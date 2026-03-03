@@ -1697,8 +1697,8 @@ def interpolate_bilstm(df: pd.DataFrame, target_var: str,
             dropout=config_bilstm.get('dropout', 0.2),
             bidirectional=True,
             sequence_length=config_bilstm.get('sequence_length', 96),
-            batch_size=config_bilstm.get('batch_size', 32),
-            epochs=config_bilstm.get('epochs', 100),
+            batch_size=HARDWARE_CONFIG.get('dl_rnn_batch_size', config_bilstm.get('batch_size', 32)),
+            epochs=HARDWARE_CONFIG.get('dl_epochs', config_bilstm.get('epochs', 100)),
             learning_rate=config_bilstm.get('learning_rate', 0.001),
             early_stopping_patience=config_bilstm.get('early_stopping_patience', 10),
             train_ratio=config_bilstm.get('train_ratio', 0.6),
@@ -2327,7 +2327,7 @@ def interpolate_xgboost(df: pd.DataFrame, target_var: str, predictor_vars: List[
     if imputer is None:
         # Simple config
         imputer = XGBoostImputer(
-            xgb_params={'n_estimators': 300, 'max_depth': 6},
+            xgb_params={'n_estimators': HARDWARE_CONFIG.get('xgb_n_estimators', 300), 'max_depth': 6},
             bidirectional=True  # ENABLED BI-DIRECTIONAL
         )
         should_fit = True
@@ -2364,7 +2364,9 @@ def interpolate_saits(df: pd.DataFrame, target_var: str, predictor_vars: List[st
     """Wrapper for SAITS Imputation."""
     from src.models.saits_model import SAITSImputer
     n_features = 1 + (len(predictor_vars) if predictor_vars else 0)
-    imputer = SAITSImputer(n_steps=128, n_features=n_features, epochs=20)
+    imputer = SAITSImputer(n_steps=128, n_features=n_features, 
+                           epochs=HARDWARE_CONFIG.get('dl_epochs', 20), 
+                           batch_size=HARDWARE_CONFIG.get('dl_transformer_batch_size', 32))
     try:
         imputer.fit(df, target_var, multivariate_vars=predictor_vars)
         prediction = imputer.predict(df)
@@ -2378,7 +2380,9 @@ def interpolate_imputeformer(df: pd.DataFrame, target_var: str, predictor_vars: 
     """Wrapper for ImputeFormer Imputation."""
     from src.models.imputeformer_model import ImputeFormerImputer
     n_features = 1 + (len(predictor_vars) if predictor_vars else 0)
-    imputer = ImputeFormerImputer(n_steps=128, n_features=n_features, epochs=20)
+    imputer = ImputeFormerImputer(n_steps=128, n_features=n_features, 
+                                  epochs=HARDWARE_CONFIG.get('dl_epochs', 20), 
+                                  batch_size=HARDWARE_CONFIG.get('dl_transformer_batch_size', 16))
     try:
         imputer.fit(df, target_var, multivariate_vars=predictor_vars)
         prediction = imputer.predict(df)
@@ -2392,7 +2396,9 @@ def interpolate_brits(df: pd.DataFrame, target_var: str, predictor_vars: List[st
     """Wrapper for BRITS Imputation."""
     from src.models.brits_model import BRITSImputer
     n_features = 1 + (len(predictor_vars) if predictor_vars else 0)
-    imputer = BRITSImputer(n_steps=128, n_features=n_features, epochs=20)
+    imputer = BRITSImputer(n_steps=128, n_features=n_features, 
+                           epochs=HARDWARE_CONFIG.get('dl_epochs', 20), 
+                           batch_size=HARDWARE_CONFIG.get('dl_rnn_batch_size', 32))
     try:
         imputer.fit(df, target_var, multivariate_vars=predictor_vars)
         prediction = imputer.predict(df)
@@ -2408,7 +2414,10 @@ def interpolate_xgboost_pro(df: pd.DataFrame, target_var: str, predictor_vars: L
     from src.models.xgboost_model_pro import XGBoostProImputer
     
     if imputer is None:
-        imputer = XGBoostProImputer(bidirectional=True)
+        imputer = XGBoostProImputer(
+            xgb_params={'n_estimators': HARDWARE_CONFIG.get('xgb_n_estimators', 1500)},
+            bidirectional=True
+        )
         should_fit = True
     else:
         should_fit = False
@@ -2429,7 +2438,9 @@ def interpolate_brits_pro(df: pd.DataFrame, target_var: str, predictor_vars: Lis
     sys.path.append(str(Path(__file__).parent.parent / "gap_project_antigr"))
     from src.models.brits_model_pro import BRITSProImputer
     n_features = 1 + (len(predictor_vars) if predictor_vars else 0)
-    imputer = BRITSProImputer(n_steps=128, n_features=n_features, rnn_hidden_size=512, epochs=200, batch_size=64)
+    imputer = BRITSProImputer(n_steps=128, n_features=n_features, rnn_hidden_size=512, 
+                              epochs=HARDWARE_CONFIG.get('dl_epochs', 200), 
+                              batch_size=HARDWARE_CONFIG.get('dl_rnn_batch_size', 64))
     try:
         imputer.fit(df, target_var, multivariate_vars=predictor_vars)
         prediction = imputer.predict(df)
