@@ -141,11 +141,40 @@ class XGBoostProImputer:
         df_masked = df.copy()
         df_masked[target_var] = train_masked_vals
         
-        # 2. COMPUTE LINEAR BASE FOR RESIDUAL
-        linear_base = df_masked[target_var].interpolate(method='time', limit_direction='both').bfill().ffill()
-        
-        # 3. RESIDUAL TARGET
-        y_residual = df[target_var] - linear_base
+        # 2. INTERNAL STL RESIDUAL LEARNING
+        try:
+            from statsmodels.tsa.seasonal import STL
+            # CLIMATOLOGY FALLBACK (Prevents long gaps from becoming straight lines)
+            group_cols = [df_masked.index.dayofyear, df_masked.index.hour]
+            climatology = df_masked[target_var].groupby(group_cols).transform('mean')
+            # Fill any remaining NaNs in climatology with linear
+            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
+            
+            base_signal = df_masked[target_var].fillna(climatology)
+            
+            stl = STL(base_signal, period=48, robust=True)
+            res = stl.fit()
+            trend_comp = res.trend
+            seasonal_comp = res.seasonal
+            y_residual = df[target_var] - trend_comp - seasonal_comp
+            # Save components to use in reconstruction
+            self.trend_comp = trend_comp
+            self.seasonal_comp = seasonal_comp
+            logger.info("  -> Successfully extracted STL components for pure residual learning.")
+            self.is_residual_mode = True # Always True now thanks to STL
+            is_residual_mode = True
+        except Exception as e:
+            logger.warning(f"  -> STL Extraction failed: {e}. Falling back to climatology residual.")
+            group_cols = [df_masked.index.dayofyear, df_masked.index.hour]
+            climatology = df_masked[target_var].groupby(group_cols).transform('mean')
+            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
+            
+            base_signal = df_masked[target_var].fillna(climatology)
+            y_residual = df[target_var] - base_signal
+            self.trend_comp = base_signal
+            self.seasonal_comp = pd.Series(0, index=df.index)
+            self.is_residual_mode = False
+            is_residual_mode = False
         
         # 4. FEATURE ENGINEERING
         df_features = feat_eng.fit_transform(
@@ -161,18 +190,10 @@ class XGBoostProImputer:
         # ROBUSTNESS: Add is_observed binary mask
         df_features[f'{target_var}_is_observed'] = df_masked[target_var].notna().astype(float)
         
-        # 5. EXTRACT TRAINING SET
-        is_residual_mode = train_gap_mask_local.sum() > 200
-        
-        if is_residual_mode:
-            logger.info("Using Auto-Supervised Residual Learning approach.")
-            X = df_features.loc[train_gap_mask_local].copy()
-            y = y_residual.loc[train_gap_mask_local].copy()
-        else:
-            logger.info("Insufficient size for synthetic gaps. Falling back to absolute learning.")
-            valid_mask = df[target_var].notna()
-            X = df_features.loc[valid_mask].copy()
-            y = df.loc[valid_mask, target_var].copy()
+        # 5. EXTRACT TRAINING SET (Now always uses residuals)
+        valid_mask = df[target_var].notna()
+        X = df_features.loc[valid_mask].copy()
+        y = y_residual.loc[valid_mask].copy()
         
         if target_var in X.columns:
             X = X.drop(columns=[target_var])
@@ -246,8 +267,27 @@ class XGBoostProImputer:
         
         df_tmp = df.copy()
         
-        linear_base = df_tmp[target].interpolate(method='time', limit_direction='both').bfill().ffill()
-        s_interp = linear_base.copy()
+        # 1. Base Reconstruction using saved STL components
+        try:
+            base_reconstruction = self.trend_comp + self.seasonal_comp
+            # If df is reversed (backward pass), we must reverse the saved components
+            if len(base_reconstruction) == len(df) and df.index[0] > df.index[-1]:
+                base_series = base_reconstruction.iloc[::-1]
+            else:
+                base_series = base_reconstruction
+        except AttributeError:
+            # Fallback if components aren't available for some reason
+            group_cols = [df_tmp.index.dayofyear, df_tmp.index.hour]
+            climatology = df_tmp[target].groupby(group_cols).transform('mean')
+            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
+            base_series = df_tmp[target].fillna(climatology)
+            
+        group_cols = [df_tmp.index.dayofyear, df_tmp.index.hour]
+        climatology_fallback = df_tmp[target].groupby(group_cols).transform('mean')
+        climatology_fallback = climatology_fallback.interpolate(method='time', limit_direction='both').bfill().ffill()
+        s_interp = df_tmp[target].fillna(climatology_fallback)
+        
+        # When creating features, pretend gaps are filled with linear interpolation
         df_tmp[target] = df[target].fillna(s_interp)
         
         if multivariate_vars:
@@ -285,7 +325,13 @@ class XGBoostProImputer:
         stats = getattr(feat_eng, 'rolling_stats', [])
         
         lag_cols = [f"{target}_lag_{l}" for l in lags]
-        base_vals = linear_base.values 
+        
+        # Ensure base_vals aligns perfectly with the current dataframe length
+        if len(base_series) != len(df):
+            # If lengths mismatch (e.g. valid data subset), fallback to simple interpolation for this pass
+            base_vals = s_interp.values
+        else:
+            base_vals = base_series.values 
         
         try:
             model.set_params(device='cpu')

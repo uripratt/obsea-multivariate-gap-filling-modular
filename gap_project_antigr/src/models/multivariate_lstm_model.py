@@ -383,7 +383,45 @@ class MultivariateLSTMImputer:
         verbose: bool = True,
     ) -> TrainingMetrics:
         logger.info(f"Training Multivariate LSTM (Attention+Scheuler) on {self.target_var}")
-        # ... (setup loaders code remains same) ...
+        
+        # =====================================================================
+        # 1. STL RESIDUAL EXTRACTION
+        # =====================================================================
+        try:
+            from statsmodels.tsa.seasonal import STL
+            logger.info("  -> Extracting STL components for pure residual learning...")
+            # CLIMATOLOGY FALLBACK (Prevents long gaps from becoming straight lines)
+            group_cols = [df[self.target_var].index.dayofyear, df[self.target_var].index.hour]
+            climatology = df[self.target_var].groupby(group_cols).transform('mean')
+            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
+            
+            base_signal = df[self.target_var].fillna(climatology)
+            
+            stl = STL(base_signal, period=48, robust=True)
+            res = stl.fit()
+            
+            self.trend_comp = res.trend
+            self.seasonal_comp = res.seasonal
+            
+            # The target for the LSTM is now exclusively the unpredictable anomaly
+            df[self.target_var] = df[self.target_var] - self.trend_comp - self.seasonal_comp
+            
+            self.is_residual_mode = True
+        except Exception as e:
+            logger.warning(f"  -> STL Extraction failed: {e}. Falling back to climatology anomaly.")
+            group_cols = [df[self.target_var].index.dayofyear, df[self.target_var].index.hour]
+            climatology = df[self.target_var].groupby(group_cols).transform('mean')
+            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
+            
+            base_signal = df[self.target_var].fillna(climatology)
+            y_residual = df[self.target_var] - base_signal
+            self.trend_comp = base_signal
+            self.seasonal_comp = pd.Series(0, index=df.index)
+            df[self.target_var] = y_residual # Update the target column in df
+            self.is_residual_mode = False
+            
+        # =====================================================================
+        
         # Clear GPU memory
         if 'cuda' in str(self.device):
             torch.cuda.empty_cache()
@@ -620,6 +658,26 @@ class MultivariateLSTMImputer:
         # Normalize
         data_norm = (df[self.predictor_vars].copy() - self.mean) / self.std
         
+        # 1. Base Reconstruction using saved STL components (or fallback)
+        try:
+            base_series = self.trend_comp + self.seasonal_comp
+            if len(base_series) != len(df):
+                raise ValueError("Length mismatch between training components and prediction dataframe")
+        except (AttributeError, ValueError):
+            # Fallback if predicting on new data or STL failed
+            group_cols = [df.index.dayofyear, df.index.hour]
+            climatology = df[self.target_var].groupby(group_cols).transform('mean')
+            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
+            base_series = df[self.target_var].fillna(climatology)
+            
+        group_cols = [df.index.dayofyear, df.index.hour]
+        climatology_fallback = df[self.target_var].groupby(group_cols).transform('mean')
+        climatology_fallback = climatology_fallback.interpolate(method='time', limit_direction='both').bfill().ffill()
+        linear_fallback = df[self.target_var].fillna(climatology_fallback)
+        
+        # When creating features, pretend gaps are filled with linear interpolation
+        data_norm[self.target_var] = (linear_fallback - self.mean[self.target_var]) / self.std[self.target_var]
+        
         # Interpolate exogenous vars safely
         target_col = self.target_var
         exog_cols = [c for c in self.predictor_vars if c != target_col]
@@ -667,15 +725,30 @@ class MultivariateLSTMImputer:
                 
                 x = torch.FloatTensor(sequence).unsqueeze(0).to(self.device)
                 
-                # Forward pass
+                # Forward pass (predicting normalized residual)
                 pred_norm = self.model(x).cpu().numpy().flatten()[0]
                 
-                # Write back into data_np for the next prediction step
-                data_np[idx, target_idx] = pred_norm
+                # Denormalize residual
+                pred_residual = pred_norm * self.std[target_col] + self.mean[target_col]
+                
+                # 3. Reconstruct Absolute Value
+                if getattr(self, 'is_residual_mode', False):
+                    # Ensure base_series aligns
+                    try:
+                        base_val = base_series.loc[df.index[idx]]
+                    except Exception:
+                        base_val = linear_fallback.iloc[idx]
+                    
+                    pred_absolute = base_val + pred_residual
+                else:
+                    pred_absolute = pred_residual
                 
                 # Write true value into resultant prediction dataframe
-                pred_real = pred_norm * self.std[target_col] + self.mean[target_col]
-                result.iloc[idx] = pred_real
+                result.iloc[idx] = pred_absolute
+                
+                # Insert predicted absolute value back into feature array (normalized!)
+                # This ensures the autoregressive feedback loop uses the correct reconstructed history
+                data_np[idx, target_idx] = (pred_absolute - self.mean[target_col]) / self.std[target_col]
                 
         # For gaps at the very start where we couldn't run LSTM (< seq_len), interpolate
         result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')

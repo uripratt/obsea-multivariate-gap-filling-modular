@@ -96,6 +96,12 @@ CONFIG = {
     'target_sampling_rate': '30min',
     'output_dir': 'output_lup',
     
+    # --- Caching System ---
+    # Set to True to skip loading raw data and QC, and load the pre-processed unified dataset directly.
+    # Set to False to run the full pipeline and overwrite the cache.
+    'use_cached_dataset': False, 
+    'cache_dir': 'output_lup/cache',
+    
     # Physical ranges for QC (NW Mediterranean - Vilanova i la Geltrú)
     'physical_ranges': {
         # Variable: (fail_min, fail_max, suspect_min, suspect_max)
@@ -185,8 +191,8 @@ HARDWARE_CONFIG = {
     # ---> ACTIVE PROFILE (Change these values to match your current machine)
     'dl_rnn_batch_size': 32, 
     'dl_transformer_batch_size': 16,
-    'dl_epochs': 30,
-    'xgb_n_estimators': 200,
+    'dl_epochs': 50,
+    'xgb_n_estimators': 500,
     'joblib_n_jobs': 4,
     'use_parallel_processing': True, # Set to False to disable all parallel execution
 }
@@ -259,7 +265,7 @@ ENABLE_MODELS = {
     'splines': True,
     'polynomial': False,
     'varma': True,      # ENABLED: Good for short-medium multivariate gaps
-    'bilstm': False,     # DISABLED: Heavy deep learning
+    'bilstm': True,     # DISABLED: Heavy deep learning
     'xgboost': True,    # Recommended: Fast, robust, handles non-linearities
     'xgboost_pro': True, # NEW: Bidirectional, complex statistics
     'missforest': False, # DISABLED: Heavy iteration tabular imputation
@@ -280,7 +286,7 @@ BENCHMARK_MODELS = {
     'splines': True,
     'polynomial': False,
     'varma': True,
-    'bilstm': False,
+    'bilstm': True,
     'xgboost': True,
     'xgboost_pro': True,
     'missforest': False,
@@ -1537,7 +1543,7 @@ def interpolate_varma(df: pd.DataFrame, target_var: str,
             q=order[1], 
             batch_size=512, 
             epochs=50, 
-            device='cuda' if torch.cuda.is_available() else 'cpu',
+            device='cpu', # Force CPU because it runs in parallel threads 
             verbose=True 
         )
         
@@ -1992,7 +1998,8 @@ def process_variable_cpu(var, df_canonical, gaps_df, interp_config, enabled_cate
 
 def selective_interpolation(df: pd.DataFrame, gaps_df: pd.DataFrame, 
                            interp_config: dict = INTERPOLATION_CONFIG,
-                           freq: str = '30min') -> Tuple[pd.DataFrame, pd.DataFrame]:
+                           freq: str = '30min',
+                           bench_df: pd.DataFrame = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Apply optimized interpolation strategies to specific gap categories.
     OPTIMIZED FOR NVIDIA A100:
@@ -2007,15 +2014,23 @@ def selective_interpolation(df: pd.DataFrame, gaps_df: pd.DataFrame,
             enabled_categories.append(cat)
             
     methods_per_cat = {}
-    if USE_AUTOMATIC_METHOD_SELECTION and BENCHMARK_RESULTS_PATH.exists():
+    
+    # Use benchmark dataframe passed in memory, or fallback to disk if available
+    has_benchmark_data = (bench_df is not None and not bench_df.empty)
+    
+    if USE_AUTOMATIC_METHOD_SELECTION and (has_benchmark_data or BENCHMARK_RESULTS_PATH.exists()):
         try:
-            bench_df = pd.read_csv(BENCHMARK_RESULTS_PATH)
+            # If not provided in memory, try to load from previous disk run
+            if not has_benchmark_data:
+                bench_df = pd.read_csv(BENCHMARK_RESULTS_PATH)
+                
             for category in enabled_categories:
                 cat_results = bench_df[bench_df['Category'] == category]
                 if not cat_results.empty:
                     best_method = cat_results.loc[cat_results['RMSE'].idxmin()]['Method']
                     methods_per_cat[category] = best_method
-                else: methods_per_cat[category] = interp_config['manual_methods'].get(category, 'time')
+                else: 
+                    methods_per_cat[category] = interp_config['manual_methods'].get(category, 'time')
             console.print("[green]✓ Loaded automatic method selection from benchmarks[/green]")
         except Exception as e:
             console.print(f"[yellow]⚠ Failed to load benchmarks: {e}. Using manual methods.[/yellow]")
@@ -2436,6 +2451,7 @@ def benchmark_gap_filling(df: pd.DataFrame,
     OPTIMIZED FOR NVIDIA A100:
     - GPU models (PyTorch/XGBoost) run sequentially with aggressive VRAM cleaning.
     - CPU models (VARMA, Splines, etc.) run in parallel using joblib.
+    - UNIVERSAL RESIDUAL LEARNING: Advanced models automatically predict STL anomalies.
     """
     console.print("\n  [bold]Benchmarking gap filling on {test_variable}...[/bold]")
     
@@ -2551,9 +2567,11 @@ def benchmark_gap_filling(df: pd.DataFrame,
         for method in gpu_methods:
             if method not in methods: continue
             
-            m_name, interp = run_model(method, df_test.copy(), test_variable, predictor_vars)
-            if interp is not None:
-                category_interps[m_name] = interp
+            # Feed the dataset to models (Advanced models handle residuals internally now)
+            m_name, interp_absolute = run_model(method, df_test.copy(), test_variable, predictor_vars)
+            
+            if interp_absolute is not None:
+                category_interps[m_name] = interp_absolute
             
             # Aggressive VRAM Cleanup for A100
             if torch.cuda.is_available():
@@ -2593,9 +2611,9 @@ def benchmark_gap_filling(df: pd.DataFrame,
                 delayed(run_model)(method, df_test.copy(), test_variable, predictor_vars)
                 for method in active_cpu_methods
             )
-            for m_name, interp in cpu_outputs:
-                if interp is not None:
-                    category_interps[m_name] = interp
+            for m_name, interp_absolute in cpu_outputs:
+                if interp_absolute is not None:
+                    category_interps[m_name] = interp_absolute
             gc.collect()  # Clean up after CPU jobs
                     
         # Process Results & Metrics 
@@ -3631,74 +3649,108 @@ def main():
     log.info(f"Log file: {log_file}")
     log.info("=" * 70)
     
-    # Step 1: Load all data
-    log.info("STEP 1: LOADING DATA")
-    log.info("Loading multiple observational sources (CTD, AWAC, Met)...")
-    data = load_all_data(CONFIG)
+    # =========================================================================
+    # CACHING SYSTEM: Load or Compute Dataset
+    # =========================================================================
+    cache_dir = base_path / CONFIG.get('cache_dir', 'output_lup/cache')
+    unified_cache_path = cache_dir / 'unified_df_filtered.parquet'
+    gaps_cache_path = cache_dir / 'gaps_df_filtered.parquet'
     
-    if not data:
-        log.error("Error: No data loaded. Pipeline aborted.")
-        return
+    use_cache = CONFIG.get('use_cached_dataset', False)
     
-    # Step 2: Apply instrumental QC
-    log.info("STEP 2: APPLYING INSTRUMENTAL QC")
-    data_qc = {}
-    for instrument, df in data.items():
-        data_qc[instrument] = apply_instrumental_qc(df, instrument, CONFIG)
-        n_flagged = sum(
-            (data_qc[instrument][col] > 1).sum() 
-            for col in data_qc[instrument].columns if '_QC_INST' in col
-        )
-        log.info(f"  - {instrument:<10}: {n_flagged:,} values flagged as suspect/fail")
-    
-    # Step 3: Create unified dataset
-    log.info("STEP 3: CREATING UNIFIED MULTIVARIATE DATASET")
-    unified_df = create_unified_dataset(data_qc, CONFIG['target_sampling_rate'])
-    
-    # Step 3.5: Phase 3 - Add derived features (σ_θ, N², wind stress, etc.)
-    log.info("STEP 3.5: OCEANOGRAPHIC FEATURE EXTRACTION AND ADVANCED PREPROCESSING")
-    unified_df = add_derived_features(unified_df, compute_stl=True) # ENABLED STL
-    
-    # Step 4: Statistical analysis
-    log.info("STEP 4: STATISTICAL ANALYSIS AND CORRELATIONS")
-    
-    # Get primary variables (no prefixes for main analysis)
-    primary_vars = [col for col in unified_df.columns 
-                   if not any(suffix in col for suffix in ['_QC', '_STD'])]
-    
-    stats_df = compute_descriptive_stats(unified_df, primary_vars)
-    log.info(f"  - Computed descriptive statistics for {len(stats_df)} variables")
-    
-    corr_matrix = compute_correlation_matrix(unified_df, primary_vars[:15])  # Limit for readability
-    log.info("  - Computed correlation matrix for primary predictors")
-    
-    # Step 5: Gap analysis
-    log.info("STEP 5: GAP ANALYSIS AND CLASSIFICATION")
-    gaps_df = analyze_gaps(unified_df, primary_vars)
-    gaps_summary = create_gap_summary(gaps_df)
-    gaps_summary = create_gap_summary(gaps_df)
-    
-    if not gaps_summary.empty:
-        log.info(f"  - Identified {len(gaps_df):,} gaps across all variables")
-        # Detailed summary will be in the gaps_detailed.csv table
-    
-    
-    # Step 5.5: Filter to High-Quality Variables (if enabled)
-    log.info("STEP 5.5: VARIABLE QUALITY FILTERING")
-    if USE_HIGH_QUALITY_FILTER:
-        # Apply filter before interpolation to reduce computational cost
-        unified_df_filtered = filter_high_quality_variables(unified_df)
+    if use_cache and unified_cache_path.exists() and gaps_cache_path.exists():
+        log.info("=" * 70)
+        log.info("🚀 CACHE HIT: LOADING PRE-PROCESSED DATASET")
+        log.info("=" * 70)
+        try:
+            unified_df_filtered = pd.read_parquet(unified_cache_path)
+            gaps_df_filtered = pd.read_parquet(gaps_cache_path)
+            log.info(f"Loaded unified_df_filtered: {unified_df_filtered.shape}")
+            log.info(f"Loaded gaps_df_filtered: {len(gaps_df_filtered)} gaps")
+        except Exception as e:
+            log.error(f"Failed to load cache: {e}. Falling back to full processing.")
+            use_cache = False
+            
+    if not use_cache:
+        log.info("=" * 70)
+        log.info("⚙️ RUNNING FULL DATA PROCESSING PIPELINE")
+        log.info("=" * 70)
         
-        # Also filter gaps_df to match
-        filtered_vars = [col for col in unified_df_filtered.columns 
-                        if not any(suffix in col for suffix in ['_QC', '_STD'])]
-        gaps_df_filtered = gaps_df[gaps_df['variable'].isin(filtered_vars)]
+        # Step 1: Load all data
+        log.info("STEP 1: LOADING DATA")
+        log.info("Loading multiple observational sources (CTD, AWAC, Met)...")
+        data = load_all_data(CONFIG)
         
-        log.info(f"  Working with {len(filtered_vars)} high-quality variables for interpolation")
-    else:
-        unified_df_filtered = unified_df
-        gaps_df_filtered = gaps_df
-        log.info("  Using all variables (no quality filter applied)")
+        if not data:
+            log.error("Error: No data loaded. Pipeline aborted.")
+            return
+        
+        # Step 2: Apply instrumental QC
+        log.info("STEP 2: APPLYING INSTRUMENTAL QC")
+        data_qc = {}
+        for instrument, df in data.items():
+            data_qc[instrument] = apply_instrumental_qc(df, instrument, CONFIG)
+            n_flagged = sum(
+                (data_qc[instrument][col] > 1).sum() 
+                for col in data_qc[instrument].columns if '_QC_INST' in col
+            )
+            log.info(f"  - {instrument:<10}: {n_flagged:,} values flagged as suspect/fail")
+        
+        # Step 3: Create unified dataset
+        log.info("STEP 3: CREATING UNIFIED MULTIVARIATE DATASET")
+        unified_df = create_unified_dataset(data_qc, CONFIG['target_sampling_rate'])
+        
+        # Step 3.5: Phase 3 - Add derived features (σ_θ, N², wind stress, etc.)
+        log.info("STEP 3.5: OCEANOGRAPHIC FEATURE EXTRACTION AND ADVANCED PREPROCESSING")
+        unified_df = add_derived_features(unified_df, compute_stl=True) # ENABLED STL
+        
+        # Step 4: Statistical analysis
+        log.info("STEP 4: STATISTICAL ANALYSIS AND CORRELATIONS")
+        
+        # Get primary variables (no prefixes for main analysis)
+        primary_vars = [col for col in unified_df.columns 
+                       if not any(suffix in col for suffix in ['_QC', '_STD'])]
+        
+        stats_df = compute_descriptive_stats(unified_df, primary_vars)
+        log.info(f"  - Computed descriptive statistics for {len(stats_df)} variables")
+        
+        corr_matrix = compute_correlation_matrix(unified_df, primary_vars[:15])  # Limit for readability
+        log.info("  - Computed correlation matrix for primary predictors")
+        
+        # Step 5: Gap analysis
+        log.info("STEP 5: GAP ANALYSIS AND CLASSIFICATION")
+        gaps_df = analyze_gaps(unified_df, primary_vars)
+        gaps_summary = create_gap_summary(gaps_df)
+        
+        if not gaps_summary.empty:
+            log.info(f"  - Identified {len(gaps_df):,} gaps across all variables")
+            # Detailed summary will be in the gaps_detailed.csv table
+        
+        # Step 5.5: Filter to High-Quality Variables (if enabled)
+        log.info("STEP 5.5: VARIABLE QUALITY FILTERING")
+        if USE_HIGH_QUALITY_FILTER:
+            # Apply filter before interpolation to reduce computational cost
+            unified_df_filtered = filter_high_quality_variables(unified_df)
+            
+            # Also filter gaps_df to match
+            filtered_vars = [col for col in unified_df_filtered.columns 
+                            if not any(suffix in col for suffix in ['_QC', '_STD'])]
+            gaps_df_filtered = gaps_df[gaps_df['variable'].isin(filtered_vars)]
+            
+            log.info(f"  Working with {len(filtered_vars)} high-quality variables for interpolation")
+        else:
+            unified_df_filtered = unified_df
+            gaps_df_filtered = gaps_df
+            log.info("  Using all variables (no quality filter applied)")
+            
+        # SAVE CACHE
+        log.info("💾 SAVING PRE-PROCESSED DATASET TO CACHE")
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        unified_df_filtered.to_parquet(unified_cache_path)
+        gaps_df_filtered.to_parquet(gaps_cache_path)
+        log.info(f"  Saved to {cache_dir}")
+        
+    # =========================================================================
     
     # Step 5.6: Benchmark Gap Filling (on filtered data)
     log.info("STEP 5.6: SCIENTIFIC BENCHMARKING OF INTERPOLATION METHODS")
@@ -3722,7 +3774,8 @@ def main():
     unified_df_interp, tracking_df = selective_interpolation(
         unified_df_filtered, gaps_df_filtered,
         interp_config=INTERPOLATION_CONFIG,
-        freq='30min'
+        freq='30min',
+        bench_df=comparison_df
     )
     
     # Step 5.8: Create per-model output directories and save visualizations
