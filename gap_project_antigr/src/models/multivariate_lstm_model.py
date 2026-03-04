@@ -704,8 +704,16 @@ class MultivariateLSTMImputer:
         # Loop over gaps to predict recursively
         gap_positions = np.where(result.isna())[0]
         
+        consecutive_gap_idx = 0
+        
         with torch.no_grad():
-            for idx in gap_positions:
+            for pos_idx, idx in enumerate(gap_positions):
+                # Dynamic Regression to Baseline based on depth into gap
+                if pos_idx > 0 and gap_positions[pos_idx - 1] == idx - 1:
+                    consecutive_gap_idx += 1
+                else:
+                    consecutive_gap_idx = 0
+                    
                 if idx < self.sequence_length:
                     # Not enough history for standard prediction. 
                     # Fill with 0.0 (normalized mean) temporarily to allow forward passing to continue
@@ -727,6 +735,14 @@ class MultivariateLSTMImputer:
                 
                 # Forward pass (predicting normalized residual)
                 pred_norm = self.model(x).cpu().numpy().flatten()[0]
+                
+                # VALUE CLAMPING: Prevent explosion on very long gaps
+                pred_norm = np.clip(pred_norm, -5.0, 5.0)
+                
+                # EXPOSURE BIAS MITIGATION: Dynamic Residual Decay
+                # At 144 steps (3 days), the autoregressive residual is mostly noise.
+                decay_factor = np.exp(-consecutive_gap_idx / 144.0)
+                pred_norm = pred_norm * decay_factor
                 
                 # Denormalize residual
                 pred_residual = pred_norm * self.std[target_col] + self.mean[target_col]

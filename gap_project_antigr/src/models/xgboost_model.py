@@ -126,30 +126,8 @@ class XGBoostImputer:
         
         feat_eng = self._create_feature_engineer()
         
-        # 1. AUTO-SUPERVISED MASKING
-        valid_indices = np.where(df[target_var].notna())[0]
-        train_masked_vals = df[target_var].values.copy()
-        n_points = len(df)
-        train_gap_mask_local = np.zeros(n_points, dtype=bool)
-        
-        np.random.seed(42)
-        # We need enough gaps to train. Scale with data size.
-        n_gaps = min(500, max(10, len(valid_indices) // 100))
-        
-        if n_gaps > 0 and len(valid_indices) > 500:
-            # Pick random valid starting points
-            starts_train = np.random.choice(valid_indices[:-100], n_gaps, replace=False)
-            for start in starts_train:
-                length = np.random.randint(6, 48) # 3 hours to 24 hours
-                end = min(start + length, n_points)
-                train_masked_vals[start:end] = np.nan
-                train_gap_mask_local[start:end] = True
-        
-        # Only consider mask where we had ground truth
-        train_gap_mask_local = train_gap_mask_local & df[target_var].notna().values
-        
+        # Original data features (no artificial masking)
         df_masked = df.copy()
-        df_masked[target_var] = train_masked_vals
         
         # 2. COMPUTE LINEAR BASE (Removed, not used for absolute prediction)
         # linear_base = df_masked[target_var].interpolate(method='time', limit_direction='both').bfill().ffill()
@@ -158,8 +136,18 @@ class XGBoostImputer:
         # y_residual = df[target_var] - linear_base
         
         # 4. FEATURE ENGINEERING
+        # CRITICAL BUG FIX (Empty Dataset): Features must be generated on a continuously interpolated
+        # sequence so that lag variables don't propagate NaNs and wipe out all `df.dropna()` training rows.
+        group_cols = [df_masked.index.dayofyear, df_masked.index.hour]
+        climatology_fallback = df_masked[target_var].groupby(group_cols).transform('mean')
+        climatology_fallback = climatology_fallback.interpolate(method='time', limit_direction='both').bfill().ffill()
+        s_interp = df_masked[target_var].fillna(climatology_fallback)
+        
+        df_for_features = df_masked.copy()
+        df_for_features[target_var] = df_masked[target_var].fillna(s_interp)
+        
         df_features = feat_eng.fit_transform(
-            df_masked, target_variable=target_var, multivariate_vars=multivariate_vars
+            df_for_features, target_variable=target_var, multivariate_vars=multivariate_vars
         )
         
         if multivariate_vars:
@@ -173,19 +161,10 @@ class XGBoostImputer:
         
         # 5. EXTRACT TRAINING SET
         is_residual_mode = False  # DO NOT use residual mode, use absolute predicting
-        
-        # Use synthetic gaps for training so model learns to impute instead of 1-step-ahead prediction
-        use_synthetic_gaps = train_gap_mask_local.sum() > 50
-        
-        if use_synthetic_gaps:
-            logger.info("Training on synthetic gaps to simulate imputation.")
-            X = df_features.loc[train_gap_mask_local].copy()
-            y = df.loc[train_gap_mask_local, target_var].copy()
-        else:
-            logger.info("Insufficient synthetic gaps. Falling back to simple extracting.")
-            valid_mask = df[target_var].notna()
-            X = df_features.loc[valid_mask].copy()
-            y = df.loc[valid_mask, target_var].copy()
+        # Simply extract all valid rows for training
+        valid_mask = df[target_var].notna().values
+        X = df_features.loc[valid_mask].copy()
+        y = df.loc[valid_mask, target_var].copy()
         
         if target_var in X.columns:
             X = X.drop(columns=[target_var])
@@ -312,7 +291,8 @@ class XGBoostImputer:
         
         # Cache column names for faster access
         lag_cols = [f"{target}_lag_{l}" for l in lags]
-        # base_vals = linear_base.values # Array for faster access (Removed)
+        base_vals = s_interp.values # Array for robust fallback blending
+        consecutive_gap_idx = 0
         
         # Optimize prediction for single-row recursive logic
         # Single-row inference is heavily latency-bound by PCIe transfers. Predict on CPU avoids
@@ -325,8 +305,16 @@ class XGBoostImputer:
             logger.debug(f"Failed to enforce CPU mid-prediction: {e}")
         
         # Main Optimized Recursive Loop
-        for pos in gap_positions:
+        for pos_idx, pos in enumerate(gap_positions):
             idx = times[pos]
+            
+            # Dynamic Regression to Baseline based on depth into gap
+            # Determines whether we are in a micro/short/medium gap vs a long/gigant gap
+            # For consecutive NaNs, we decay the prediction towards the simple physical baseline
+            if pos_idx > 0 and gap_positions[pos_idx - 1] == pos - 1:
+                consecutive_gap_idx += 1
+            else:
+                consecutive_gap_idx = 0
             
             # 1. Update Lags (O(n_lags))
             for lag, col in zip(lags, lag_cols):
@@ -377,6 +365,13 @@ class XGBoostImputer:
             #     pred_absolute = base_vals[pos] + pred
             # else:
             #     pred_absolute = pred
+            
+            # EXPOSURE BIAS MITIGATION: Dynamic Baseline Reversion
+            # Deep into a gap, the autoregressive predictability drops to noise.
+            # We decay the model's pure prediction towards the robust Climatology baseline.
+            # lambda = 1/288 (144 = 3 days, 288 = 6 days. At 6 days depth, e^-1 = 36% weight to XGBoost)
+            decay_factor = np.exp(-consecutive_gap_idx / 288.0)
+            pred_absolute = (pred_absolute * decay_factor) + (base_vals[pos] * (1.0 - decay_factor))
             
             # 5. Commit to working array for next recursions
             y_values[pos] = pred_absolute

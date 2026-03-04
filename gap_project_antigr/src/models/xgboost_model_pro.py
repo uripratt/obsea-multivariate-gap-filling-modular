@@ -55,6 +55,7 @@ class XGBoostProImputer:
         # Models storage
         self.models = {} # 'fwd', 'bwd'
         self.feature_engineers = {} # 'fwd', 'bwd'
+        self.stl_components = {} # 'fwd': (trend, seasonal), 'bwd': ...
         
         self.is_residual_fwd = False
         self.is_residual_bwd = False
@@ -94,6 +95,7 @@ class XGBoostProImputer:
         
         # Train Forward Model
         logger.info(f"Training Forward Model for {target_var}...")
+        self._current_direction = 'fwd'
         self.models['fwd'], self.feature_columns, self.feature_engineers['fwd'], self.is_residual_fwd = self._fit_single(
             df, target_var, multivariate_vars, validation_data
         )
@@ -101,6 +103,7 @@ class XGBoostProImputer:
         # Train Backward Model if requested
         if self.bidirectional:
             logger.info(f"Training Backward Model for {target_var}...")
+            self._current_direction = 'bwd'
             # Reverse DataFrames
             df_rev = df.iloc[::-1].copy()
             val_rev = validation_data.iloc[::-1].copy() if validation_data is not None else None
@@ -116,30 +119,8 @@ class XGBoostProImputer:
         
         feat_eng = self._create_feature_engineer()
         
-        # 1. AUTO-SUPERVISED MASKING
-        valid_indices = np.where(df[target_var].notna())[0]
-        train_masked_vals = df[target_var].values.copy()
-        n_points = len(df)
-        train_gap_mask_local = np.zeros(n_points, dtype=bool)
-        
-        np.random.seed(42)
-        # We need enough gaps to train. Scale with data size.
-        n_gaps = min(1000, max(20, len(valid_indices) // 50))
-        
-        if n_gaps > 0 and len(valid_indices) > 500:
-            # Pick random valid starting points
-            starts_train = np.random.choice(valid_indices[:-200], n_gaps, replace=False)
-            for start in starts_train:
-                length = np.random.randint(6, 96) # 3 hours to 48 hours gaps
-                end = min(start + length, n_points)
-                train_masked_vals[start:end] = np.nan
-                train_gap_mask_local[start:end] = True
-        
-        # Only consider mask where we had ground truth
-        train_gap_mask_local = train_gap_mask_local & df[target_var].notna().values
-        
+        # Original data features (no artificial masking)
         df_masked = df.copy()
-        df_masked[target_var] = train_masked_vals
         
         # 2. INTERNAL STL RESIDUAL LEARNING
         try:
@@ -158,10 +139,8 @@ class XGBoostProImputer:
             seasonal_comp = res.seasonal
             y_residual = df[target_var] - trend_comp - seasonal_comp
             # Save components to use in reconstruction
-            self.trend_comp = trend_comp
-            self.seasonal_comp = seasonal_comp
+            self.stl_components[self._current_direction] = (trend_comp, seasonal_comp)
             logger.info("  -> Successfully extracted STL components for pure residual learning.")
-            self.is_residual_mode = True # Always True now thanks to STL
             is_residual_mode = True
         except Exception as e:
             logger.warning(f"  -> STL Extraction failed: {e}. Falling back to climatology residual.")
@@ -171,14 +150,22 @@ class XGBoostProImputer:
             
             base_signal = df_masked[target_var].fillna(climatology)
             y_residual = df[target_var] - base_signal
-            self.trend_comp = base_signal
-            self.seasonal_comp = pd.Series(0, index=df.index)
-            self.is_residual_mode = False
+            self.stl_components[self._current_direction] = (base_signal, pd.Series(0, index=df.index))
             is_residual_mode = False
         
         # 4. FEATURE ENGINEERING
+        # CRITICAL BUG FIX (Empty Dataset): Features must be generated on a continuously interpolated
+        # sequence so that lag variables don't propagate NaNs and wipe out all `df.dropna()` training rows.
+        group_cols = [df_masked.index.dayofyear, df_masked.index.hour]
+        climatology_fallback = df_masked[target_var].groupby(group_cols).transform('mean')
+        climatology_fallback = climatology_fallback.interpolate(method='time', limit_direction='both').bfill().ffill()
+        s_interp = df_masked[target_var].fillna(climatology_fallback)
+        
+        df_for_features = df_masked.copy()
+        df_for_features[target_var] = df_masked[target_var].fillna(s_interp)
+        
         df_features = feat_eng.fit_transform(
-            df_masked, target_variable=target_var, multivariate_vars=multivariate_vars
+            df_for_features, target_variable=target_var, multivariate_vars=multivariate_vars
         )
         
         if multivariate_vars:
@@ -232,6 +219,7 @@ class XGBoostProImputer:
              
         # Predict Forward
         logger.info("Predicting Forward...")
+        self._current_direction = 'fwd'
         pred_fwd = self._predict_single(
             self.models['fwd'], self.feature_engineers['fwd'], 
             df, multivariate_vars, self.is_residual_fwd
@@ -242,6 +230,7 @@ class XGBoostProImputer:
             
         # Predict Backward
         logger.info("Predicting Backward...")
+        self._current_direction = 'bwd'
         df_rev = df.iloc[::-1].copy()
         pred_bwd_rev = self._predict_single(
             self.models['bwd'], self.feature_engineers['bwd'],
@@ -265,17 +254,19 @@ class XGBoostProImputer:
             
         logger.debug(f"Total gaps to fill: {len(gap_positions)}")
         
+        
         df_tmp = df.copy()
         
         # 1. Base Reconstruction using saved STL components
         try:
-            base_reconstruction = self.trend_comp + self.seasonal_comp
+            trend_comp, seasonal_comp = self.stl_components[self._current_direction]
+            base_reconstruction = trend_comp + seasonal_comp
             # If df is reversed (backward pass), we must reverse the saved components
             if len(base_reconstruction) == len(df) and df.index[0] > df.index[-1]:
                 base_series = base_reconstruction.iloc[::-1]
             else:
                 base_series = base_reconstruction
-        except AttributeError:
+        except KeyError:
             # Fallback if components aren't available for some reason
             group_cols = [df_tmp.index.dayofyear, df_tmp.index.hour]
             climatology = df_tmp[target].groupby(group_cols).transform('mean')
@@ -340,8 +331,16 @@ class XGBoostProImputer:
         except Exception as e:
             pass
         
-        for pos in gap_positions:
+        consecutive_gap_idx = 0
+        
+        for pos_idx, pos in enumerate(gap_positions):
             idx = times[pos]
+            
+            # Dynamic Regression to Baseline based on depth into gap
+            if pos_idx > 0 and gap_positions[pos_idx - 1] == pos - 1:
+                consecutive_gap_idx += 1
+            else:
+                consecutive_gap_idx = 0
             
             # Update Lags 
             for lag, col in zip(lags, lag_cols):
@@ -390,6 +389,12 @@ class XGBoostProImputer:
             except:
                 pred = model.predict(X_row)[0]
             
+            # EXPOSURE BIAS MITIGATION: Dynamic Residual Decay
+            # At 144 steps (3 days), the autoregressive residual is mostly noise.
+            # We decay it towards 0, gracefully merging into the pure STL baseline signal.
+            decay_factor = np.exp(-consecutive_gap_idx / 144.0)
+            pred = pred * decay_factor
+            
             if is_residual_mode:
                 pred_absolute = base_vals[pos] + pred
             else:
@@ -409,7 +414,8 @@ class XGBoostProImputer:
             'bidirectional': self.bidirectional,
             'target_var': self.target_var,
             'is_residual_fwd': self.is_residual_fwd,
-            'is_residual_bwd': self.is_residual_bwd
+            'is_residual_bwd': self.is_residual_bwd,
+            'stl_components': self.stl_components
         }, path)
 
     @classmethod
@@ -431,4 +437,5 @@ class XGBoostProImputer:
         imputer.target_var = data['target_var']
         imputer.is_residual_fwd = data.get('is_residual_fwd', False)
         imputer.is_residual_bwd = data.get('is_residual_bwd', False)
+        imputer.stl_components = data.get('stl_components', {})
         return imputer
