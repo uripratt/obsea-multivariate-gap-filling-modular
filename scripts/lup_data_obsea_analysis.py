@@ -173,7 +173,7 @@ INTERPOLATION_CONFIG = {
     'interpolate_medium': True,     # 6h - 3 days
     'interpolate_long': True,       # 3-30 days
     'interpolate_extended': True,  # 30-60 days (off by default - too long)
-    'interpolate_gigant': False,    # > 60 days (off by default - too long)
+    'interpolate_gigant': True,    # > 60 days (off by default - too long)
     
     # -------------------------------------------------------------------------
     # MANUAL METHOD ASSIGNMENT (used when USE_AUTOMATIC_METHOD_SELECTION = False)
@@ -213,12 +213,12 @@ INTERPOLATION_CONFIG = {
 # This dictates which methods are allowed to run (train) for PRODUCTION.
 # If a method is disabled here, it will be skipped entirely, even if selected below.
 ENABLE_MODELS = {
-    'linear': True,
-    'time': True,
-    'splines': True,
-    'polynomial': True,
-    'varma': True,      # ENABLED: Good for short-medium multivariate gaps
-    'bilstm': True,     # ENABLED: Best for long, complex gaps
+    'linear': False,
+    'time': False,
+    'splines': False,
+    'polynomial': False,
+    'varma': False,      # ENABLED: Good for short-medium multivariate gaps
+    'bilstm': False,     # ENABLED: Best for long, complex gaps
     'xgboost': True,    # Recommended: Fast, robust, handles non-linearities
     'missforest': True, # NEW: Robust tabular imputation
     'saits': True,      # NEW: Transformer-based
@@ -232,12 +232,12 @@ ENABLE_MODELS = {
 # All models enabled for benchmarking to provide complete scientific comparison.
 # This is separate from production to allow comprehensive thesis evaluation.
 BENCHMARK_MODELS = {
-    'linear': True,
-    'time': True,
-    'splines': True,
-    'polynomial': True,
-    'varma': True,
-    'bilstm': True,
+    'linear': False,
+    'time': False,
+    'splines': False,
+    'polynomial': False,
+    'varma': False,
+    'bilstm': False,
     'xgboost': True,
     'missforest': True,
     'saits': True,

@@ -100,10 +100,13 @@ class MultivariateTimeSeriesDataset(Dataset):
         # Get target (next timestep of target variable)
         target = self.data[idx + self.sequence_length, self.target_idx]
         
-        # Check if sequence is valid (no NaNs)
-        is_valid = not np.isnan(sequence).any() and not np.isnan(target)
+        # Check if sequence has a valid TARGET to predict
+        # We NO LONGER discard sequences with NaNs in their features.
+        # Features with NaNs are filled with 0.0 (normalized mean) below, 
+        # and the 'is_observed' channel tells the LSTM which points are real.
+        is_valid = not np.isnan(target)
         
-        # Replace NaNs with 0 for torch (will be masked out)
+        # Replace remaining NaNs in sequence with 0.0 for torch (mean of standard scaler)
         sequence = np.nan_to_num(sequence, nan=0.0)
         target = np.nan_to_num(target, nan=0.0)
         
@@ -330,6 +333,10 @@ class MultivariateLSTMImputer:
         self.std = None
         self.metrics = None
         
+        # Physical range for value clamping (set during fit)
+        self.observed_min = None
+        self.observed_max = None
+        
         logger.info(f"Initialized Multivariate LSTM Imputer")
         logger.info(f"  Target: {target_var}")
         logger.info(f"  Predictors: {predictor_vars}")
@@ -384,41 +391,89 @@ class MultivariateLSTMImputer:
     ) -> TrainingMetrics:
         logger.info(f"Training Multivariate LSTM (Attention+Scheuler) on {self.target_var}")
         
+        # CRITICAL: Work on a copy to prevent in-place mutation of caller's DataFrame
+        df = df.copy()
+        
+        # Store observed physical range for value clamping during prediction
+        valid_vals = df[self.target_var].dropna()
+        if len(valid_vals) > 0:
+            self.observed_min = valid_vals.min()
+            self.observed_max = valid_vals.max()
+            logger.info(f"Observed range for {self.target_var}: [{self.observed_min:.2f}, {self.observed_max:.2f}]")
+        
         # =====================================================================
-        # 1. STL RESIDUAL EXTRACTION
+        # 1. TEMPORAL SPLIT (MUST HAPPEN BEFORE ANY DECOMPOSITION)
         # =====================================================================
-        try:
-            from statsmodels.tsa.seasonal import STL
-            logger.info("  -> Extracting STL components for pure residual learning...")
-            # CLIMATOLOGY FALLBACK (Prevents long gaps from becoming straight lines)
-            group_cols = [df[self.target_var].index.dayofyear, df[self.target_var].index.hour]
-            climatology = df[self.target_var].groupby(group_cols).transform('mean')
-            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
+        # Clear GPU memory
+        if 'cuda' in str(self.device):
+            torch.cuda.empty_cache()
             
-            base_signal = df[self.target_var].fillna(climatology)
+        train_df, val_df, test_df = self._temporal_split(df)
+        
+        # =====================================================================
+        # 2. CLIMATOLOGY RESIDUAL EXTRACTION (NO LEAKAGE)
+        # =====================================================================
+        logger.info("  -> Extracting Climatology components for pure residual learning...")
+        # CRITICAL BUG FIX (Data Leakage): Calculate climatology ONLY on train_df
+        # We group by day of year and hour
+        
+        # Compute purely on train
+        train_climatology_profile = train_df[self.target_var].groupby([train_df.index.dayofyear, train_df.index.hour]).mean()
+        
+        def map_climatology(data_df):
+            # Create a MultiIndex of (dayofyear, hour) for the target dataframe
+            idx_multi = pd.MultiIndex.from_arrays([data_df.index.dayofyear, data_df.index.hour])
             
-            stl = STL(base_signal, period=48, robust=True)
-            res = stl.fit()
+            # Map the profile values. If a specific (day, hour) is missing in the training profile,
+            # we fill it with the global mean of the training data.
+            global_mean = train_df[self.target_var].mean()
             
-            self.trend_comp = res.trend
-            self.seasonal_comp = res.seasonal
+            # Safely get values, falling back to global mean if index is missing in profile
+            mapped_values = []
+            for item in idx_multi:
+                if item in train_climatology_profile.index:
+                    mapped_values.append(train_climatology_profile.loc[item])
+                else:
+                    mapped_values.append(global_mean)
             
-            # The target for the LSTM is now exclusively the unpredictable anomaly
-            df[self.target_var] = df[self.target_var] - self.trend_comp - self.seasonal_comp
-            
-            self.is_residual_mode = True
-        except Exception as e:
-            logger.warning(f"  -> STL Extraction failed: {e}. Falling back to climatology anomaly.")
-            group_cols = [df[self.target_var].index.dayofyear, df[self.target_var].index.hour]
-            climatology = df[self.target_var].groupby(group_cols).transform('mean')
-            climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
-            
-            base_signal = df[self.target_var].fillna(climatology)
-            y_residual = df[self.target_var] - base_signal
-            self.trend_comp = base_signal
-            self.seasonal_comp = pd.Series(0, index=df.index)
-            df[self.target_var] = y_residual # Update the target column in df
-            self.is_residual_mode = False
+            s_clim = pd.Series(mapped_values, index=data_df.index)
+            # Smooth out and fill any remaining gaps
+            s_clim = s_clim.interpolate(method='time', limit_direction='both').bfill().ffill()
+            return s_clim
+
+        # Map to all splits
+        train_baseline = map_climatology(train_df)
+        val_baseline = map_climatology(val_df)
+        test_baseline = map_climatology(test_df)
+        
+        # Calculate residuals
+        train_df[self.target_var] = train_df[self.target_var] - train_baseline
+        val_df[self.target_var] = val_df[self.target_var] - val_baseline
+        test_df[self.target_var] = test_df[self.target_var] - test_baseline
+        
+        self.is_residual_mode = True
+        
+        # =====================================================================
+        # 3. PRE-FILL EXOGENOUS VARIABLES & PREPARE DATASET MASKS
+        # =====================================================================
+        # CRITICAL BUG FIX (NaN Dataset Destruction & Inference Mismatch):
+        # We must time-interpolate the sequences before extracting windows.
+        # This matches what happens during `predict()` when it hits a gap.
+        
+        for var in self.predictor_vars:
+            if var != self.target_var:
+                train_df[var] = train_df[var].interpolate(method='time').bfill().ffill()
+                val_df[var] = val_df[var].interpolate(method='time').bfill().ffill()
+                test_df[var] = test_df[var].interpolate(method='time').bfill().ffill()
+            else:
+                # We also interpolate the target variable for the HISTORICAL sequence lags!
+                # But we must be careful: the Dataset class expects ground truth for the target.
+                # Since we interpolating here, the target at t+1 would be fake. 
+                # This is solved because we now use `is_observed` mask.
+                # We will interpolate it here. The true missing targets are already marked `notna()` in mask.
+                train_df[var] = train_df[var].interpolate(method='time').bfill().ffill()
+                val_df[var] = val_df[var].interpolate(method='time').bfill().ffill()
+                test_df[var] = test_df[var].interpolate(method='time').bfill().ffill()
             
         # =====================================================================
         
@@ -723,13 +778,9 @@ class MultivariateLSTMImputer:
                 # Extract sequence (batch=1, seq_length, n_features)
                 sequence = data_np[idx - self.sequence_length:idx].copy()
                 
-                # Check for remaining NaNs in the target variable within the sequence
-                # (e.g. from the start of the file) and fill them to prevent NaN propagation
-                nan_mask = np.isnan(sequence[:, target_idx])
-                if nan_mask.any():
-                    # Forward-fill and backward-fill within the sequence simply
-                    s = pd.Series(sequence[:, target_idx])
-                    sequence[:, target_idx] = s.ffill().bfill().fillna(0.0).values
+                # Check for remaining NaNs (should be very rare now due to linear fallback)
+                # Just replace with 0.0 (normalized mean) safely for torch
+                sequence = np.nan_to_num(sequence, nan=0.0)
                 
                 x = torch.FloatTensor(sequence).unsqueeze(0).to(self.device)
                 
@@ -740,8 +791,8 @@ class MultivariateLSTMImputer:
                 pred_norm = np.clip(pred_norm, -5.0, 5.0)
                 
                 # EXPOSURE BIAS MITIGATION: Dynamic Residual Decay
-                # At 144 steps (3 days), the autoregressive residual is mostly noise.
-                decay_factor = np.exp(-consecutive_gap_idx / 144.0)
+                # At 576 steps (12 days), the autoregressive residual is mostly noise.
+                decay_factor = np.exp(-consecutive_gap_idx / 576.0)
                 pred_norm = pred_norm * decay_factor
                 
                 # Denormalize residual
@@ -761,6 +812,14 @@ class MultivariateLSTMImputer:
                 
                 # Write true value into resultant prediction dataframe
                 result.iloc[idx] = pred_absolute
+                
+                # VALUE CLAMPING: Prevent physically impossible predictions
+                if self.observed_min is not None and self.observed_max is not None:
+                    obs_range = self.observed_max - self.observed_min
+                    pred_absolute = np.clip(pred_absolute,
+                                            self.observed_min - 0.1 * obs_range,
+                                            self.observed_max + 0.1 * obs_range)
+                    result.iloc[idx] = pred_absolute
                 
                 # Insert predicted absolute value back into feature array (normalized!)
                 # This ensures the autoregressive feedback loop uses the correct reconstructed history

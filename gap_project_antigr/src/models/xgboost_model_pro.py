@@ -63,6 +63,10 @@ class XGBoostProImputer:
         self.feature_columns = None
         self.target_var = None
         
+        # Physical range for value clamping (set during fit)
+        self.observed_min = None
+        self.observed_max = None
+        
     def _create_feature_engineer(self):
         """Create a fresh feature engineer to prevent state cross-contamination."""
         if not self.feature_config: 
@@ -92,6 +96,13 @@ class XGBoostProImputer:
         Train the XGBoost model(s).
         """
         self.target_var = target_var
+        
+        # Store observed physical range for value clamping during prediction
+        valid_vals = df[target_var].dropna()
+        if len(valid_vals) > 0:
+            self.observed_min = valid_vals.min()
+            self.observed_max = valid_vals.max()
+            logger.info(f"Observed range for {target_var}: [{self.observed_min:.2f}, {self.observed_max:.2f}]")
         
         # Train Forward Model
         logger.info(f"Training Forward Model for {target_var}...")
@@ -154,15 +165,17 @@ class XGBoostProImputer:
             is_residual_mode = False
         
         # 4. FEATURE ENGINEERING
-        # CRITICAL BUG FIX (Empty Dataset): Features must be generated on a continuously interpolated
-        # sequence so that lag variables don't propagate NaNs and wipe out all `df.dropna()` training rows.
-        group_cols = [df_masked.index.dayofyear, df_masked.index.hour]
-        climatology_fallback = df_masked[target_var].groupby(group_cols).transform('mean')
-        climatology_fallback = climatology_fallback.interpolate(method='time', limit_direction='both').bfill().ffill()
-        s_interp = df_masked[target_var].fillna(climatology_fallback)
-        
+        # CRITICAL BUG FIX (Empty Dataset): Features must be generated on a sequence where the
+        # TARGET variable retains its NaNs. If we pre-fill the target with climatology before lag generation,
+        # the model learns to simply map climatology to the original signal, destroying autoregressive learning.
         df_for_features = df_masked.copy()
-        df_for_features[target_var] = df_masked[target_var].fillna(s_interp)
+        
+        # We only interpolate MULTIVARIATE predictor variables so that a single missing exogenous 
+        # sensor doesn't drop the entire training row. The target MUST remain with NaNs.
+        if multivariate_vars:
+            for var in multivariate_vars:
+                if var in df_for_features.columns and var != target_var:
+                    df_for_features[var] = df_for_features[var].interpolate(method='time').bfill().ffill()
         
         df_features = feat_eng.fit_transform(
             df_for_features, target_variable=target_var, multivariate_vars=multivariate_vars
@@ -172,7 +185,7 @@ class XGBoostProImputer:
             for var in multivariate_vars:
                 if var in df.columns and var != target_var:
                     if var not in df_features.columns:
-                        df_features[var] = df[var]
+                        df_features[var] = df_for_features[var]
         
         # ROBUSTNESS: Add is_observed binary mask
         df_features[f'{target_var}_is_observed'] = df_masked[target_var].notna().astype(float)
@@ -261,8 +274,8 @@ class XGBoostProImputer:
         try:
             trend_comp, seasonal_comp = self.stl_components[self._current_direction]
             base_reconstruction = trend_comp + seasonal_comp
-            # If df is reversed (backward pass), we must reverse the saved components
-            if len(base_reconstruction) == len(df) and df.index[0] > df.index[-1]:
+            # Use _current_direction to determine if we need to reverse STL components
+            if self._current_direction == 'bwd':
                 base_series = base_reconstruction.iloc[::-1]
             else:
                 base_series = base_reconstruction
@@ -348,20 +361,18 @@ class XGBoostProImputer:
                     val = y_values[pos - lag] if pos >= lag else np.nan
                     all_feats.at[idx, col] = val
             
-            # Update Rolling Stats 
-            if windows and stats:
+            # CRITICAL FIX (Rolling Stats Error Propagation):
+            # Do NOT update rolling stats dynamically within the gap using our own predictions.
+            # If a prediction has a tiny error, the rolling mean magnifies it infinitely.
+            # Instead, we just keep the rolling stats frozen to their value at the START of the gap.
+            # The XGBoost model naturally handles this missing dynamic information better than pure noise.
+            if windows and stats and pos > 0:
                 for window in windows:
-                    start_w = max(0, pos - window + 1)
-                    window_data = y_values[start_w : pos + 1]
                     for stat in stats:
                         col = f"{target}_roll_{stat}_{window}"
                         if col in self.feature_columns:
-                            if stat == 'mean': val = np.nanmean(window_data) if not np.all(np.isnan(window_data)) else np.nan
-                            elif stat == 'std': val = np.nanstd(window_data) if not np.all(np.isnan(window_data)) else np.nan
-                            elif stat == 'min': val = np.nanmin(window_data) if not np.all(np.isnan(window_data)) else np.nan
-                            elif stat == 'max': val = np.nanmax(window_data) if not np.all(np.isnan(window_data)) else np.nan
-                            else: val = np.nan
-                            all_feats.at[idx, col] = val
+                            # Keep the value from the previous step (freezing it)
+                            all_feats.at[idx, col] = all_feats.iloc[pos-1].get(col, np.nan)
             
             # Update Time Since Observation
             col_ts = f"{target}_time_since_obs"
@@ -390,15 +401,27 @@ class XGBoostProImputer:
                 pred = model.predict(X_row)[0]
             
             # EXPOSURE BIAS MITIGATION: Dynamic Residual Decay
-            # At 144 steps (3 days), the autoregressive residual is mostly noise.
+            # At 576 steps (12 days), the autoregressive residual is mostly noise.
             # We decay it towards 0, gracefully merging into the pure STL baseline signal.
-            decay_factor = np.exp(-consecutive_gap_idx / 144.0)
+            # CRITICAL FIX: Grace period of 48 steps (24 hours) where we trust the model 100%.
+            if consecutive_gap_idx <= 48:
+                decay_factor = 1.0
+            else:
+                decay_factor = np.exp(-(consecutive_gap_idx - 48) / 576.0)
+                
             pred = pred * decay_factor
             
             if is_residual_mode:
                 pred_absolute = base_vals[pos] + pred
             else:
                 pred_absolute = pred
+            
+            # VALUE CLAMPING: Prevent physically impossible predictions
+            if self.observed_min is not None and self.observed_max is not None:
+                obs_range = self.observed_max - self.observed_min
+                pred_absolute = np.clip(pred_absolute, 
+                                        self.observed_min - 0.1 * obs_range,
+                                        self.observed_max + 0.1 * obs_range)
             
             y_values[pos] = pred_absolute
             result.at[idx] = pred_absolute
@@ -415,7 +438,9 @@ class XGBoostProImputer:
             'target_var': self.target_var,
             'is_residual_fwd': self.is_residual_fwd,
             'is_residual_bwd': self.is_residual_bwd,
-            'stl_components': self.stl_components
+            'stl_components': self.stl_components,
+            'observed_min': self.observed_min,
+            'observed_max': self.observed_max,
         }, path)
 
     @classmethod
@@ -438,4 +463,6 @@ class XGBoostProImputer:
         imputer.is_residual_fwd = data.get('is_residual_fwd', False)
         imputer.is_residual_bwd = data.get('is_residual_bwd', False)
         imputer.stl_components = data.get('stl_components', {})
+        imputer.observed_min = data.get('observed_min', None)
+        imputer.observed_max = data.get('observed_max', None)
         return imputer

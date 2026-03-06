@@ -94,6 +94,10 @@ class VARMAImputer:
         self.mean = None
         self.std = None
         
+        # Physical range for value clamping (set during fit)
+        self.observed_min = None
+        self.observed_max = None
+        
     def fit(self, df: pd.DataFrame, target_var: str, predictor_vars: List[str]):
         # Clear GPU memory before training to prevent CUDA errors
         if 'cuda' in str(self.device):
@@ -103,6 +107,13 @@ class VARMAImputer:
         # Select columns
         cols = [target_var] + predictor_vars
         data = df[cols].values
+        
+        # Store observed physical range for value clamping during prediction
+        valid_target = df[target_var].dropna()
+        if len(valid_target) > 0:
+            self.observed_min = valid_target.min()
+            self.observed_max = valid_target.max()
+            logger.info(f"VARMA observed range for {target_var}: [{self.observed_min:.2f}, {self.observed_max:.2f}]")
         
         # Differencing for Stationarity:
         # Train on delta(t) = x(t) - x(t-1)
@@ -181,10 +192,14 @@ class VARMAImputer:
         cols = [target_var] + predictor_vars
         data_orig = df[cols].values
         
-        # We need to work with differences.
-        # But for prediction, we need valid context x[t-p]...x[t].
-        # So we first fill the original data linearly to get a baseline for context.
-        df_filled_baseline = df[cols].interpolate(limit_direction='both') # Baseline fill for context
+        # CLIMATOLOGY-AWARE FILLING instead of linear interpolation
+        # Linear interpolation creates constant diffs which bias VARMA predictions
+        df_filled_baseline = df[cols].copy()
+        for col in cols:
+            group_cols = [df.index.dayofyear, df.index.hour]
+            climatology = df[col].groupby(group_cols).transform('mean')
+            df_filled_baseline[col] = df[col].fillna(climatology)
+        df_filled_baseline = df_filled_baseline.interpolate(method='time', limit_direction='both').bfill().ffill()
         data_vals = df_filled_baseline.values
         
         # Calculate differences for the WHOLE filled series to get context
@@ -240,6 +255,15 @@ class VARMAImputer:
                     # Use the *previously predicted* value if it was a gap, or actual if available
                     prev_val = pred_fwd[t-1, target_idx] 
                     pred_fwd[t, target_idx] = prev_val + pred_diff_real
+                    
+                    # VALUE CLAMPING: Prevent physically impossible predictions
+                    if self.observed_min is not None and self.observed_max is not None:
+                        obs_range = self.observed_max - self.observed_min
+                        pred_fwd[t, target_idx] = np.clip(
+                            pred_fwd[t, target_idx],
+                            self.observed_min - 0.1 * obs_range,
+                            self.observed_max + 0.1 * obs_range
+                        )
 
 
         # 2. Backward Pass
@@ -289,6 +313,15 @@ class VARMAImputer:
                     
                     next_val = pred_bwd[t+1, target_idx]
                     pred_bwd[t, target_idx] = next_val - pred_diff_real
+                    
+                    # VALUE CLAMPING: Prevent physically impossible predictions
+                    if self.observed_min is not None and self.observed_max is not None:
+                        obs_range = self.observed_max - self.observed_min
+                        pred_bwd[t, target_idx] = np.clip(
+                            pred_bwd[t, target_idx],
+                            self.observed_min - 0.1 * obs_range,
+                            self.observed_max + 0.1 * obs_range
+                        )
 
         # 3. Merge
         final_vals = data_orig[:, target_idx].copy()

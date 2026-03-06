@@ -157,6 +157,7 @@ GAP_CATEGORIES = {
 }
 
 
+
 # =============================================================================
 # HARDWARE CONFIGURATION (ADJUST FOR YOUR MACHINE)
 # =============================================================================
@@ -1645,33 +1646,16 @@ def interpolate_bilstm(df: pd.DataFrame, target_var: str,
         console.print(f"    [dim]│ Predictors ({len(predictor_vars)}): {', '.join(predictor_vars[:3])}{'...' if len(predictor_vars) > 3 else ''}[/dim]")
         
         # =====================================================================
-        # STEP 2: Compute Anomaly for target (residual learning)
+        # STEP 2: Prepare multivariate DataFrame (RAW values)
         # =====================================================================
-        console.print(f"    [dim]│ Computing climatological anomaly for {target_var}...[/dim]")
+        # NOTE: The model handles STL residual learning INTERNALLY.
+        # Do NOT pre-compute anomaly here — that caused double subtraction.
         
         original_series = df[target_var].copy()
-        # Compute climatology directly ensuring it's available for gaps
-        group_cols = {
-            'dayofyear': df.index.dayofyear,
-            'hour': df.index.hour
-        }
-        group_temp = pd.DataFrame(group_cols, index=df.index)
-        group_temp[target_var] = original_series
         
-        # Calculate climatology (mean per day/hour) - this fills gaps with historical means
-        climatology = group_temp.groupby(list(group_cols.keys()))[target_var].transform('mean')
-        
-        # Compute anomaly
-        anomaly_series = original_series - climatology
-
-        
-        console.print(f"    [dim]│ ✓ Anomaly computed[/dim]")
-        
-        # =====================================================================
-        # STEP 3: Prepare multivariate DataFrame
-        # =====================================================================
         df_multi = df[predictor_vars].copy()
-        df_multi[target_var] = anomaly_series  # Use anomaly for target
+        # Pass RAW values — the model will compute STL decomposition internally
+        df_multi[target_var] = original_series
         
         # Check for sufficient data
         valid_count = df_multi.notna().all(axis=1).sum()
@@ -1685,7 +1669,7 @@ def interpolate_bilstm(df: pd.DataFrame, target_var: str,
         console.print(f"    [dim]│ Complete records: {valid_count:,} / {len(df_multi):,}[/dim]")
         
         # =====================================================================
-        # STEP 4: Train Multivariate Bi-LSTM
+        # STEP 3: Train Multivariate Bi-LSTM
         # =====================================================================
         console.print(f"    [cyan]│ Training Multivariate Bi-LSTM...[/cyan]")
         
@@ -1706,125 +1690,41 @@ def interpolate_bilstm(df: pd.DataFrame, target_var: str,
             device=device,
         )
         
-        # Train model
+        # Train model (model handles STL residual learning internally)
         metrics = imputer.fit(df_multi, verbose=False)
         
         console.print(f"    [dim]│ ✓ Training complete (stopped at epoch {metrics.best_epoch + 1})[/dim]")
         console.print(f"    [dim]│   Val loss: {metrics.best_val_loss:.6f}, Test loss: {metrics.test_loss:.6f}[/dim]")
         
         # =====================================================================
-        # STEP 5: Predict on full series
+        # STEP 4: Predict on full series
         # =====================================================================
-        console.print(f"    [dim]│ Predicting gaps in anomaly space...[/dim]")
+        console.print(f"    [dim]│ Predicting gaps...[/dim]")
         
-        anomaly_filled = imputer.predict(df_multi)
+        # Model returns ABSOLUTE values (handles STL reconstruction internally)
+        predicted_filled = imputer.predict(df_multi)
         
         # DEBUG: Log prediction statistics
-        log.info(f"    DEBUG: anomaly_filled - Total: {len(anomaly_filled)}, NaN: {anomaly_filled.isna().sum()}, Valid: {anomaly_filled.notna().sum()}")
-        if anomaly_filled.notna().any():
-            log.info(f"    DEBUG: anomaly_filled range: [{anomaly_filled.min():.4f}, {anomaly_filled.max():.4f}]")
-        
-        # NaN protection
-        nan_count_pred = anomaly_filled.isna().sum()
-        nan_count_orig = anomaly_series.isna().sum()
-        
-        log.info(f"    DEBUG: NaN count - Original anomaly: {nan_count_orig}, Predicted: {nan_count_pred}")
-        
-        if nan_count_pred > nan_count_orig:
-            log.warning(f"    Prediction introduced {nan_count_pred - nan_count_orig} new NaNs, filling with original")
-            # Keep original NaNs, don't add new ones
-            anomaly_filled = anomaly_filled.fillna(anomaly_series)
+        log.info(f"    DEBUG: predicted_filled - Total: {len(predicted_filled)}, NaN: {predicted_filled.isna().sum()}, Valid: {predicted_filled.notna().sum()}")
+        if predicted_filled.notna().any():
+            log.info(f"    DEBUG: predicted_filled range: [{predicted_filled.min():.4f}, {predicted_filled.max():.4f}]")
         
         # =====================================================================
-        # STEP 6: Reconstruct full signal - SMART GAP FILLING
+        # STEP 5: Reconstruct — direct gap filling (no blending ramp)
         # =====================================================================
-        console.print(f"    [dim]│ Reconstructing full signal (targeted gap filling)...[/dim]")
+        console.print(f"    [dim]│ Filling gaps with model predictions...[/dim]")
         
         # Start with original series
         result_series = original_series.copy()
         
         # Only fill where original was NaN AND model made a prediction
-        gaps_to_fill = original_series.isna() & anomaly_filled.notna()
+        gaps_to_fill = original_series.isna() & predicted_filled.notna()
         
         if gaps_to_fill.any():
-            # Initial Reconstruction: anomaly + climatology
-            full_reconstruction = anomaly_filled + climatology
-            
-            # Apply BLENDING / BIAS CORRECTION
-            # Iterate through contiguous gaps and correct them individually
-            # We need to find the start and end of each gap block
-            
-            # 1. Identify gap groups in 'gaps_to_fill' mask
-            # True=Gap, False=Observed
-            gap_mask = gaps_to_fill.copy()
-            gap_groups = (gap_mask != gap_mask.shift()).cumsum()
-            gap_groups = gap_groups[gap_mask] # Keep only gap groups
-            
-            # 2. Iterate through each unique gap block
-            for group_id in gap_groups.unique():
-                try:
-                    # Get indices for this gap block
-                    gap_indices = gap_groups[gap_groups == group_id].index
-                    
-                    if len(gap_indices) == 0: continue
-                    
-                    gap_start_idx = df.index.get_loc(gap_indices[0])
-                    gap_end_idx = df.index.get_loc(gap_indices[-1])
-                    
-                    # Ensure we have context (previous/next valid points)
-                    # Note: We need to use integer location to easily get -1 and +1
-                    # But we need timestamp for value lookup
-                    
-                    # Points just outside the gap
-                    prev_valid_idx = gap_start_idx - 1
-                    next_valid_idx = gap_end_idx + 1
-                    
-                    if prev_valid_idx < 0 or next_valid_idx >= len(df):
-                        # Cannot blend at very beginning or very end of dataset
-                        continue
-                        
-                    time_prev = df.index[prev_valid_idx]
-                    time_next = df.index[next_valid_idx]
-                    
-                    # Get True Values (Original Series)
-                    val_prev = original_series.iloc[prev_valid_idx]
-                    val_next = original_series.iloc[next_valid_idx]
-                    
-                    if pd.isna(val_prev) or pd.isna(val_next):
-                        # If neighbors are also NaN (shouldn't happen if we group correctly), skip correction
-                        continue
-                        
-                    # Get Predicted Values (Reconstructed) at the gap edges
-                    pred_series_slice = full_reconstruction.iloc[gap_start_idx : gap_end_idx + 1] # slice includes end in iloc? No, Python standard slice
-                    # Wait, standard slice logic: [start:end] excludes end. 
-                    # gap_indices covers the gap.
-                    # slice needs to be gap_start_idx : gap_end_idx + 1
-                    
-                    pred_first = full_reconstruction.iloc[gap_start_idx]
-                    pred_last = full_reconstruction.iloc[gap_end_idx]
-                    
-                    # Calculate BIAS (Offset)
-                    bias_start = val_prev - pred_first
-                    bias_end = val_next - pred_last
-                    
-                    # Create CORRECTION RAMP
-                    n_gap = len(gap_indices)
-                    correction = np.linspace(bias_start, bias_end, n_gap)
-                    
-                    # Apply correction to the full reconstruction for this segment
-                    # Use .loc with specific timestamps to be safe
-                    full_reconstruction.loc[gap_indices] += correction
-                    
-                except Exception as e:
-                    # If correction fails for a specific gap, just ignore and leave raw prediction
-                    # log.warning(f"Blending failed for gap group {group_id}: {e}")
-                    pass
-            
-            # Finally assign the (now corrected) values to the result
-            result_series.loc[gaps_to_fill] = full_reconstruction.loc[gaps_to_fill]
+            result_series.loc[gaps_to_fill] = predicted_filled.loc[gaps_to_fill]
             
             n_filled = gaps_to_fill.sum()
-            console.print(f"    [green]│ ✓ Filled {n_filled:,} gap points (with Blending)[/green]")
+            console.print(f"    [green]│ ✓ Filled {n_filled:,} gap points[/green]")
         else:
             console.print(f"    [yellow]│ ⚠ No gaps filled (model predictions were all NaN)[/yellow]")
         

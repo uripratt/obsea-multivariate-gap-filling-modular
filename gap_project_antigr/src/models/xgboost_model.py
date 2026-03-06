@@ -71,6 +71,10 @@ class XGBoostImputer:
         self.feature_columns = None
         self.target_var = None
         
+        # Physical range for value clamping (set during fit)
+        self.observed_min = None
+        self.observed_max = None
+        
     def _create_feature_engineer(self):
         """Create a fresh feature engineer to prevent state cross-contamination."""
         if not self.feature_config: # Use default simple config if feature_config is empty or None
@@ -101,6 +105,13 @@ class XGBoostImputer:
         Train the XGBoost model(s).
         """
         self.target_var = target_var
+        
+        # Store observed physical range for value clamping during prediction
+        valid_vals = df[target_var].dropna()
+        if len(valid_vals) > 0:
+            self.observed_min = valid_vals.min()
+            self.observed_max = valid_vals.max()
+            logger.info(f"Observed range for {target_var}: [{self.observed_min:.2f}, {self.observed_max:.2f}]")
         
         # Train Forward Model
         logger.info(f"Training Forward Model for {target_var}...")
@@ -136,16 +147,18 @@ class XGBoostImputer:
         # y_residual = df[target_var] - linear_base
         
         # 4. FEATURE ENGINEERING
-        # CRITICAL BUG FIX (Empty Dataset): Features must be generated on a continuously interpolated
-        # sequence so that lag variables don't propagate NaNs and wipe out all `df.dropna()` training rows.
-        group_cols = [df_masked.index.dayofyear, df_masked.index.hour]
-        climatology_fallback = df_masked[target_var].groupby(group_cols).transform('mean')
-        climatology_fallback = climatology_fallback.interpolate(method='time', limit_direction='both').bfill().ffill()
-        s_interp = df_masked[target_var].fillna(climatology_fallback)
-        
+        # CRITICAL BUG FIX (Empty Dataset): Features must be generated on a sequence where the
+        # TARGET variable retains its NaNs. If we pre-fill the target with climatology before lag generation,
+        # the model learns to simply map climatology to the original signal, destroying autoregressive learning.
         df_for_features = df_masked.copy()
-        df_for_features[target_var] = df_masked[target_var].fillna(s_interp)
         
+        # We only interpolate MULTIVARIATE predictor variables so that a single missing exogenous 
+        # sensor doesn't drop the entire training row. The target MUST remain with NaNs.
+        if multivariate_vars:
+            for var in multivariate_vars:
+                if var in df_for_features.columns and var != target_var:
+                    df_for_features[var] = df_for_features[var].interpolate(method='time').bfill().ffill()
+
         df_features = feat_eng.fit_transform(
             df_for_features, target_variable=target_var, multivariate_vars=multivariate_vars
         )
@@ -154,7 +167,7 @@ class XGBoostImputer:
             for var in multivariate_vars:
                 if var in df.columns and var != target_var:
                     if var not in df_features.columns:
-                        df_features[var] = df[var]
+                        df_features[var] = df_for_features[var]
         
         # ROBUSTNESS: Add is_observed binary mask
         df_features[f'{target_var}_is_observed'] = df_masked[target_var].notna().astype(float)
@@ -244,9 +257,12 @@ class XGBoostImputer:
         # Pre-allocate features dataframe
         df_tmp = df.copy()
         
-        # Linear base for fallback (Removed, not used for residual prediction)
-        s_interp = df[target].interpolate(method='time', limit_direction='both').bfill().ffill()
-        df_tmp[target] = df[target].fillna(s_interp) # Fill target with interpolated values for feature generation
+        # CLIMATOLOGY BASELINE instead of linear interpolation
+        # Uses mean per (dayofyear, hour) — physically realistic baseline
+        group_cols = [df.index.dayofyear, df.index.hour]
+        climatology = df[target].groupby(group_cols).transform('mean')
+        s_interp = df[target].fillna(climatology).interpolate(method='time', limit_direction='both').bfill().ffill()
+        df_tmp[target] = df[target].fillna(s_interp) # Fill target with climatology for feature generation
         
         # CRITICAL: Interpolate multivariate variables to prevent NaN propagation
         if multivariate_vars:
@@ -369,9 +385,21 @@ class XGBoostImputer:
             # EXPOSURE BIAS MITIGATION: Dynamic Baseline Reversion
             # Deep into a gap, the autoregressive predictability drops to noise.
             # We decay the model's pure prediction towards the robust Climatology baseline.
-            # lambda = 1/288 (144 = 3 days, 288 = 6 days. At 6 days depth, e^-1 = 36% weight to XGBoost)
-            decay_factor = np.exp(-consecutive_gap_idx / 288.0)
+            # CRITICAL FIX: Only start decaying after 48 steps (24 hours). Before that, trust XGBoost 100%.
+            if consecutive_gap_idx <= 48:
+                decay_factor = 1.0
+            else:
+                # lambda = 1/576 (576 steps = 12 days. At 12 days depth, e^-1 = 36% weight to XGBoost)
+                decay_factor = np.exp(-(consecutive_gap_idx - 48) / 576.0)
+                
             pred_absolute = (pred_absolute * decay_factor) + (base_vals[pos] * (1.0 - decay_factor))
+            
+            # VALUE CLAMPING: Prevent physically impossible predictions
+            if self.observed_min is not None and self.observed_max is not None:
+                obs_range = self.observed_max - self.observed_min
+                pred_absolute = np.clip(pred_absolute, 
+                                        self.observed_min - 0.1 * obs_range,
+                                        self.observed_max + 0.1 * obs_range)
             
             # 5. Commit to working array for next recursions
             y_values[pos] = pred_absolute
@@ -388,7 +416,9 @@ class XGBoostImputer:
             'bidirectional': self.bidirectional,
             'target_var': self.target_var,
             'is_residual_fwd': self.is_residual_fwd,
-            'is_residual_bwd': self.is_residual_bwd
+            'is_residual_bwd': self.is_residual_bwd,
+            'observed_min': self.observed_min,
+            'observed_max': self.observed_max,
         }, path)
 
     @classmethod
@@ -411,4 +441,6 @@ class XGBoostImputer:
         imputer.target_var = data['target_var']
         imputer.is_residual_fwd = data.get('is_residual_fwd', False)
         imputer.is_residual_bwd = data.get('is_residual_bwd', False)
+        imputer.observed_min = data.get('observed_min', None)
+        imputer.observed_max = data.get('observed_max', None)
         return imputer

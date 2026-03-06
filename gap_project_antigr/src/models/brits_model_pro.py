@@ -1,6 +1,8 @@
 """
 BRITS (Bidirectional Recurrent Imputation for Time Series) wrapper using PyPOTS (PRO Version).
 Enhanced capacity, deeper RNN, larger scale training.
+
+Pipeline B: NaN-preserving preprocessing.
 """
 
 import numpy as np
@@ -9,14 +11,17 @@ import torch
 from pypots.imputation import BRITS
 import logging
 from typing import List, Optional
-from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
 class BRITSProImputer:
     """
     PRO Wrapper for BRITS imputation model.
-    Increases rnn_hidden_size, epochs, learning_rate variations.
+    Increases rnn_hidden_size, epochs, and window overlap.
+    
+    Pipeline B: NaN-preserving preprocessing.
+    - Scales data using observed-only statistics
+    - Preserves NaN positions through scaling and windowing
     """
     def __init__(self, n_steps: int, n_features: int, rnn_hidden_size: int = 512, epochs: int = 200, batch_size: int = 64):
         logger.info(f"Initializing BRITS PRO with hidden_size={rnn_hidden_size}, epochs={epochs}")
@@ -31,46 +36,67 @@ class BRITSProImputer:
         )
         self.n_steps = n_steps
         self.feature_columns = None
-        self.scaler = StandardScaler()
+        
+        # NaN-aware scaler parameters (computed during fit)
+        self.scaler_mean_ = None
+        self.scaler_std_ = None
+
+    def _fit_scaler(self, data: np.ndarray):
+        """Fit scaler on observed (non-NaN) values only."""
+        self.scaler_mean_ = np.nanmean(data, axis=0)
+        self.scaler_std_ = np.nanstd(data, axis=0)
+        self.scaler_std_[self.scaler_std_ == 0] = 1.0
+
+    def _transform_preserving_nan(self, data: np.ndarray) -> np.ndarray:
+        """Scale data while preserving NaN positions."""
+        return (data - self.scaler_mean_) / self.scaler_std_
+
+    def _inverse_transform(self, data_scaled: np.ndarray) -> np.ndarray:
+        """Inverse scale."""
+        return data_scaled * self.scaler_std_ + self.scaler_mean_
 
     def fit(self, df: pd.DataFrame, target_var: str, multivariate_vars: Optional[List[str]] = None):
-        """Fit BRITS on time series data."""
+        """Fit BRITS on time series data — NaN-preserving Pipeline B."""
         self.feature_columns = [target_var] + (multivariate_vars if multivariate_vars else [])
-        data = df[self.feature_columns].copy()
+        self.target_var = target_var
         
-        # We assume standardization is handled outside, but usually neural nets need it.
-        # Ensure we have double/float32
-        data = data.astype(np.float32).values
+        data = df[self.feature_columns].values.astype(np.float32)
         
-        # Scale data for Deep Learning model
-        data_scaled = self.scaler.fit_transform(data)
+        # NaN-aware scaling (fit on observed values only, preserve NaN)
+        self._fit_scaler(data)
+        data_scaled = self._transform_preserving_nan(data)
         
-        # Create windows
+        # Create windows — NaN positions are preserved
         X = self._create_windows(data_scaled)
+        
+        nan_count = np.isnan(X).sum()
+        total_count = X.size
+        logger.info(f"  [BRITS PRO] Training windows: {X.shape}, NaN ratio: {nan_count/total_count:.2%}")
         
         dataset = {"X": X}
         self.model.fit(dataset)
         return self
 
     def predict(self, df: pd.DataFrame) -> pd.Series:
-        """Impute missing values."""
-        data = df[self.feature_columns].astype(np.float32).values
-        data_scaled = self.scaler.transform(data)
+        """Impute missing values — returns ABSOLUTE values."""
+        data = df[self.feature_columns].values.astype(np.float32)
+        data_scaled = self._transform_preserving_nan(data)
         X = self._create_windows(data_scaled)
         
         dataset = {"X": X}
         predictions = self.model.predict(dataset)
         
-        imputed_values_scaled = self._reconstruct_from_windows(predictions["imputation"], len(df))
-        imputed_values = self.scaler.inverse_transform(imputed_values_scaled)
+        imputed_scaled = self._reconstruct_from_windows(predictions["imputation"], len(df))
+        imputed = self._inverse_transform(imputed_scaled)
         
-        return pd.Series(imputed_values[:, 0], index=df.index)
+        return pd.Series(imputed[:, 0], index=df.index)
 
     def _create_windows(self, data):
-        """Helper to create windows for RNN."""
+        """Create overlapping windows for RNN — PRO uses 1/4 step for more overlap."""
         n_samples = len(data)
         windows = []
-        for i in range(0, n_samples - self.n_steps + 1, self.n_steps // 4): # More overlap in PRO version
+        step = self.n_steps // 4  # More overlap in PRO version
+        for i in range(0, n_samples - self.n_steps + 1, step):
             windows.append(data[i:i+self.n_steps])
         
         # If no windows were created (very short sequence)
@@ -85,11 +111,10 @@ class BRITSProImputer:
         reconstructed = np.zeros((original_len, windows.shape[2]))
         counts = np.zeros((original_len, 1))
         
-        step = self.n_steps // 4 # Matching the overlap from create_windows
+        step = self.n_steps // 4  # Matching the overlap from create_windows
         for i, win in enumerate(windows):
             start = i * step
             end = start + self.n_steps
-            # Limit end if we reached original_len (for the last window if padding was used)
             actual_end = min(end, original_len)
             win_len = actual_end - start
             

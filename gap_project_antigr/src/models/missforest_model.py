@@ -9,10 +9,11 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 import logging
 from typing import List, Optional
+from .stl_mixin import STLResidualMixin
 
 logger = logging.getLogger(__name__)
 
-class MissForestImputer:
+class MissForestImputer(STLResidualMixin):
     """
     MissForest-style imputer utilizing IterativeImputer with RandomForest.
     """
@@ -28,16 +29,20 @@ class MissForestImputer:
         self.feature_columns = None
 
     def fit(self, df: pd.DataFrame, target_var: str, multivariate_vars: Optional[List[str]] = None):
-        """Fit the imputer on valid data."""
+        """Fit the imputer on valid data using STL residual learning."""
         self.feature_columns = [target_var] + (multivariate_vars if multivariate_vars else [])
-        data = df[self.feature_columns].dropna()
+        
+        # EXTRACT STL ANOMALY
+        df_residuals = self.apply_stl_extraction(df.copy(), target_var, period=48)
+        
+        data = df_residuals[self.feature_columns].dropna()
         
         if data.empty:
             logger.warning("No complete data found for MissForest fit. Using all non-null target data.")
-            data = df[[target_var]].dropna()
+            data = df_residuals[[target_var]].dropna()
             self.feature_columns = [target_var]
 
-        self.imputer.fit(df[self.feature_columns])
+        self.imputer.fit(df_residuals[self.feature_columns])
         return self
 
     def predict(self, df: pd.DataFrame) -> pd.Series:
@@ -48,4 +53,9 @@ class MissForestImputer:
         data_imputed = self.imputer.transform(df[self.feature_columns])
         df_imputed = pd.DataFrame(data_imputed, columns=self.feature_columns, index=df.index)
         
-        return df_imputed[self.feature_columns[0]]
+        predicted_residuals = df_imputed[self.feature_columns[0]]
+        
+        # RECONSTRUCT ABSOLUTE
+        predicted_absolute = self.apply_stl_reconstruction(df, predicted_residuals)
+        
+        return predicted_absolute
