@@ -177,6 +177,11 @@ class XGBoostProImputer:
                 if var in df_for_features.columns and var != target_var:
                     df_for_features[var] = df_for_features[var].interpolate(method='time').bfill().ffill()
         
+        if is_residual_mode:
+            # CRITICAL FIX: To predict a residual target, the autoregressive features (lags, diffs)
+            # must also be derived from the RESIDUAL. Otherwise the model cannot generalize the anomaly.
+            df_for_features[target_var] = y_residual
+        
         df_features = feat_eng.fit_transform(
             df_for_features, target_variable=target_var, multivariate_vars=multivariate_vars
         )
@@ -286,13 +291,14 @@ class XGBoostProImputer:
             climatology = climatology.interpolate(method='time', limit_direction='both').bfill().ffill()
             base_series = df_tmp[target].fillna(climatology)
             
-        group_cols = [df_tmp.index.dayofyear, df_tmp.index.hour]
-        climatology_fallback = df_tmp[target].groupby(group_cols).transform('mean')
-        climatology_fallback = climatology_fallback.interpolate(method='time', limit_direction='both').bfill().ffill()
-        s_interp = df_tmp[target].fillna(climatology_fallback)
+        s_interp = df_tmp[target].fillna(base_series)
         
-        # When creating features, pretend gaps are filled with linear interpolation
-        df_tmp[target] = df[target].fillna(s_interp)
+        # When creating features, pretend gaps are filled with base_series
+        df_tmp[target] = s_interp
+        
+        if is_residual_mode:
+            # CRITICAL FIX: Generate features from the RESIDUAL space, mapping the fit() behavior
+            df_tmp[target] = df_tmp[target] - base_series
         
         if multivariate_vars:
              for col in multivariate_vars:
@@ -319,8 +325,13 @@ class XGBoostProImputer:
                  else:
                      all_feats[col] = 0.0
 
-        y_values = df[target].values.copy()
-        y_values[np.isnan(y_values)] = s_interp[np.isnan(y_values)]
+        # Working arrays for speed
+        if is_residual_mode:
+            y_values = df[target].values.copy() - base_vals
+            y_values[np.isnan(y_values)] = 0.0 # Initial guess for pure residual is exactly 0
+        else:
+            y_values = df[target].values.copy()
+            y_values[np.isnan(y_values)] = s_interp.values[np.isnan(y_values)]
         
         times = df.index
         
@@ -423,7 +434,8 @@ class XGBoostProImputer:
                                         self.observed_min - 0.1 * obs_range,
                                         self.observed_max + 0.1 * obs_range)
             
-            y_values[pos] = pred_absolute
+            # Store residual in y_values so next lag correctly pulls residual
+            y_values[pos] = pred_absolute - base_vals[pos] if is_residual_mode else pred_absolute
             result.at[idx] = pred_absolute
             
         return result

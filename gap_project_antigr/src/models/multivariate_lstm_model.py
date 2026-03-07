@@ -477,13 +477,6 @@ class MultivariateLSTMImputer:
             
         # =====================================================================
         
-        # Clear GPU memory
-        if 'cuda' in str(self.device):
-            torch.cuda.empty_cache()
-        
-        # Temporal split
-        train_df, val_df, test_df = self._temporal_split(df)
-        
         # Normalize data (fit on training set only!)
         train_norm = self._normalize(train_df[self.predictor_vars])
         val_norm = (val_df[self.predictor_vars] - self.mean) / self.std
