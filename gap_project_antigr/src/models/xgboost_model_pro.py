@@ -27,6 +27,7 @@ class XGBoostProImputer:
         xgb_params: Optional[Dict] = None,
         feature_config: Optional[Dict] = None,
         bidirectional: bool = True,
+        max_gap_size: int = None,
     ):
         """
         Initialize XGBoost Pro imputer.
@@ -59,6 +60,7 @@ class XGBoostProImputer:
         
         self.is_residual_fwd = False
         self.is_residual_bwd = False
+        self.max_gap_size = max_gap_size
         
         self.feature_columns = None
         self.target_var = None
@@ -69,6 +71,31 @@ class XGBoostProImputer:
         
     def _create_feature_engineer(self):
         """Create a fresh feature engineer to prevent state cross-contamination."""
+        
+        # -------------------------------------------------------------
+        # SCALE-AWARE FRAMEWORK V4.0
+        # Dynamic Lag scaling based on max geometric gap size
+        # -------------------------------------------------------------
+        if self.max_gap_size is not None and not self.feature_config:
+            if self.max_gap_size <= 12: # Micro/Short (6 hours)
+                dynamic_lags = [1, 2, 3, 4, 6, 12] # Dense local lags
+                logger.info(f"Scale-Aware Triggered: XGBoost Pro tracking MICRO lags for {self.max_gap_size} pts gap.")
+            elif self.max_gap_size <= 144: # Medium (3 days)
+                dynamic_lags = [1, 2, 4, 12, 24, 48, 72] # Mix of local and daily
+                logger.info(f"Scale-Aware Triggered: XGBoost Pro tracking MEDIUM lags for {self.max_gap_size} pts gap.")
+            else: # Long/Gigant
+                # Skip immediate lags because they are just predicted noise deep inside a massive hole
+                dynamic_lags = [24, 48, 96, 168, 336] # Deep daily and weekly structural lags
+                logger.info(f"Scale-Aware Triggered: XGBoost Pro tracking DEEP lags for {self.max_gap_size} pts gap.")
+                
+            return TemporalFeatureEngineer(
+                lags=dynamic_lags,
+                rolling_windows=[12, 48, 168],
+                rolling_stats=['mean', 'std', 'min', 'max'],
+                include_cyclical=True,
+                include_time_features=True  
+            )
+            
         if not self.feature_config: 
             return TemporalFeatureEngineer(
                 lags=[1, 2, 4, 12, 24, 48, 168], # Deep lags up to 1 week (30 min freq -> 168 is 3.5 days, 336 is 1 week. Let's use up to 1 week)

@@ -30,6 +30,7 @@ class XGBoostImputer:
         xgb_params: Optional[Dict] = None,
         feature_config: Optional[Dict] = None,
         bidirectional: bool = False,
+        max_gap_size: int = None,
     ):
         """
         Initialize XGBoost imputer.
@@ -60,6 +61,7 @@ class XGBoostImputer:
         self.xgb_params = {**default_xgb_params, **(xgb_params or {})}
         self.feature_config = feature_config or {}
         self.bidirectional = bidirectional
+        self.max_gap_size = max_gap_size
         
         # Models storage
         self.models = {} # 'fwd', 'bwd'
@@ -77,6 +79,31 @@ class XGBoostImputer:
         
     def _create_feature_engineer(self):
         """Create a fresh feature engineer to prevent state cross-contamination."""
+        
+        # -------------------------------------------------------------
+        # SCALE-AWARE FRAMEWORK V4.0
+        # Dynamic Lag scaling based on max geometric gap size
+        # -------------------------------------------------------------
+        if self.max_gap_size is not None and not self.feature_config:
+            if self.max_gap_size <= 12: # Micro/Short (6 hours)
+                dynamic_lags = [1, 2, 3, 4, 6, 12] # Dense local lags
+                logger.info(f"Scale-Aware Triggered: XGBoost tracking MICRO lags for {self.max_gap_size} pts gap.")
+            elif self.max_gap_size <= 144: # Medium (3 days)
+                dynamic_lags = [1, 2, 4, 12, 24, 48, 72] # Mix of local and daily
+                logger.info(f"Scale-Aware Triggered: XGBoost tracking MEDIUM lags for {self.max_gap_size} pts gap.")
+            else: # Long/Gigant
+                # Skip immediate lags because they are just predicted noise deep inside a massive hole
+                dynamic_lags = [24, 48, 96, 168, 336] # Deep daily and weekly structural lags
+                logger.info(f"Scale-Aware Triggered: XGBoost tracking DEEP lags for {self.max_gap_size} pts gap.")
+                
+            return TemporalFeatureEngineer(
+                lags=dynamic_lags,
+                rolling_windows=[],
+                rolling_stats=[],
+                include_cyclical=False,
+                include_time_features=True  
+            )
+            
         if not self.feature_config: # Use default simple config if feature_config is empty or None
             return TemporalFeatureEngineer(
                 lags=[1, 2, 4, 12, 24], # Simple lags based on the old script

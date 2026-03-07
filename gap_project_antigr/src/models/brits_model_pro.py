@@ -23,10 +23,21 @@ class BRITSProImputer:
     - Scales data using observed-only statistics
     - Preserves NaN positions through scaling and windowing
     """
-    def __init__(self, n_steps: int, n_features: int, rnn_hidden_size: int = 512, epochs: int = 200, batch_size: int = 64):
+    def __init__(self, n_steps: int, n_features: int, rnn_hidden_size: int = 512, epochs: int = 200, batch_size: int = 64, max_gap_size: Optional[int] = None):
         logger.info(f"Initializing BRITS PRO with hidden_size={rnn_hidden_size}, epochs={epochs}")
+        self.n_steps = n_steps
+        self.max_gap_size = max_gap_size
+        
+        # Dynamically adjust n_steps based on max_gap_size
+        if self.max_gap_size is not None:
+            if self.max_gap_size <= 12: # Micro/Short gaps
+                self.n_steps = max(self.n_steps, 24) # Ensure at least 2x gap size, or a reasonable minimum
+            elif self.max_gap_size > 12: # Long/Gigant gaps
+                self.n_steps = min(max(self.n_steps, self.max_gap_size * 2), 128) # Up to 128 max, at least 2x gap size
+            logger.info(f"  [BRITS PRO] Adjusted n_steps to {self.n_steps} based on max_gap_size={self.max_gap_size}")
+
         self.model = BRITS(
-            n_steps=n_steps,
+            n_steps=self.n_steps,
             n_features=n_features,
             rnn_hidden_size=rnn_hidden_size,
             epochs=epochs,
@@ -34,7 +45,6 @@ class BRITSProImputer:
             device='cuda' if torch.cuda.is_available() else 'cpu',
             saving_path="brits_pro_models"  
         )
-        self.n_steps = n_steps
         self.feature_columns = None
         
         # NaN-aware scaler parameters (computed during fit)

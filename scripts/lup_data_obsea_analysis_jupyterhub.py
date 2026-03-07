@@ -1569,7 +1569,8 @@ def interpolate_varma(df: pd.DataFrame, target_var: str,
 
 def interpolate_bilstm(df: pd.DataFrame, target_var: str,
                        config_bilstm: dict = None,
-                       predictor_vars: Optional[List[str]] = None) -> pd.Series:
+                       predictor_vars: Optional[List[str]] = None,
+                       max_gap_size: int = None) -> pd.Series:
     """
     Multivariate Bi-directional LSTM with train/val/test split and NaN protection.
     
@@ -1688,6 +1689,7 @@ def interpolate_bilstm(df: pd.DataFrame, target_var: str,
             train_ratio=config_bilstm.get('train_ratio', 0.6),
             val_ratio=config_bilstm.get('val_ratio', 0.2),
             device=device,
+            max_gap_size=max_gap_size
         )
         
         # Train model (model handles STL residual learning internally)
@@ -2218,7 +2220,7 @@ def simulate_gaps(series: pd.Series, n_gaps: int,
 # TRAIN/INTERPOLATION HELPERS
 # =============================================================================
 
-def interpolate_xgboost(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None, imputer=None):
+def interpolate_xgboost(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None, imputer=None, max_gap_size: int = None):
     """Wrapper for XGBoost Imputation with caching support."""
     sys.path.append(str(Path(__file__).parent.parent / "gap_project_antigr"))
     from src.models.xgboost_model import XGBoostImputer
@@ -2228,7 +2230,8 @@ def interpolate_xgboost(df: pd.DataFrame, target_var: str, predictor_vars: List[
         # Simple config
         imputer = XGBoostImputer(
             xgb_params={'n_estimators': HARDWARE_CONFIG.get('xgb_n_estimators', 300), 'max_depth': 6},
-            bidirectional=True  # ENABLED BI-DIRECTIONAL
+            bidirectional=True,  # ENABLED BI-DIRECTIONAL
+            max_gap_size=max_gap_size
         )
         should_fit = True
     else:
@@ -2276,13 +2279,14 @@ def interpolate_saits(df: pd.DataFrame, target_var: str, predictor_vars: List[st
         return df[target_var].interpolate(method='time')
 
 
-def interpolate_imputeformer(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None):
+def interpolate_imputeformer(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None, max_gap_size: int = None):
     """Wrapper for ImputeFormer Imputation."""
     from src.models.imputeformer_model import ImputeFormerImputer
     n_features = 1 + (len(predictor_vars) if predictor_vars else 0)
     imputer = ImputeFormerImputer(n_steps=128, n_features=n_features, 
                                   epochs=HARDWARE_CONFIG.get('dl_epochs', 20), 
-                                  batch_size=HARDWARE_CONFIG.get('dl_transformer_batch_size', 16))
+                                  batch_size=HARDWARE_CONFIG.get('dl_transformer_batch_size', 16),
+                                  max_gap_size=max_gap_size)
     try:
         imputer.fit(df, target_var, multivariate_vars=predictor_vars)
         prediction = imputer.predict(df)
@@ -2292,13 +2296,14 @@ def interpolate_imputeformer(df: pd.DataFrame, target_var: str, predictor_vars: 
         return df[target_var].interpolate(method='time')
 
 
-def interpolate_brits(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None):
+def interpolate_brits(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None, max_gap_size: int = None):
     """Wrapper for BRITS Imputation."""
     from src.models.brits_model import BRITSImputer
     n_features = 1 + (len(predictor_vars) if predictor_vars else 0)
     imputer = BRITSImputer(n_steps=128, n_features=n_features, 
                            epochs=HARDWARE_CONFIG.get('dl_epochs', 20), 
-                           batch_size=HARDWARE_CONFIG.get('dl_rnn_batch_size', 32))
+                           batch_size=HARDWARE_CONFIG.get('dl_rnn_batch_size', 32),
+                           max_gap_size=max_gap_size)
     try:
         imputer.fit(df, target_var, multivariate_vars=predictor_vars)
         prediction = imputer.predict(df)
@@ -2308,7 +2313,7 @@ def interpolate_brits(df: pd.DataFrame, target_var: str, predictor_vars: List[st
         return df[target_var].interpolate(method='time')
 
 
-def interpolate_xgboost_pro(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None, imputer=None):
+def interpolate_xgboost_pro(df: pd.DataFrame, target_var: str, predictor_vars: List[str] = None, imputer=None, max_gap_size: int = None):
     """Wrapper for XGBoost Pro Imputation with caching support."""
     sys.path.append(str(Path(__file__).parent.parent / "gap_project_antigr"))
     from src.models.xgboost_model_pro import XGBoostProImputer
@@ -2429,24 +2434,24 @@ def benchmark_gap_filling(df: pd.DataFrame,
         }
     
     # Function for running a single model (used for both parallel and sequential)
-    def run_model(method, df_test, test_var, pred_vars):
+    def run_model(method, df_test, test_var, pred_vars, max_gap_size=None):
         try:
-            log.info(f"    [GPU/CPU|{method.upper()}] Starting interpolation...")
+            log.info(f"    [GPU/CPU|{method.upper()}] Starting interpolation (scale-aware: max_gap={max_gap_size} pts)...")
             if method == 'linear': interp = interpolate_linear(df_test[test_var])
             elif method == 'time': interp = interpolate_time(df_test[test_var])
             elif method == 'splines': interp = interpolate_spline(df_test[test_var])
             elif method == 'polynomial': interp = interpolate_polynomial(df_test[test_var])
             elif method == 'varma': interp = interpolate_varma(df_test, test_var, predictor_vars=pred_vars)
-            elif method == 'bilstm': interp = interpolate_bilstm(df_test, test_var, predictor_vars=pred_vars)
+            elif method == 'bilstm': interp = interpolate_bilstm(df_test, test_var, predictor_vars=pred_vars, max_gap_size=max_gap_size)
             elif method == 'xgboost': 
-                interp, _ = interpolate_xgboost(df_test, test_var, predictor_vars=pred_vars)
+                interp, _ = interpolate_xgboost(df_test, test_var, predictor_vars=pred_vars, max_gap_size=max_gap_size)
             elif method == 'xgboost_pro': 
-                interp, _ = interpolate_xgboost_pro(df_test, test_var, predictor_vars=pred_vars)
+                interp, _ = interpolate_xgboost_pro(df_test, test_var, predictor_vars=pred_vars, max_gap_size=max_gap_size)
             elif method == 'missforest': interp = interpolate_missforest(df_test, test_var, predictor_vars=pred_vars)
             elif method == 'saits': interp = interpolate_saits(df_test, test_var, predictor_vars=pred_vars)
-            elif method == 'imputeformer': interp = interpolate_imputeformer(df_test, test_var, predictor_vars=pred_vars)
-            elif method == 'brits': interp = interpolate_brits(df_test, test_var, predictor_vars=pred_vars)
-            elif method == 'brits_pro': interp = interpolate_brits_pro(df_test, test_var, predictor_vars=pred_vars)
+            elif method == 'imputeformer': interp = interpolate_imputeformer(df_test, test_var, predictor_vars=pred_vars, max_gap_size=max_gap_size)
+            elif method == 'brits': interp = interpolate_brits(df_test, test_var, predictor_vars=pred_vars, max_gap_size=max_gap_size)
+            elif method == 'brits_pro': interp = interpolate_brits_pro(df_test, test_var, predictor_vars=pred_vars, max_gap_size=max_gap_size)
             else: interp = None
             return method, interp
         except Exception as e:
@@ -2479,7 +2484,7 @@ def benchmark_gap_filling(df: pd.DataFrame,
             if method not in methods: continue
             
             # Feed the dataset to models (Advanced models handle residuals internally now)
-            m_name, interp_absolute = run_model(method, df_test.copy(), test_variable, predictor_vars)
+            m_name, interp_absolute = run_model(method, df_test.copy(), test_variable, predictor_vars, max_gap_size=params['max_pts'])
             
             if interp_absolute is not None:
                 category_interps[m_name] = interp_absolute
@@ -2519,7 +2524,7 @@ def benchmark_gap_filling(df: pd.DataFrame,
         if active_cpu_methods:
             log.info(f"    [{category.upper()}] Launching {len(active_cpu_methods)} CPU models (n_jobs={n_jobs_cpu}) via Joblib...")
             cpu_outputs = Parallel(n_jobs=n_jobs_cpu, prefer="threads")(
-                delayed(run_model)(method, df_test.copy(), test_variable, predictor_vars)
+                delayed(run_model)(method, df_test.copy(), test_variable, predictor_vars, max_gap_size=params['max_pts'])
                 for method in active_cpu_methods
             )
             for m_name, interp_absolute in cpu_outputs:

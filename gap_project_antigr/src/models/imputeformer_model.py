@@ -24,28 +24,65 @@ class ImputeFormerImputer:
     - Preserves NaN positions through scaling and windowing
     - PyPOTS internally generates observation masks from NaN positions
     """
-    def __init__(self, n_steps: int, n_features: int, n_layers: int = 2, d_input_embed: int = 128, d_ffn: int = 256, n_temporal_heads: int = 4, dropout: float = 0.1, epochs: int = 50, batch_size: int = 16):
-        self.model = ImputeFormer(
-            n_steps=n_steps,
-            n_features=n_features,
-            n_layers=n_layers,
-            d_input_embed=d_input_embed,
-            d_learnable_embed=d_input_embed,
-            d_proj=d_input_embed // 2,
-            d_ffn=d_ffn,
-            n_temporal_heads=n_temporal_heads,
-            dropout=dropout,
-            epochs=epochs,
-            batch_size=batch_size,
-            device='cuda' if torch.cuda.is_available() else 'cpu',
-            saving_path='imputeformer_models',
-        )
+    def __init__(self, target_var: str, predictor_vars: Optional[List[str]] = None, n_steps: int = 128, n_features: int = 1, n_layers: int = 2, d_input_embed: int = 128, d_ffn: int = 256, n_temporal_heads: int = 4, dropout: float = 0.1, epochs: int = 50, batch_size: int = 16, device: str = 'cuda' if torch.cuda.is_available() else 'cpu', max_gap_size: Optional[int] = None):
+        """
+        Initialize ImputeFormer imputer.
+        """
         self.n_steps = n_steps
+        self.n_features = n_features
+        self.n_layers = n_layers
+        self.d_input_embed = d_input_embed
+        self.d_ffn = d_ffn
+        self.n_temporal_heads = n_temporal_heads
+        self.dropout = dropout
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.device = device
+        self.max_gap_size = max_gap_size
+
         self.feature_columns = None
-        
+        self.target_var = None # Will be set in fit
+
         # NaN-aware scaler parameters (computed during fit)
         self.scaler_mean_ = None
         self.scaler_std_ = None
+
+        # -------------------------------------------------------------
+        # SCALE-AWARE FRAMEWORK V4.0
+        # Dynamic Sequence Length scaling based on max geometric gap size
+        # -------------------------------------------------------------
+        if self.max_gap_size is not None:
+            original_steps = self.n_steps
+            if self.max_gap_size <= 12: # Micro/Short (6 hours)
+                self.n_steps = 12  # Fast, sharp context
+            elif self.max_gap_size <= 144: # Medium (3 days)
+                self.n_steps = 128  # Legal limit for VRAM
+            else: # Long/Gigant
+                self.n_steps = 128  # Hard cap to prevent OOM
+            
+            # Log this adjustment later in fit, as target_var is not available here
+            # logger.info(f"Scale-Aware Triggered: Adjusted ImputeFormer n_steps from {original_steps} -> {self.n_steps} to match gap scale ({self.max_gap_size} pts).")
+
+        self.model = ImputeFormer(
+            n_steps=self.n_steps,
+            n_features=self.n_features,
+            n_layers=self.n_layers,
+            d_input_embed=self.d_input_embed,
+            d_learnable_embed=self.d_input_embed,
+            d_proj=self.d_input_embed // 2,
+            d_ffn=self.d_ffn,
+            n_temporal_heads=self.n_temporal_heads,
+            dropout=self.dropout,
+            epochs=self.epochs,
+            batch_size=self.batch_size,
+            device=self.device,
+            saving_path='imputeformer_models',
+        )
+        
+        logger.info(f"Initialized ImputeFormer Imputer")
+        logger.info(f"  n_steps: {self.n_steps}")
+        logger.info(f"  Device: {self.device}")
+
 
     def _fit_scaler(self, data: np.ndarray):
         """Fit scaler on observed (non-NaN) values only."""
@@ -66,6 +103,13 @@ class ImputeFormerImputer:
         """Fit ImputeFormer on time series data — NaN-preserving Pipeline B."""
         self.feature_columns = [target_var] + (multivariate_vars if multivariate_vars else [])
         self.target_var = target_var
+        
+        # Log dynamic n_steps adjustment if it happened
+        if self.max_gap_size is not None:
+            # Re-log with target_var now available
+            # This assumes original_steps was stored in __init__ if needed,
+            # but for simplicity, we'll just log the final n_steps here.
+            logger.info(f"Scale-Aware Triggered: ImputeFormer n_steps for {target_var} set to {self.n_steps} to match gap scale ({self.max_gap_size} pts).")
         
         data = df[self.feature_columns].values.astype(np.float64)
         

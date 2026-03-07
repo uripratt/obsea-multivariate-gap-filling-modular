@@ -307,6 +307,7 @@ class MultivariateLSTMImputer:
         train_ratio: float = 0.6,
         val_ratio: float = 0.2,
         device: str = 'cuda' if torch.cuda.is_available() else 'cpu',
+        max_gap_size: int = None,
     ):
         """
         Initialize multivariate LSTM imputer.
@@ -326,6 +327,24 @@ class MultivariateLSTMImputer:
         self.val_ratio = val_ratio
         self.test_ratio = 1.0 - train_ratio - val_ratio
         self.device = torch.device(device)
+        self.max_gap_size = max_gap_size
+        
+        # -------------------------------------------------------------
+        # SCALE-AWARE FRAMEWORK V4.0
+        # Dynamic Sequence Length scaling based on max geometric gap size
+        # -------------------------------------------------------------
+        if self.max_gap_size is not None:
+            original_seq = self.sequence_length
+            if self.max_gap_size <= 12: # Micro/Short (6 hours)
+                self.sequence_length = 24  # 12 hours of sharp, reactive memory
+            elif self.max_gap_size <= 144: # Medium (3 days)
+                self.sequence_length = 96  # 2 days of contextual memory
+            elif self.max_gap_size <= 1440: # Long (30 days)
+                self.sequence_length = 336 # 7 days of stable structural memory
+            else: # Extended/Gigant
+                self.sequence_length = 672 # 14 days of deep seasonal memory
+                
+            logger.info(f"Scale-Aware Triggered: Adjusted {target_var} BiLSTM sequence_length from {original_seq} -> {self.sequence_length} to match gap scale ({self.max_gap_size} pts).")
         
         # Will be set during training
         self.model = None
@@ -341,7 +360,7 @@ class MultivariateLSTMImputer:
         logger.info(f"  Target: {target_var}")
         logger.info(f"  Predictors: {predictor_vars}")
         logger.info(f"  Split: Train={train_ratio:.0%}, Val={val_ratio:.0%}, Test={self.test_ratio:.0%}")
-        logger.info(f"  Sequence length: {sequence_length} (temporal context)")
+        logger.info(f"  Sequence length: {self.sequence_length} (temporal context)")
         logger.info(f"  Device: {device}")
         
     def _normalize(self, data: pd.DataFrame) -> pd.DataFrame:
