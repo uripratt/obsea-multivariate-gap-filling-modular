@@ -355,7 +355,12 @@ class MultivariateLSTMImputer:
         return (data - self.mean) / self.std
     
     def _denormalize_target(self, data: np.ndarray) -> np.ndarray:
-        """Denormalize target variable predictions."""
+        """Denormalize target variable predictions.
+        CRITICAL FIX: In residual mode, the mean of the residuals is assumed to be 0, 
+        so we do NOT add the global mean back to the residual (that would add 15.0 to 0.0!).
+        """
+        if getattr(self, 'is_residual_mode', False):
+            return data * self.std[self.target_var]
         return data * self.std[self.target_var] + self.mean[self.target_var]
     
     def _temporal_split(
@@ -789,7 +794,11 @@ class MultivariateLSTMImputer:
                 pred_norm = pred_norm * decay_factor
                 
                 # Denormalize residual
-                pred_residual = pred_norm * self.std[target_col] + self.mean[target_col]
+                # BUG FIX: Pure Residuals have mean=0. Adding self.mean would add the global absolute mean!
+                if getattr(self, 'is_residual_mode', False):
+                    pred_residual = pred_norm * self.std[target_col]
+                else:
+                    pred_residual = pred_norm * self.std[target_col] + self.mean[target_col]
                 
                 # 3. Reconstruct Absolute Value
                 if getattr(self, 'is_residual_mode', False):
