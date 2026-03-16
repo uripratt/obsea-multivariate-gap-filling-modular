@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBSEA | Oceanographic Analysis Platform</title>
+    <link rel="stylesheet" href="css/oceanographic.css?v=22">
+    <link rel="stylesheet" href="css/digital-twin.css">
+    <!-- Essential Libraries -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <!-- Three.js Import Map for Digital Twin -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+
+<body>
+    <div class="app-shell">
+        <!-- Professional Top Navigation Header -->
+        <header class="header">
+            <div class="logo-container" onclick="location.reload()"
+                style="display: flex; align-items: center; gap: 15px;">
+                <img src="obsea_icon.png" alt="OBSEA Logo" style="height: 50px; border-radius: 50%;">
+                <div class="logo-text">
+                    <h1>OBSEA</h1>
+                    <span>Expandable Seafloor Observatory</span>
+                </div>
+            </div>
+
+            <nav class="top-nav">
+                <div class="nav-link active" data-view="overview">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Dashboard
+                </div>
+                <div class="nav-link" data-view="instruments">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Instruments
+                </div>
+                <div class="nav-link" data-view="gaps">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    Gap Analysis
+                </div>
+                <div class="nav-link" data-view="methods">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                        </path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    Interpolation
+                </div>
+                <div class="nav-link" data-view="oceanography">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m2 16 20 0"></path>
+                        <path d="m2 12 20 0"></path>
+                        <path d="m2 8 20 0"></path>
+                    </svg>
+                    Oceanography
+                </div>
+                <div class="nav-link" data-view="digital-twin">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    Digital Twin
+                </div>
+            </nav>
+
+            <div class="header-status">
+                <div class="conn-indicator">
+                    <div class="led"></div>
+                    <span>STATION ONLINE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Area -->
+        <main class="main-wrapper">
+            <!-- Breadcrumbs / Geo-Meta Bar -->
+            <div class="top-bar-info">
+                <div class="page-path">
+                    SYSTEMS <span class="sep">/</span> <span class="current" id="view-indicator">DASHBOARD</span>
+                </div>
+                <div class="geo-meta">
+                    <span class="m-item">LAT <span class="v">41.1819°N</span></span>
+                    <span class="m-item">LON <span class="v">1.7527°E</span></span>
+                    <span class="m-item">DEPTH <span class="v">20M</span></span>
+                </div>
+            </div>
+
+            <!-- View Scroll Pane -->
+            <div class="content-pane" id="main-content-scroll">
+
+                <!-- ====== VIEW: OVERVIEW ====== -->
+                <section id="overview" class="view active">
+                    <div class="metrics-row">
+                        <div class="metric-box">
+                            <div class="metric-header"
+                                style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: var(--primary);">
+                                    <path
+                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                    </path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                                <div class="metric-label" style="margin-bottom: 0;">Total Observations</div>
+                            </div>
+                            <div class="metric-value" id="stat-observations">--</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-header"
+                                style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: var(--secondary);">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                                <div class="metric-label" style="margin-bottom: 0;">Variables</div>
+                            </div>
+                            <div class="metric-value" id="stat-variables">--</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-header"
+                                style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: var(--accent);">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <div class="metric-label" style="margin-bottom: 0;">Operational Record</div>
+                            </div>
+                            <div class="metric-value" id="stat-timespan">--</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-header"
+                                style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: var(--highlight);">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <div class="metric-label" style="margin-bottom: 0;">Resolution</div>
+                            </div>
+                            <div class="metric-value" id="stat-resolution">30m</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-cols-2">
+                        <div class="card">
+                            <div class="card-title">
+                                <span><i class="icon">📊</i> Data Quality Metrics</span>
+                                <span class="badge">Missing %</span>
+                            </div>
+                            <div class="chart-container" id="chart-missing"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">
+                                <span><i class="icon">🔗</i> Correlation Analysis</span>
+                                <span class="badge">Spearman r</span>
+                            </div>
+                            <div class="chart-container" id="chart-correlation"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Descriptive Statistics Summary <span class="badge">TABLE VIEW</span>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="premium-table" id="table-stats">
+                                <thead>
+                                    <tr>
+                                        <th>Variable</th>
+                                        <th>Logs</th>
+                                        <th>Missing %</th>
+                                        <th>Mean</th>
+                                        <th>Std. Dev</th>
+                                        <th>Min</th>
+                                        <th>Max</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stats-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ====== VIEW: INSTRUMENTS ====== -->
+                <section id="instruments" class="view">
+                    <div class="inst-selector">
+                        <button class="inst-tab active" data-inst="ctd">CTD (SBE37)</button>
+                        <button class="inst-tab" data-inst="currents">AWAC Currents</button>
+                        <button class="inst-tab" data-inst="waves">AWAC Waves</button>
+                        <button class="inst-tab" data-inst="airmar">Airmar Station</button>
+                        <button class="inst-tab" data-inst="ctvg">CTVG (Land)</button>
+                    </div>
+
+                    <div class="instrument-panels">
+                        <div id="inst-ctd" class="inst-panel active">
+                            <div class="card">
+                                <div class="card-title">Conductivity, Temp & Depth <span class="badge">REAL-TIME</span>
+                                </div>
+                                <div class="chart-container tall" id="chart-ctd"></div>
+                            </div>
+                        </div>
+                        <div id="inst-currents" class="inst-panel">
+                            <div class="card">
+                                <div class="card-title">Acoustic Doppler Currents <span class="badge">PROFILES</span>
+                                </div>
+                                <div class="chart-container tall" id="chart-currents"></div>
+                            </div>
+                        </div>
+                        <div id="inst-waves" class="inst-panel">
+                            <div class="card">
+                                <div class="card-title">Surface Wave Diagnostics <span class="badge">HM0 / TP</span>
+                                </div>
+                                <div class="chart-container tall" id="chart-waves"></div>
+                            </div>
+                        </div>
+                        <div id="inst-airmar" class="inst-panel">
+                            <div class="card">
+                                <div class="card-title">Surface Meteorological Data <span class="badge">AIRMAR</span>
+                                </div>
+                                <div class="chart-container tall" id="chart-airmar"></div>
+                            </div>
+                        </div>
+                        <div id="inst-ctvg" class="inst-panel">
+                            <div class="card">
+                                <div class="card-title">Land-based Meteorological Data <span class="badge">CTVG
+                                        STATION</span>
+                                </div>
+                                <div class="chart-container tall" id="chart-ctvg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+
+                <!-- ====== VIEW: GAPS ====== -->
+                <section id="gaps" class="view">
+                    <div class="card">
+                        <div class="card-title">Data Availability Inventory <span class="badge">10Y RECORD</span></div>
+                        <div class="chart-container" style="height: 500px;" id="chart-gantt"></div>
+                    </div>
+
+                    <div class="grid-cols-2">
+                        <div class="card">
+                            <div class="card-title">Gap Distribution (Events)</div>
+                            <div class="chart-container" style="height: 480px;" id="chart-gap-histogram"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Inventory Health Check</div>
+                            <div id="instrument-stats-table"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Event Investigation Log</div>
+                        <div class="table-wrap">
+                            <table class="premium-table" id="table-gaps">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Category</th>
+                                        <th>Frequency</th>
+                                        <th>Total Loss</th>
+                                        <th>Mean MTTR</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gaps-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ====== VIEW: METHODS ====== -->
+                <section id="methods" class="view">
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-title">
+                            <span id="case-study-title">Deep Learning Case Study: 5-Day Gap Reconstruction</span>
+                            <div style="margin-left: auto; display: flex; gap: 8px;">
+                                <button class="control-btn"
+                                    onclick="window.MethodAnalysis.renderCaseStudy('chart-case-study', 'micro')">Micro
+                                    (30m)</button>
+                                <button class="control-btn"
+                                    onclick="window.MethodAnalysis.renderCaseStudy('chart-case-study', 'long')">Long
+                                    (5d)</button>
+                                <button class="control-btn"
+                                    onclick="window.MethodAnalysis.renderCaseStudy('chart-case-study', 'extended')">Extended
+                                    (45d)</button>
+                                <button class="control-btn"
+                                    onclick="window.MethodAnalysis.renderCaseStudy('chart-case-study', 'gigant')">Gigant
+                                    (90d)</button>
+                                <button class="control-btn"
+                                    onclick="window.MethodAnalysis.renderCaseStudy('chart-case-study', 'medium')">Medium
+                                    (2d)</button>
+                                <button class="control-btn"
+                                    onclick="window.MethodAnalysis.renderCaseStudy('chart-case-study', 'short')">Short
+                                    (6h)</button>
+                                <button class="control-btn"
+                                    onclick="window.MethodAnalysis.renderCaseStudy('chart-case-study', 'multigap')"
+                                    style="background: rgba(255, 255, 255, 0.1); border: 1px solid #e8f4f8;">Multi-Gap</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height: 500px;" id="chart-case-study"></div>
+                        <div class="case-study-legend"
+                            style="display: flex; justify-content: center; gap: 24px; padding: 12px 20px; font-size: 0.85em; color: #8ba3b8; background: rgba(255,255,255,0.03); border-radius: 8px; margin-top: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 20px; height: 3px; background: #ffffff; border-radius: 2px;"></span>
+                                Ground Truth
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 20px; height: 3px; background: #56B4E9; border-radius: 2px;"></span>
+                                Linear
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 20px; height: 3px; background: #E69F00; border-radius: 2px;"></span>
+                                VARMA
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 20px; height: 3px; background: #CC79A7; border-radius: 2px;"></span>
+                                XGBoost
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 20px; height: 4px; background: #0072B2; border-radius: 2px;"></span>
+                                <strong style="color: #56B4E9;">Bi-LSTM (AI)</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-cols-2" style="gap: 24px;">
+                        <div class="card">
+                            <div class="card-title">Algorithm Performance Comparison</div>
+                            <div class="chart-container" style="height: 420px;" id="chart-methods"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">
+                                <span>Reconstruction Preview Simulator</span>
+                                <div style="display: flex; gap: 8px;">
+                                    <select id="interp-var-select" class="select-input"></select>
+                                    <select id="interp-method-select" class="select-input"></select>
+                                </div>
+                            </div>
+                            <div class="chart-container" style="height: 420px;" id="chart-interpolation-series"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Scientific Benchmarking <span class="badge">RMSE / MAE / R²</span></div>
+                        <div class="table-wrap">
+                            <table class="premium-table" id="table-methods">
+                                <thead>
+                                    <tr>
+                                        <th>interpolation Method</th>
+                                        <th>Class</th>
+                                        <th>RMSE</th>
+                                        <th>MAE</th>
+                                        <th>Coefficient R²</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="methods-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ====== VIEW: OCEANOGRAPHY ====== -->
+                <section id="oceanography" class="view">
+                    <div class="grid-cols-3">
+                        <div class="card">
+                            <div class="card-title">Meteorological Wind Rose <span class="badge">SURFACE</span></div>
+                            <div class="chart-container" style="height: 400px;" id="chart-windrose"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Benthic Current Rose <span class="badge">AWAC</span></div>
+                            <div class="chart-container" style="height: 400px;" id="chart-currentrose"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Surface Wave Rose <span class="badge">AWAC</span></div>
+                            <div class="chart-container" style="height: 400px;" id="chart-waverose"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid-cols-2" style="grid-template-columns: 1.6fr 1fr; margin-top: 24px;">
+                        <div class="card">
+                            <div class="card-title">T-S Hydrographic Diagram <span class="badge">PROPERTIES</span></div>
+                            <div class="chart-container" style="height: 520px;" id="chart-ts"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Derived Oceanographic Indices <span class="badge">TEOS-10</span>
+                            </div>
+                            <div class="chart-container" style="height: 520px;" id="chart-derived"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ====== VIEW: DIGITAL TWIN ====== -->
+                <section id="digital-twin" class="view">
+                    <div class="card"
+                        style="border-color: var(--primary); box-shadow: 0 0 30px rgba(86, 180, 233, 0.1);">
+                        <div class="card-title" style="color: var(--primary);">
+                            <span><i class="icon">🧊</i> OBSEA Digital Clone (v1.0)</span>
+                            <span class="badge" style="background: var(--primary); color: #000;">LIVE LINK</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 24px;">
+                            <!-- Main 3D Viewport -->
+                            <div id="scene-container"
+                                style="border-radius: 12px; height: 600px; position: relative; border: 1px solid rgba(86,180,233,0.3); overflow: hidden;">
+                                <!-- HUD Overlay -->
+                                <div class="hud-overlay">
+                                    <!-- Top Left: Station Info -->
+                                    <div class="hud-panel top-left">
+                                        <div class="hud-title">OBSEA DIGITAL TWIN</div>
+                                        <div class="hud-subtitle">Expandable Seafloor Observatory</div>
+                                        <div class="hud-divider"></div>
+                                        <div class="hud-stat">
+                                            <span class="label">LAT</span>
+                                            <span class="value">41.1819°N</span>
+                                        </div>
+                                        <div class="hud-stat">
+                                            <span class="label">LON</span>
+                                            <span class="value">1.7527°E</span>
+                                        </div>
+                                        <div class="hud-stat">
+                                            <span class="label">DEPTH</span>
+                                            <span class="value">20 m</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Top Right: Real-time Data -->
+                                    <div class="hud-panel top-right">
+                                        <div class="hud-title">LIVE SENSORS</div>
+                                        <div class="hud-divider"></div>
+                                        <div class="hud-stat">
+                                            <span class="label">TEMP</span>
+                                            <span class="value" id="hud-temp">--</span>
+                                            <span class="unit">°C</span>
+                                        </div>
+                                        <div class="hud-stat">
+                                            <span class="label">PSAL</span>
+                                            <span class="value" id="hud-psal">--</span>
+                                            <span class="unit">PSU</span>
+                                        </div>
+                                        <div class="hud-stat">
+                                            <span class="label">CURRENT</span>
+                                            <span class="value" id="hud-current">--</span>
+                                            <span class="unit">m/s</span>
+                                        </div>
+                                        <div class="hud-stat">
+                                            <span class="label">WAVE H</span>
+                                            <span class="value" id="hud-wave">--</span>
+                                            <span class="unit">m</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Left: Controls -->
+                                    <div class="hud-panel bottom-left">
+                                        <div class="hud-title">CONTROLS</div>
+                                        <div class="hud-divider"></div>
+                                        <div class="control-row">
+                                            <label>Show Currents</label>
+                                            <input type="checkbox" id="toggle-currents" checked>
+                                        </div>
+                                        <div class="control-row">
+                                            <label>Show Waves</label>
+                                            <input type="checkbox" id="toggle-waves" checked>
+                                        </div>
+                                        <div class="control-row">
+                                            <label>Show Bathymetry</label>
+                                            <input type="checkbox" id="toggle-bathymetry" checked>
+                                        </div>
+                                        <div class="control-row">
+                                            <label>Animation Speed</label>
+                                            <input type="range" id="animation-speed" min="0.1" max="3" step="0.1"
+                                                value="1">
+                                        </div>
+                                        <!-- XBeach Simulation Controls -->
+                                        <div id="sim-controls-panel" style="display:none;">
+                                            <div class="hud-divider"></div>
+                                            <div class="hud-title" style="font-size:0.65rem; margin-bottom:6px;">XBEACH
+                                                SIMULATION</div>
+                                            <div class="control-row">
+                                                <label>Simulation</label>
+                                                <input type="checkbox" id="toggle-simulation" checked>
+                                            </div>
+                                            <div class="control-row" style="gap:6px;">
+                                                <button id="sim-play-btn" class="sim-btn"
+                                                    title="Pause Simulation">⏸</button>
+                                                <span id="sim-time-display" class="sim-time-text">t = 0s</span>
+                                            </div>
+                                            <div class="control-row">
+                                                <label>Time</label>
+                                                <input type="range" id="sim-time-slider" min="0" max="1000" value="0"
+                                                    class="sim-slider">
+                                            </div>
+                                            <div class="control-row">
+                                                <label>Speed <span id="sim-speed-label">1.0×</span></label>
+                                                <input type="range" id="sim-speed" min="0.1" max="5" step="0.1"
+                                                    value="1" class="sim-slider">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Center Bottom: Time Slider -->
+                                    <div class="hud-panel bottom-center">
+                                        <div class="time-display">
+                                            <span id="current-time">2026-02-06 12:00:00</span>
+                                        </div>
+                                        <input type="range" id="time-slider" min="0" max="100" value="50">
+                                    </div>
+                                </div>
+
+                                <!-- Loading Screen -->
+                                <div id="loading-screen">
+                                    <div class="loader">
+                                        <div class="spinner"></div>
+                                        <div class="loading-text">Initializing Digital Twin...</div>
+                                        <div class="loading-progress" id="loading-progress">Loading Three.js...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Side Control Panel -->
+                            <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <div class="metric-box" style="padding: 15px;">
+                                    <div class="metric-label">Real-time Anomaly Score</div>
+                                    <div class="metric-value" style="font-size: 1.4rem; color: var(--secondary);">0.02
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: var(--text-mid); margin-top: 5px;">Status:
+                                        NORMAL</div>
+                                </div>
+
+                                <div class="metric-box" style="padding: 15px;">
+                                    <div class="metric-label">Predicted Next Gap</div>
+                                    <div class="metric-value" style="font-size: 1.4rem; color: var(--accent);">+48h
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: var(--text-mid); margin-top: 5px;">
+                                        Probability: LOW</div>
+                                </div>
+
+                                <div
+                                    style="background: rgba(255,255,255,0.03); border: var(--border-light); border-radius: 12px; padding: 15px; flex-grow: 1;">
+                                    <div
+                                        style="font-size: 0.75rem; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                        SYSTEM HEALTH LOG</div>
+                                    <div
+                                        style="font-family: 'JetBrains Mono'; font-size: 0.7rem; color: var(--text-mid); display: flex; flex-direction: column; gap: 8px;">
+                                        <div>[15:30:00] CTD_SBE37: OK</div>
+                                        <div>[15:30:01] AWAC_AQ: OK</div>
+                                        <div>[15:30:05] DATA_LNK: STABLE</div>
+                                        <div>[15:31:00] BATT_CHK: 100%</div>
+                                        <div style="color: var(--accent);">[15:32:10] PRED_MDL: RUNNING</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- End of Content Pane -->
+            </div>
+
+            <!-- Enhanced Footer -->
+            <footer class="footer">
+                <div>© 2026 OBSEA Observatory • UPF/UPC Scientific Collaboration</div>
+                <div class="footer-links">
+                    <a href="#">Technical Documentation</a>
+                    <a href="#">Data Policy</a>
+                    <a href="#">Contact Support</a>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Pre-processed Data (Bypasses CORS/CSV parsing) -->
+    <script src="js/db.js"></script>
+    <script src="js/db_stats.js"></script>
+    <!-- Application Module Stack -->
+    <script src="js/dataLoader.js?v=24"></script>
+    <script src="js/charts.js?v=24"></script>
+    <script src="js/gapTimeline.js?v=24"></script>
+    <script src="js/methodAnalysis.js?v=24"></script>
+    <script src="js/exportUtils.js?v=24"></script>
+    <script type="module" src="js/digitaltwin/bridge.js"></script>
+    <script src="js/app.js?v=24"></script>
+</body>
+
+</html>

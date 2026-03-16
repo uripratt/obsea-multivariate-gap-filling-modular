@@ -1,0 +1,383 @@
+/* ============================================
+   OBSEA Digital Twin - CSS Styles
+   Professional underwater observatory visualization
+   ============================================ */
+
+:root {
+    --primary: #56B4E9;
+    --secondary: #009E73;
+    --accent: #E69F00;
+    --danger: #D55E00;
+    --bg-dark: #020810;
+    --bg-panel: rgba(2, 8, 16, 0.5);
+    --border-glow: rgba(86, 180, 233, 0.6);
+    --text-bright: #e8f4f8;
+    --text-dim: rgba(255, 255, 255, 0.5);
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    /* overflow: hidden; - Removed to allow scrolling in other sections */
+    background: var(--bg-dark);
+    font-family: var(--font-sans);
+    color: var(--text-bright);
+}
+
+/* ============================================
+   3D Scene Container
+   ============================================ */
+/* #scene-container styles handled inline in index.html for embedded view */
+/* 
+#scene-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+*/
+
+#scene-container canvas {
+    display: block;
+}
+
+/* ============================================
+   HUD Overlay System
+   ============================================ */
+.hud-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.hud-panel {
+    position: absolute;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glow);
+    border-radius: 8px;
+    padding: 16px 20px;
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    box-shadow:
+        0 0 20px rgba(86, 180, 233, 0.1),
+        inset 0 0 30px rgba(86, 180, 233, 0.03);
+}
+
+.hud-panel.top-left {
+    top: 20px;
+    left: 20px;
+    min-width: 200px;
+}
+
+.hud-panel.top-right {
+    top: 20px;
+    right: 20px;
+    min-width: 180px;
+}
+
+.hud-panel.bottom-left {
+    bottom: 80px;
+    left: 20px;
+    min-width: 220px;
+}
+
+.hud-panel.bottom-right {
+    bottom: 80px;
+    right: 20px;
+    min-width: 180px;
+}
+
+.hud-panel.bottom-center {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 400px;
+    text-align: center;
+}
+
+/* ============================================
+   HUD Typography
+   ============================================ */
+.hud-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.hud-subtitle {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+}
+
+.hud-divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--primary), transparent);
+    margin: 10px 0;
+}
+
+.hud-stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-family: var(--font-mono);
+}
+
+.hud-stat .label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+}
+
+.hud-stat .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+}
+
+.hud-stat .unit {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: 4px;
+}
+
+/* ============================================
+   Controls
+   ============================================ */
+.control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 11px;
+}
+
+.control-row label {
+    color: var(--text-dim);
+}
+
+.control-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.control-row input[type="range"] {
+    width: 80px;
+    height: 4px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+/* ============================================
+   Status LEDs
+   ============================================ */
+.status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+    font-size: 11px;
+    font-family: var(--font-mono);
+}
+
+.led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+}
+
+.led.green {
+    background: var(--secondary);
+    color: var(--secondary);
+}
+
+.led.blue {
+    background: var(--primary);
+    color: var(--primary);
+    animation: pulse 2s infinite;
+}
+
+.led.orange {
+    background: var(--accent);
+    color: var(--accent);
+}
+
+.led.red {
+    background: var(--danger);
+    color: var(--danger);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ============================================
+   Time Slider
+   ============================================ */
+.time-display {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+#time-slider {
+    width: 100%;
+    height: 6px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.time-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--text-dim);
+}
+
+/* ============================================
+   Loading Screen
+   ============================================ */
+#loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #020810 0%, #0a1628 50%, #020810 100%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease;
+}
+
+#loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader {
+    text-align: center;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(86, 180, 233, 0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--primary);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.loading-progress {
+    font-size: 11px;
+    color: var(--text-dim);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 768px) {
+    .hud-panel {
+        padding: 12px 15px;
+        font-size: 10px;
+    }
+
+    .hud-panel.bottom-center {
+        min-width: 280px;
+    }
+
+    .hud-panel.bottom-left,
+    .hud-panel.bottom-right {
+        display: none;
+    }
+}
+
+/* ============================================
+   XBeach Simulation Controls
+   ============================================ */
+.sim-btn {
+    background: rgba(86, 180, 233, 0.15);
+    border: 1px solid var(--border-glow);
+    border-radius: 6px;
+    color: var(--primary);
+    font-size: 14px;
+    width: 32px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.sim-btn:hover {
+    background: rgba(86, 180, 233, 0.3);
+    box-shadow: 0 0 10px rgba(86, 180, 233, 0.3);
+}
+
+.sim-time-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 1px;
+}
+
+.sim-slider {
+    width: 80px;
+    height: 3px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+#sim-speed-label {
+    color: var(--accent);
+    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 10px;
+}

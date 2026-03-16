@@ -1,0 +1,2 @@
+cd /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/webapp
+python3 -m http.server 8000
