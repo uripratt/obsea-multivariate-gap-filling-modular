@@ -26,31 +26,28 @@ El corazón de la nueva versión es el paquete `obsea_pipeline/`:
 
 ---
 
-## 2. Flujo de Datos (Pipeline)
+## 3. Flujo de Datos (Pipeline)
 
 El camino que siguen los datos desde el sensor hasta la web es el siguiente:
 
-1.  **Ingesta**: Descarga y concatenación de archivos NetCDF (.nc) de los diferentes instrumentos (CTD, AWAC, Met) mediante `concatenate_nc_files.py`.
-2.  **Procesamiento Central (`lup_data_obsea_analysis.py`)**: 
-    *   Carga los CSVs generados.
-    *   Aplica **Control de Calidad (QC)** siguiendo estándares QARTOD.
+1.  **Ingesta**: Descarga automatizada y unificación de datos mediante la **API STA v1.1** (o fallback ERDDAP/CSV) gestionada por `obsea_pipeline/ingestion/`.
+2.  **Procesamiento Central (`main_obsea.py`)**: 
+    *   Aplica **Control de Calidad (QC)** siguiendo estándares QARTOD (Soft Flagging).
     *   Realiza el re-muestreo a una cuadrícula temporal común (30 min).
-    *   Calcula **Variables Oceanográficas** (Densidad Poteencial, Estratificación, Estrés del Viento, etc.).
-    *   Analiza y clasifica los **Gaps** (huecos de datos).
-    *   Ejecuta el **Benchmarking** para comparar métodos de interpolación.
-3.  **Exportación**: Los resultados se guardan en la carpeta `webapp/tables/`, `webapp/data/` y `webapp/figures/`, que son consumidos por la interfaz web.
+    *   Calcula **Variables Oceanográficas** (Sigma-T, Estratificación, Estrés del Viento, etc.).
+    *   Modelado de **Ausencia de Datos (MNAR)** con máscaras y Delta T.
+    *   Ejecuta el **Benchmarking** o la **Producción** para imputar huecos mediante algoritmos *Scale-Aware*.
+3.  **Exportación**: Los resultados se guardan en la carpeta `webapp/tables/`, `webapp/data/` y `webapp/figures/`, consumidos por la interfaz web.
 
 ---
 
 ## 3. Mapa de Directorios
 
 ### Raíz del Proyecto
--   `lup_data_obsea_analysis.py`: **Script principal**. Orquestador de todo el análisis científico.
--   `multivariate_dl_gap_filling.py`: Implementación de modelos Deep Learning (Bi-LSTM) para interpolación avanzada.
--   `PIPELINE_DOCUMENTATION.md`: Documentación detallada de las funciones científicas del script principal.
--   `exported_data/`: Contiene los CSVs intermedios y finales del procesamiento.
--   `OBSEA_*_nc/`: Carpetas con los archivos originales en formato NetCDF.
--   `webapp/`: Directorio de la aplicación web.
+-   `main_obsea.py`: **Script principal / Orquestador**. Ejecuta todo el flujo científico.
+-   `obsea_pipeline/`: Paquete core con la lógica de modelos, QC e ingesta.
+-   `requirements.txt`: Dependencias del proyecto.
+-   `webapp/`: Directorio de la aplicación web (Dashboard).
 
 ### Aplicación Web (`webapp/`)
 -   `index.html`: Estructura de la interfaz (Dashboard, Instrumentos, Gaps, Métodos, Oceanografía).
