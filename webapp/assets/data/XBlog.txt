@@ -1,0 +1,15 @@
+  **********************************************************
+                     Welcome to XBeach
+ 
+               version 1.23. XBeachX BETA release
+               datemar 19 mar 2024 15:09:47 CET
+     URL:
+  **********************************************************
+ 
+  Simulation started: YYYYMMDD    hh:mm:ss     time zone (UTC)
+                      20260207  18:47:52     +0100
+ 
+    running in:/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/webapp/assets/data
+  General Input Module
+  Reading input parameters:
+   File 'params.txt' not found. Terminating simulation

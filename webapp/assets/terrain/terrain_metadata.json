@@ -1,0 +1,16 @@
+{
+    "center_lat": 41.1819,
+    "center_lon": 1.7527,
+    "dims_meters": {
+        "width": 835.411479356523,
+        "height": 1110.0
+    },
+    "elevation_range": {
+        "min": -40.0,
+        "max": 5.0
+    },
+    "resolution": [
+        949,
+        949
+    ]
+}
