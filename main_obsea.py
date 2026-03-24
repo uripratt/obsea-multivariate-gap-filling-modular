@@ -12,12 +12,19 @@ from obsea_pipeline.gaps.analysis import detect_gaps
 from plot_all_instruments import plot_instrument_timeseries
 from obsea_pipeline.models.selector import selective_interpolation
 from obsea_pipeline.benchmark.runner import benchmark_gap_filling
+from datetime import datetime
 from obsea_pipeline.utils.logger import setup_logger
 from rich.console import Console
 from rich.table import Table
 from rich import print as rprint
 
-logger = setup_logger(name="obsea_main")
+# Logger con persistencia en archivo timestamped
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+log_dir = Path(CONFIG['output_dir']) / "logs"
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / f"obsea_pipeline_{timestamp}.log"
+
+logger = setup_logger(name="obsea_main", log_file=str(log_file))
 console = Console()
 
 def show_data_summary(df):
