@@ -31,11 +31,18 @@ class BRITSProImputer(STLResidualMixin):
         
         # Dynamically adjust n_steps based on max_gap_size
         if self.max_gap_size is not None:
-            if self.max_gap_size <= 12: # Micro/Short gaps
-                self.n_steps = max(self.n_steps, 24) # Ensure at least 2x gap size, or a reasonable minimum
-            elif self.max_gap_size > 12: # Long/Gigant gaps
-                self.n_steps = min(max(self.n_steps, self.max_gap_size * 2), 128) # Up to 128 max, at least 2x gap size
-            logger.info(f"  [BRITS PRO] Adjusted n_steps to {self.n_steps} based on max_gap_size={self.max_gap_size}")
+            # -------------------------------------------------------------
+            # Adaptive Context Window (Context > Gap)
+            # -------------------------------------------------------------
+            min_context = self.max_gap_size * 3
+            
+            # Hardware/RNN unroll safety clamp: min 24 points, max 1024 points for RNNs
+            self.n_steps = int(max(24, min(min_context, 1024)))
+            
+            if self.n_steps % 2 != 0:
+                self.n_steps += 1
+                
+            logger.info(f"  [BRITS PRO] Adjusted adaptive n_steps to {self.n_steps} based on max_gap_size={self.max_gap_size}")
 
         self.model = BRITS(
             n_steps=self.n_steps,

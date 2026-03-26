@@ -53,13 +53,16 @@ class ImputeFormerImputer(STLResidualMixin):
         # Dynamic Sequence Length scaling based on max geometric gap size
         # -------------------------------------------------------------
         if self.max_gap_size is not None:
-            original_steps = self.n_steps
-            if self.max_gap_size <= 12: # Micro/Short (6 hours)
-                self.n_steps = 24  # Sharp context
-            elif self.max_gap_size <= 144: # Medium (3 days)
-                self.n_steps = 256 # 5 days of context
-            else: # Long/Gigant
-                self.n_steps = 512 # 10 days of context (A40 Capable)
+            # -------------------------------------------------------------
+            # Adaptive Context Window (Context > Gap)
+            # -------------------------------------------------------------
+            min_context = self.max_gap_size * 3
+            
+            # Hardware safety clamp: min 24 points, max 2048 points (attention O(N^2))
+            self.n_steps = int(max(24, min(min_context, 2048)))
+            
+            if self.n_steps % 2 != 0:
+                self.n_steps += 1
             
             # Log this adjustment later in fit, as target_var is not available here
             # logger.info(f"Scale-Aware Triggered: Adjusted ImputeFormer n_steps from {original_steps} -> {self.n_steps} to match gap scale ({self.max_gap_size} pts).")

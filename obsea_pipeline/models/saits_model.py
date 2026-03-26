@@ -35,17 +35,21 @@ class SAITSImputer(STLResidualMixin):
         
         # -------------------------------------------------------------
         # SCALE-AWARE FRAMEWORK V4.0
-        # Dynamic Sequence Length scaling
-        # -------------------------------------------------------------
         if self.max_gap_size is not None:
-            if self.max_gap_size <= 1:
-                self.n_steps = 24
-            elif self.max_gap_size <= 12:
-                self.n_steps = 48
-            elif self.max_gap_size <= 144:
-                self.n_steps = 256
-            else:
-                self.n_steps = 512
+            # -------------------------------------------------------------
+            # Adaptive Context Window (Context > Gap)
+            # -------------------------------------------------------------
+            # Ensure the sliding window always has bilateral historical context.
+            # We enforce the window to be roughly 3x the gap size.
+            min_context = self.max_gap_size * 3
+            
+            # Hardware safety clamp: min 24 points, max 2048 points (attention O(N^2))
+            # 2048 points = ~42 days of context.
+            self.n_steps = int(max(24, min(min_context, 2048)))
+            
+            # Models often prefer or require even sequence lengths
+            if self.n_steps % 2 != 0:
+                self.n_steps += 1
         
         self.model = SAITS(
             n_steps=n_steps,
