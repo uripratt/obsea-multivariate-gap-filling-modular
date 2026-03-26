@@ -31,15 +31,34 @@ To solve the prevalent issue of artificial model assessment, the evaluation fram
 
 ---
 
-## Evaluated Imputation Models
+## Evaluated Imputation Typologies
 
-The benchmarking suite systematically evaluates a wide array of imputation algorithms, ranging from topological interpolations to state-of-the-art Deep Learning sequences, each demonstrating specific proficiencies depending on the gap temporal scale:
+The benchmarking suite systematically evaluates a wide array of imputation algorithms. To comprehend their scale-aware routing, the models are classified into five distinct typologies ordered by complexity:
 
-- **Baseline Interpolations (Linear, Time, Splines, PCHIP)**: Extremely efficient topological estimators. Ideal for *Micro* (<6h) gaps where the physical variable hasn't undergone significant non-linear shifts.
-- **VARMA (Vector Autoregression Moving-Average)**: A classical multivariate statistical model. It explores linear physical relationships (e.g., Temperature-Salinity) but struggles with the characteristic non-stationarity of long oceanographic series.
-- **XGBoost Pro (Gradient Boosting)**: A feature-engineered iterative tree model. Highly optimized for parallel CPU/GPU execution. It utilizes multivariate correlations and explicit temporal encoding (hour, day of year). It represents the optimal balance of speed and precision for *Short* to *Medium* (6h-72h) gaps.
-- **Bi-LSTM (Bidirectional Long Short-Term Memory)**: A recurrent neural network that analyzes the temporal sequence forwards and backwards. Excels at capturing the physical inertia of the series before and after the gap.
-- **PyPOTS Architectures (SAITS, BRITS, ImputeFormer)**: State-of-the-Art Deep Learning models tailored for irregularly sampled multivariate time series. Featuring self-attention mechanisms (Transformers) and dual-directional RNNs, they excel at reconstructing *Long, Extended, and Gigant* (>3d) gaps by learning complex cross-variable physical attention maps (e.g., deducing deep currents from surface wind stress).
+### 1. Topological & Univariate Interpolations
+*(Linear, Time, Splines, PCHIP)*
+- **Mechanism**: Extremely efficient polynomial or linear estimations bridging the immediate edges of a gap. They do not utilize external variables.
+- **Role in Pipeline**: Baseline estimators. Ideal for **Micro (<6h)** gaps where physical oceanographic variables maintain inertia and have not undergone significant non-linear shifts.
+
+### 2. Classical Multivariate Statistical Models
+*(VARMA - Vector Autoregression Moving-Average)*
+- **Mechanism**: A traditional statistical approach that explores linear cross-correlations (e.g., Temperature reacting to Salinity).
+- **Role in Pipeline**: Included as a benchmark baseline. While mathematically sound, it struggles with the characteristic non-stationarity and long-term seasonality of marine temporal series.
+
+### 3. Iterative Machine Learning (Tree-Based)
+*(XGBoost Pro)*
+- **Mechanism**: A feature-engineered Gradient Boosting mechanism optimized for parallel GPU/CPU execution. It breaks the temporal sequence constraint by treating timestamps as cyclically encoded features (hour, day of year) while leveraging the full multivariate correlation matrix.
+- **Role in Pipeline**: Represents the optimal Pareto frontier of speed vs. precision. It is the reigning champion for **Short to Medium (6h-72h)** gaps, heavily penalizing local noise without catastrophic memory overhead.
+
+### 4. Deep Learning: Recurrent Neural Networks
+*(Bi-LSTM - Bidirectional Long Short-Term Memory)*
+- **Mechanism**: Analyzes the continuous sequence of data forwards and backwards. The hidden states act as "memory cells" capable of retaining the physical momentum of the ocean before the gap occurs and reconciling it with the states observed immediately after.
+- **Role in Pipeline**: Exceptional at capturing physical inertia, typically deployed for complex **Medium (1d-3d)** gaps where temporal memory is strictly required.
+
+### 5. Deep Learning: Attention & Transformer Architectures
+*(PyPOTS Framework: SAITS, BRITS, ImputeFormer)*
+- **Mechanism**: State-of-the-Art models specifically tailored for irregularly sampled multivariate time series. Operating on self-attention mechanisms and dual-directional RNNs, they compute complex, long-range cross-variable physical attention maps (e.g., deducing deep underwater currents solely from sustained surface wind stress).
+- **Role in Pipeline**: The heavy artillery. Deployed exclusively for **Long, Extended, and Gigant (>3d)** gaps. These models are capable of reconstructing entirely missing physical events (like a multi-day storm) by inferring the missing data from the remaining active instruments.
 
 ---
 
