@@ -33,32 +33,16 @@ To solve the prevalent issue of artificial model assessment, the evaluation fram
 
 ## Evaluated Imputation Typologies
 
-The benchmarking suite systematically evaluates a wide array of imputation algorithms. To comprehend their scale-aware routing, the models are classified into five distinct typologies ordered by complexity:
+The benchmarking suite classifies models into five distinct typologies based on architectural complexity to drive the scale-aware routing engine:
 
-### 1. Topological & Univariate Interpolations
-*(Linear, Time, Splines, PCHIP)*
-- **Mechanism**: Extremely efficient polynomial or linear estimations bridging the immediate edges of a gap. They do not utilize external variables.
-- **Role in Pipeline**: Baseline estimators. Ideal for **Micro (<6h)** gaps where physical oceanographic variables maintain inertia and have not undergone significant non-linear shifts.
+| Typology | Evaluated Models | Core Mechanism | Pipeline Role (Target Gap Scale) |
+| :--- | :--- | :--- | :--- |
+| **1. Topological & Univariate** | Linear, Time, Splines, PCHIP | Fast polynomial/linear estimations bridging immediate gap edges without external variables. | **Baseline**. Ideal for **Micro (<6h)** gaps maintaining physical inertia. |
+| **2. Multivariate Statistical** | VARMA | Explores classical linear cross-correlations (e.g. Temp vs Salinity). | **Benchmark Reference**. Struggles with long-term non-stationarity. |
+| **3. Iterative Machine Learning** | XGBoost Pro | GPU-optimized Gradient Boosting using cyclical temporal encoding and full multivariate correlation matrices. | **Speed/Precision Champion**. Deployed for **Short/Medium (6h-72h)** gaps. |
+| **4. Recurrent Neural Networks** | Bi-LSTM | Bidirectional sequence analysis retaining the physical momentum of the ocean before and after gaps. | **Inertia Capturing**. Ideal for complex **Medium (1d-3d)** gaps. |
+| **5. Attention & Transformers** | SAITS, BRITS, ImputeFormer | SOTA Deep Learning utilizing self-attention to map long-range, cross-variable physical relationships. | **Heavy Artillery**. Essential for **Long, Extended & Gigant (>3d)** missing events. |
 
-### 2. Classical Multivariate Statistical Models
-*(VARMA - Vector Autoregression Moving-Average)*
-- **Mechanism**: A traditional statistical approach that explores linear cross-correlations (e.g., Temperature reacting to Salinity).
-- **Role in Pipeline**: Included as a benchmark baseline. While mathematically sound, it struggles with the characteristic non-stationarity and long-term seasonality of marine temporal series.
-
-### 3. Iterative Machine Learning (Tree-Based)
-*(XGBoost Pro)*
-- **Mechanism**: A feature-engineered Gradient Boosting mechanism optimized for parallel GPU/CPU execution. It breaks the temporal sequence constraint by treating timestamps as cyclically encoded features (hour, day of year) while leveraging the full multivariate correlation matrix.
-- **Role in Pipeline**: Represents the optimal Pareto frontier of speed vs. precision. It is the reigning champion for **Short to Medium (6h-72h)** gaps, heavily penalizing local noise without catastrophic memory overhead.
-
-### 4. Deep Learning: Recurrent Neural Networks
-*(Bi-LSTM - Bidirectional Long Short-Term Memory)*
-- **Mechanism**: Analyzes the continuous sequence of data forwards and backwards. The hidden states act as "memory cells" capable of retaining the physical momentum of the ocean before the gap occurs and reconciling it with the states observed immediately after.
-- **Role in Pipeline**: Exceptional at capturing physical inertia, typically deployed for complex **Medium (1d-3d)** gaps where temporal memory is strictly required.
-
-### 5. Deep Learning: Attention & Transformer Architectures
-*(PyPOTS Framework: SAITS, BRITS, ImputeFormer)*
-- **Mechanism**: State-of-the-Art models specifically tailored for irregularly sampled multivariate time series. Operating on self-attention mechanisms and dual-directional RNNs, they compute complex, long-range cross-variable physical attention maps (e.g., deducing deep underwater currents solely from sustained surface wind stress).
-- **Role in Pipeline**: The heavy artillery. Deployed exclusively for **Long, Extended, and Gigant (>3d)** gaps. These models are capable of reconstructing entirely missing physical events (like a multi-day storm) by inferring the missing data from the remaining active instruments.
 
 ---
 
