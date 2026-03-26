@@ -31,6 +31,18 @@ To solve the prevalent issue of artificial model assessment, the evaluation fram
 
 ---
 
+## Evaluated Imputation Models
+
+The benchmarking suite systematically evaluates a wide array of imputation algorithms, ranging from topological interpolations to state-of-the-art Deep Learning sequences, each demonstrating specific proficiencies depending on the gap temporal scale:
+
+- **Baseline Interpolations (Linear, Time, Splines, PCHIP)**: Extremely efficient topological estimators. Ideal for *Micro* (<6h) gaps where the physical variable hasn't undergone significant non-linear shifts.
+- **VARMA (Vector Autoregression Moving-Average)**: A classical multivariate statistical model. It explores linear physical relationships (e.g., Temperature-Salinity) but struggles with the characteristic non-stationarity of long oceanographic series.
+- **XGBoost Pro (Gradient Boosting)**: A feature-engineered iterative tree model. Highly optimized for parallel CPU/GPU execution. It utilizes multivariate correlations and explicit temporal encoding (hour, day of year). It represents the optimal balance of speed and precision for *Short* to *Medium* (6h-72h) gaps.
+- **Bi-LSTM (Bidirectional Long Short-Term Memory)**: A recurrent neural network that analyzes the temporal sequence forwards and backwards. Excels at capturing the physical inertia of the series before and after the gap.
+- **PyPOTS Architectures (SAITS, BRITS, ImputeFormer)**: State-of-the-Art Deep Learning models tailored for irregularly sampled multivariate time series. Featuring self-attention mechanisms (Transformers) and dual-directional RNNs, they excel at reconstructing *Long, Extended, and Gigant* (>3d) gaps by learning complex cross-variable physical attention maps (e.g., deducing deep currents from surface wind stress).
+
+---
+
 ## Execution Interface (CLI)
 
 The pipeline is orchestrated via `main_obsea.py`, providing a declarative interface for the operational modes:
