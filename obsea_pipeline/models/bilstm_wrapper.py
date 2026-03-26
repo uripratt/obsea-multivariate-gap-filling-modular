@@ -3,13 +3,11 @@ import pandas as pd
 import numpy as np
 
 from obsea_pipeline.config.settings import HARDWARE_CONFIG
-from obsea_pipeline.models.multivariate_lstm_model import MultivariateLSTMImputer
-
-logger = logging.getLogger(__name__)
-
 def interpolate_bilstm(df: pd.DataFrame, target_var: str, predictor_vars: list = None, max_gap_size: int = None):
     """Wrapper for the Multivariate Bi-LSTM Imputer with physical clamping."""
     try:
+        from obsea_pipeline.models.multivariate_lstm_model import MultivariateLSTMImputer
+        
         if predictor_vars is None:
             # Auto-select 4 most correlated features to provide support
             numeric_cols = df.select_dtypes(include=[np.number]).columns

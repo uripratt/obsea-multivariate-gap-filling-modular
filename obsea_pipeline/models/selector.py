@@ -8,20 +8,21 @@ from obsea_pipeline.models.interpolation import (
 )
 from obsea_pipeline.models.varma_wrapper import interpolate_varma
 from obsea_pipeline.models.xgboost_wrapper import interpolate_xgboost_pro, interpolate_xgboost
-from obsea_pipeline.models.deep_learning import (
-    interpolate_saits, interpolate_brits, interpolate_imputeformer, interpolate_brits_pro
-)
-
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn, TaskID
-from rich.console import Console
-
-# Deep Learning Imports (Graceful fail if Torch/CUDA is broken)
+# Deep Learning & Multivariate Imports (Graceful fail if Torch/CUDA is broken)
 try:
+    from obsea_pipeline.models.deep_learning import (
+        interpolate_saits, interpolate_brits, interpolate_imputeformer, interpolate_brits_pro
+    )
     from obsea_pipeline.models.bilstm_wrapper import interpolate_bilstm
-    BILSTM_AVAILABLE = True
+    DL_AVAILABLE = True
 except (ImportError, Exception) as e:
-    logger.warning(f"BiLSTM model could not be loaded: {e}. Falling back to VARMA/XGBoost for long gaps.")
-    BILSTM_AVAILABLE = False
+    # Error fatal de Torch/CUDA (suele pasar en entornos con NCCL roto o CUDA mal configurado)
+    logger.warning(f"  [IMPORT WARNING] Deep Learning / Torch models could not be loaded: {e}.")
+    logger.warning("  The pipeline will fallback to XGBoost/VARMA/Linear for these gaps.")
+    DL_AVAILABLE = False
+    # Definir stubs para evitar NameError
+    interpolate_saits = interpolate_brits = interpolate_imputeformer = interpolate_brits_pro = None
+    interpolate_bilstm = None
 
 from obsea_pipeline.gaps.analysis import detect_gaps
 
@@ -44,20 +45,40 @@ def apply_selected_model(df, col, method, gap=None):
     elif method == 'varma':
         df[col] = interpolate_varma(df, col, max_gap_size=max_gap)
     elif method == 'bilstm':
-        if BILSTM_AVAILABLE:
+        if DL_AVAILABLE and interpolate_bilstm:
             df[col] = interpolate_bilstm(df, col, max_gap_size=max_gap)
         else:
             logger.warning(f"  [FALLBACK] BiLSTM no disponible para {col}. Usando XGBoost Pro.")
             prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
             df[col] = prediction
     elif method == 'saits':
-        df[col] = interpolate_saits(df, col, max_gap_size=max_gap)
+        if DL_AVAILABLE and interpolate_saits:
+            df[col] = interpolate_saits(df, col, max_gap_size=max_gap)
+        else:
+            logger.warning(f"  [FALLBACK] SAITS no disponible para {col}. Usando XGBoost Pro.")
+            prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
+            df[col] = prediction
     elif method == 'imputeformer':
-        df[col] = interpolate_imputeformer(df, col, max_gap_size=max_gap)
+        if DL_AVAILABLE and interpolate_imputeformer:
+            df[col] = interpolate_imputeformer(df, col, max_gap_size=max_gap)
+        else:
+            logger.warning(f"  [FALLBACK] ImputeFormer no disponible para {col}. Usando XGBoost Pro.")
+            prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
+            df[col] = prediction
     elif method == 'brits':
-        df[col] = interpolate_brits(df, col, max_gap_size=max_gap)
+        if DL_AVAILABLE and interpolate_brits:
+            df[col] = interpolate_brits(df, col, max_gap_size=max_gap)
+        else:
+            logger.warning(f"  [FALLBACK] BRITS no disponible para {col}. Usando XGBoost Pro.")
+            prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
+            df[col] = prediction
     elif method == 'brits_pro':
-        df[col] = interpolate_brits_pro(df, col)
+        if DL_AVAILABLE and interpolate_brits_pro:
+            df[col] = interpolate_brits_pro(df, col)
+        else:
+            logger.warning(f"  [FALLBACK] BRITS Pro no disponible para {col}. Usando XGBoost Pro.")
+            prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
+            df[col] = prediction
     elif method == 'xgboost':
         prediction, _ = interpolate_xgboost(df, col, max_gap_size=max_gap)
         df[col] = prediction
