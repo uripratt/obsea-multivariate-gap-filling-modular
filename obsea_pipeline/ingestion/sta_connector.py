@@ -3,10 +3,17 @@ import urllib.error
 import urllib.parse
 import json
 import logging
+import time
 import pandas as pd
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
+
+# STA API Resilience Configuration
+_MAX_RETRIES = 3
+_BASE_DELAY_S = 2
+_REQUEST_TIMEOUT_S = 30
+
 
 class STAConnector:
     """
@@ -135,29 +142,46 @@ class STAConnector:
         all_results = []
         next_link = url
 
-        # Bucle recursivo de paginación
+        # Bucle de paginación con retry + exponential backoff
+        page_count = 0
         while next_link:
-            try:
-                req = urllib.request.Request(next_link)
-                with urllib.request.urlopen(req) as response:
-                    data = json.loads(response.read().decode('utf-8'))
-                    
-                    if 'value' in data:
-                        all_results.extend(data['value'])
-                    
-                    # Chequear si existe la siguiente página y arreglar bug del servidor ($orderby vs $orderBy)
-                    next_link = data.get('@iot.nextLink')
-                    if next_link:
-                        import re
-                        next_link = next_link.replace("$orderby=", "$orderBy=")
-                        # Arreglar bug critico 2: El servidor inyecta $skipFilter que el mismo rechaza luego
-                        next_link = re.sub(r'&\$skipFilter=[^&]+', '', next_link)
-                    
-            except urllib.error.URLError as e:
-                logger.error(f"Error accediendo a STA: {e}. URL: {next_link}")
-                if hasattr(e, 'read'):
-                    logger.error(f"Response: {e.read().decode('utf-8')}")
+            data = None
+            for attempt in range(_MAX_RETRIES):
+                try:
+                    req = urllib.request.Request(next_link, headers={'User-Agent': 'OBSEA-Pipeline/2.0'})
+                    with urllib.request.urlopen(req, timeout=_REQUEST_TIMEOUT_S) as response:
+                        data = json.loads(response.read().decode('utf-8'))
+                        break  # Success, exit retry loop
+                except (urllib.error.URLError, TimeoutError, ConnectionResetError) as e:
+                    if attempt < _MAX_RETRIES - 1:
+                        delay = _BASE_DELAY_S * (2 ** attempt)
+                        logger.warning(f"  [STA Retry {attempt+1}/{_MAX_RETRIES}] {e} — waiting {delay}s...")
+                        time.sleep(delay)
+                    else:
+                        logger.error(f"  [STA FAIL] Permanent failure after {_MAX_RETRIES} retries on page {page_count+1}: {e}")
+                        if hasattr(e, 'read'):
+                            try: logger.error(f"  Response: {e.read().decode('utf-8')[:500]}")
+                            except: pass
+            
+            if data is None:
+                logger.warning(f"  Aborting pagination at page {page_count+1}. Collected {len(all_results)} records so far.")
                 break
+                    
+            if 'value' in data:
+                all_results.extend(data['value'])
+                
+            page_count += 1
+            if page_count % 10 == 0:
+                logger.info(f"    ... fetched {page_count} pages ({len(all_results):,} records)")
+            
+            # Chequear si existe la siguiente página y arreglar bug del servidor ($orderby vs $orderBy)
+            next_link = data.get('@iot.nextLink')
+            if next_link:
+                import re
+                next_link = next_link.replace("$orderby=", "$orderBy=")
+                # Arreglar bug critico 2: El servidor inyecta $skipFilter que el mismo rechaza luego
+                next_link = re.sub(r'&\$skipFilter=[^&]+', '', next_link)
+
                 
         if not all_results:
             logger.warning(f"No se han encontrado observaciones para el Datastream {datastream_id}.")

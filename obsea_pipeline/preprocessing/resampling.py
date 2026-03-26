@@ -25,25 +25,45 @@ def circular_mean(series):
         
     return mean_deg
 
+# Sufijos de variables direccionales que requieren media circular
+_CIRCULAR_SUFFIXES = ('WDIR', 'CDIR', 'VMDR')
+
+def _is_circular_variable(var_name: str) -> bool:
+    """Detecta si una variable es direccional (0-360°) usando matching por sufijo."""
+    return var_name.endswith(_CIRCULAR_SUFFIXES)
+
 def resample_variable(series, var_name, freq='30min'):
     """
     Remuestrea una serie temporal específica usando la técnica adecuada según la variable.
     Variables angulares usan media circular. El resto usan media aritmética estandar.
     """
-    # Variables direccionales que necesitan media circular
-    circular_vars = ['WDIR', 'CDIR', 'VMDR'] 
-    
-    if var_name in circular_vars:
-        # custom resampling with circular mean
-        # .apply calls the function on the groups
+    if _is_circular_variable(var_name):
         return series.resample(freq).apply(circular_mean)
     else:
         # Standard arithmetic mean for scalar variables (TEMP, PSAL, WSPD...)
         return series.resample(freq).mean()
 
+def resample_with_qc(df, var_name, freq='30min'):
+    """
+    QC-Aware Resampling: excluye valores FAIL del promedio y propaga el peor flag
+    del bin temporal como el QC del punto remuestreado.
+    
+    Returns: (resampled_values, resampled_qc) o (resampled_values, None) si no hay QC.
+    """
+    qc_col = f"{var_name}_QC"
+    if qc_col in df.columns:
+        # Solo promediar datos con flag <= 3 (Pass + Suspect)
+        clean = df[var_name].where(df[qc_col] <= 3)
+        resampled_val = resample_variable(clean, var_name, freq)
+        resampled_qc = df[qc_col].resample(freq).max()  # Peor flag del bin
+        return resampled_val, resampled_qc
+    else:
+        return resample_variable(df[var_name], var_name, freq), None
+
 def resample_dataframe(df, freq='30min'):
     """
     Alinea y remuestrea un dataframe asíncrono entero a una frecuencia fija.
+    Usa resample_with_qc si hay columnas _QC disponibles.
     """
     logger.info(f"Resampling complete dataset to {freq} intervals...")
     
@@ -53,9 +73,15 @@ def resample_dataframe(df, freq='30min'):
          
     resampled_cols = {}
     for col in df.columns:
-        if df[col].dtype == object: # saltar columnas de texto si las hay
+        if df[col].dtype == object:  # saltar columnas de texto si las hay
             continue
-        resampled_cols[col] = resample_variable(df[col], col, freq)
+        if col.endswith('_QC') or col.endswith('_STD'):
+            continue  # QC/STD columns are handled inside resample_with_qc
+            
+        resampled_val, resampled_qc = resample_with_qc(df, col, freq)
+        resampled_cols[col] = resampled_val
+        if resampled_qc is not None:
+            resampled_cols[f"{col}_QC"] = resampled_qc
         
     return pd.DataFrame(resampled_cols)
 
