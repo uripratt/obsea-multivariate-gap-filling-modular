@@ -35,13 +35,13 @@ To solve the prevalent issue of artificial model assessment, the evaluation fram
 
 The benchmarking suite classifies models into five distinct typologies based on architectural complexity to drive the scale-aware routing engine:
 
-| Typology | Evaluated Models | Core Mechanism | Pipeline Role (Target Gap Scale) |
+| Typology | Evaluated Models | Theoretical Mechanism | Scale Routine |
 | :--- | :--- | :--- | :--- |
-| **1. Topological & Univariate** | Linear, Time, Splines, PCHIP | Fast polynomial/linear estimations bridging immediate gap edges without external variables. | **Baseline**. Ideal for **Micro (<6h)** gaps maintaining physical inertia. |
-| **2. Multivariate Statistical** | VARMA | Explores classical linear cross-correlations (e.g. Temp vs Salinity). | **Benchmark Reference**. Struggles with long-term non-stationarity. |
-| **3. Iterative Machine Learning** | XGBoost Pro | GPU-optimized Gradient Boosting using cyclical temporal encoding and full multivariate correlation matrices. | **Speed/Precision Champion**. Deployed for **Short/Medium (6h-72h)** gaps. |
-| **4. Recurrent Neural Networks** | Bi-LSTM | Bidirectional sequence analysis retaining the physical momentum of the ocean before and after gaps. | **Inertia Capturing**. Ideal for complex **Medium (1d-3d)** gaps. |
-| **5. Attention & Transformers** | SAITS, BRITS, ImputeFormer | SOTA Deep Learning utilizing self-attention to map long-range, cross-variable physical relationships. | **Heavy Artillery**. Essential for **Long, Extended & Gigant (>3d)** missing events. |
+| **1. Topological** | Linear, Splines, PCHIP | Bridges adjacent points mathematically without exploring external multivariate physics. | **Micro (<6h)**: Variable momentum is assumed stable. |
+| **2. Statistical** | VARMA | Computes fixed linear cross-correlations (e.g. Temperature-Salinity covariance). | **Benchmark Baseline**: Often fails against ocean non-stationarity. |
+| **3. Iterative ML / Trees** | XGBoost Pro | GPU-accelerated Gradient Boosting. Uses multivariate context and treats time cyclically (Hour/DOY). | **Short & Medium (6h-72h)**: The absolute Pareto optimum (Speed vs. Error). |
+| **4. Recurrent Architectures** | Bi-LSTM, **BRITS** | Employs bidirectional memory cells. *BRITS* specifically adds temporal decay mechanisms for irregular sampling. | **Medium & Long (1d-7d)**: Outstanding at capturing sustained physical inertia. |
+| **5. Transformers (Attention)** | SAITS, ImputeFormer | Replaces sequential memory with Self-Attention, computing global interaction maps across all timestamps/variables. | **Extended & Gigant (>7d)**: The only models capable of reconstructing entire missing storms/events. |
 
 
 ---
