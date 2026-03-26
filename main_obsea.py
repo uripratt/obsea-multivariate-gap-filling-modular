@@ -47,7 +47,7 @@ def show_data_summary(df):
     
     console.print(table)
 
-def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True):
+def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True, methods=None):
     logger.info(f"Starting OBSEA Pipeline V2 in {mode.upper()} mode")
     
     output_dir = Path(CONFIG['output_dir'])
@@ -163,8 +163,8 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
         return df_resampled
         
     elif mode == "benchmark":
-        logger.info("Executing Artificial Benchmark Simulation across 14 Native Deep Learning Models...")
-        results = benchmark_gap_filling(df_resampled, test_variable='TEMP', gap_categories=list(GAP_CATEGORIES.keys()))
+        logger.info("Executing Artificial Benchmark Simulation...")
+        results = benchmark_gap_filling(df_resampled, test_variable='TEMP', gap_categories=list(GAP_CATEGORIES.keys()), methods=methods)
         logger.info("Benchmark complete.")
         return results
         
@@ -223,12 +223,12 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=None, help="Limit history days for faster debugging (e.g. 30)")
     parser.add_argument("--start", type=str, default=None, help="Start date (YYYY-MM-DD)")
     parser.add_argument("--end", type=str, default=None, help="End date (YYYY-MM-DD)")
-    parser.add_argument("--no-cache", action="store_true", help="Force fetching from API instead of loading the cache")
+    parser.add_argument("--methods", nargs="+", default=None, help="List of specific models to benchmark (e.g. --methods linear time splines varma xgboost)")
     args = parser.parse_args()
     
     try:
         run_pipeline(mode=args.mode, limit_days=args.limit, 
                      start_date=args.start, end_date=args.end, 
-                     use_cache=not args.no_cache)
+                     use_cache=not args.no_cache, methods=args.methods)
     except KeyboardInterrupt:
         logger.warning("Pipeline execution interrupted by user.")
