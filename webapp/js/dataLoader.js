@@ -160,19 +160,19 @@ const DataLoader = {
 
     getSampleMethodComparison() {
         return [
-            { Method: 'Linear', Category: 'micro', RMSE: 0.12, MAE: 0.08, R2: 0.95 },
-            { Method: 'Time', Category: 'micro', RMSE: 0.11, MAE: 0.07, R2: 0.96 },
-            { Method: 'Splines', Category: 'micro', RMSE: 0.10, MAE: 0.06, R2: 0.97 },
-            { Method: 'VARMA', Category: 'micro', RMSE: 0.09, MAE: 0.05, R2: 0.98 },
-            { Method: 'Linear', Category: 'short', RMSE: 0.35, MAE: 0.25, R2: 0.82 },
-            { Method: 'Time', Category: 'short', RMSE: 0.32, MAE: 0.22, R2: 0.84 },
-            { Method: 'Splines', Category: 'short', RMSE: 0.28, MAE: 0.19, R2: 0.87 },
-            { Method: 'VARMA', Category: 'short', RMSE: 0.22, MAE: 0.15, R2: 0.91 },
-            { Method: 'Linear', Category: 'medium', RMSE: 0.85, MAE: 0.62, R2: 0.65 },
-            { Method: 'Time', Category: 'medium', RMSE: 0.78, MAE: 0.55, R2: 0.70 },
-            { Method: 'Splines', Category: 'medium', RMSE: 0.68, MAE: 0.48, R2: 0.76 },
-            { Method: 'VARMA', Category: 'medium', RMSE: 0.52, MAE: 0.38, R2: 0.84 },
-            { Method: 'Bi-LSTM', Category: 'medium', RMSE: 0.45, MAE: 0.32, R2: 0.88 },
+            { Method: 'Linear', Category: 'micro', RMSE: 0.12, MAE: 0.08, R2: 0.95, Spectral_Error: 1.2 },
+            { Method: 'Time', Category: 'micro', RMSE: 0.11, MAE: 0.07, R2: 0.96, Spectral_Error: 1.1 },
+            { Method: 'Splines', Category: 'micro', RMSE: 0.10, MAE: 0.06, R2: 0.97, Spectral_Error: 0.8 },
+            { Method: 'VARMA', Category: 'micro', RMSE: 0.09, MAE: 0.05, R2: 0.98, Spectral_Error: 0.5 },
+            { Method: 'Linear', Category: 'short', RMSE: 0.35, MAE: 0.25, R2: 0.82, Spectral_Error: 2.1 },
+            { Method: 'Time', Category: 'short', RMSE: 0.32, MAE: 0.22, R2: 0.84, Spectral_Error: 2.0 },
+            { Method: 'Splines', Category: 'short', RMSE: 0.28, MAE: 0.19, R2: 0.87, Spectral_Error: 1.5 },
+            { Method: 'VARMA', Category: 'short', RMSE: 0.22, MAE: 0.15, R2: 0.91, Spectral_Error: 0.9 },
+            { Method: 'Linear', Category: 'medium', RMSE: 0.85, MAE: 0.62, R2: 0.65, Spectral_Error: 3.5 },
+            { Method: 'Time', Category: 'medium', RMSE: 0.78, MAE: 0.55, R2: 0.70, Spectral_Error: 3.2 },
+            { Method: 'Splines', Category: 'medium', RMSE: 0.68, MAE: 0.48, R2: 0.76, Spectral_Error: 2.5 },
+            { Method: 'VARMA', Category: 'medium', RMSE: 0.52, MAE: 0.38, R2: 0.84, Spectral_Error: 1.2 },
+            { Method: 'Bi-LSTM', Category: 'medium', RMSE: 0.45, MAE: 0.32, R2: 0.88, Spectral_Error: 0.6 },
         ];
     },
 

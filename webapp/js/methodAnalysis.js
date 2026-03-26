@@ -192,7 +192,7 @@ const MethodAnalysis = {
         if (!data || data.length === 0) return;
 
         const methods = [...new Set(data.map(d => d.Method || d.method))];
-        const metrics = ['RMSE', 'MAE', 'R2'];
+        const metrics = ['RMSE', 'MAE', 'R2', 'Spectral_Error'];
 
         const z = methods.map(method => {
             return metrics.map(metric => {
@@ -245,11 +245,11 @@ const MethodAnalysis = {
             return val.toFixed(4);
         };
 
-        const metricList = ['RMSE', 'MAE', 'MAPE', 'R2', 'NSE', 'Bias'];
+        const metricList = ['RMSE', 'MAE', 'MAPE', 'R2', 'NSE', 'Bias', 'Spectral_Error'];
 
         let html = '<div class="metrics-grid">';
         metricList.forEach(key => {
-            if (metrics[key] !== undefined) {
+            if (metrics[key] !== undefined && metrics[key] !== null) {
                 const isGood = (key === 'R2' || key === 'NSE') ? metrics[key] > 0.9 : metrics[key] < 0.1;
                 const colorClass = isGood ? 'metric-good' : (
                     ((key === 'R2' || key === 'NSE') ? metrics[key] > 0.7 : metrics[key] < 0.5) ? 'metric-ok' : 'metric-bad'
@@ -257,7 +257,7 @@ const MethodAnalysis = {
                 html += `
                     <div class="metric-card ${colorClass}">
                         <div class="metric-value">${formatValue(key, metrics[key])}</div>
-                        <div class="metric-name">${key}</div>
+                        <div class="metric-name">${key.replace('_', ' ')}</div>
                     </div>
                 `;
             }

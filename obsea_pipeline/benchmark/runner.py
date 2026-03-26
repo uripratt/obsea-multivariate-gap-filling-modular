@@ -155,12 +155,32 @@ def benchmark_gap_filling(df: pd.DataFrame, test_variable: str = 'TEMP', gap_cat
         except Exception:
             w_dist = np.nan
 
+        try:
+            from scipy import signal
+            if len(true_valid) > 20:
+                nperseg = min(len(true_valid), 256)
+                # Compute Power Spectral Density (PSD) using Welch's method
+                # This directly measures how much high-frequency physical energy the model preserved
+                f_true, Pxx_true = signal.welch(true_valid, fs=1.0, nperseg=nperseg)
+                f_pred, Pxx_pred = signal.welch(predicted_valid, fs=1.0, nperseg=nperseg)
+                
+                # Spectral Error: Root Mean Squared Error of the Log Power Spectra
+                eps = 1e-10
+                log_Pxx_true = np.log10(Pxx_true + eps)
+                log_Pxx_pred = np.log10(Pxx_pred + eps)
+                psd_error = np.sqrt(np.mean((log_Pxx_true - log_Pxx_pred)**2))
+            else:
+                psd_error = np.nan
+        except Exception as e:
+            psd_error = np.nan
+
         return {
             'Category': cat, 'Method': met, 
             'RMSE': round(rmse, 4), 'MAE': round(mae, 4), 'NRMSE': round(nrmse, 4),
             'R2': round(r2, 4), 'Precision_%': round(precision, 2),
             'Coverage_%': round(coverage, 2),
             'Wasserstein': round(w_dist, 4) if not np.isnan(w_dist) else None,
+            'Spectral_Error': round(psd_error, 4) if not np.isnan(psd_error) else None,
             'Physical_Violations_%': round(phys_viol_pct, 2),
             'N_Gap_Points': n_total_gap, 'N_Filled': n_valid
         }
