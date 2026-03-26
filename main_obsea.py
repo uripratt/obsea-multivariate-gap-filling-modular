@@ -12,19 +12,12 @@ from obsea_pipeline.gaps.analysis import detect_gaps
 from plot_all_instruments import plot_instrument_timeseries
 from obsea_pipeline.models.selector import selective_interpolation
 from obsea_pipeline.benchmark.runner import benchmark_gap_filling
-from datetime import datetime
 from obsea_pipeline.utils.logger import setup_logger
 from rich.console import Console
 from rich.table import Table
 from rich import print as rprint
 
-# Logger con persistencia en archivo timestamped
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = Path(CONFIG['output_dir']) / "logs"
-log_dir.mkdir(parents=True, exist_ok=True)
-log_file = log_dir / f"obsea_pipeline_{timestamp}.log"
-
-logger = setup_logger(name="obsea_main", log_file=str(log_file))
+logger = setup_logger(name="obsea_main")
 console = Console()
 
 def show_data_summary(df):
@@ -179,9 +172,32 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
         logger.info("Running Scale-Aware Autonomous Interpolation Engine...")
         df_filled = selective_interpolation(df_resampled)
         
-        output_path = output_dir / "OBSEA_final_interpolated.csv"
-        df_filled.to_csv(output_path)
-        logger.info(f"Pipeline complete. Production dataset exported to {output_path}")
+        output_path_csv = output_dir / "OBSEA_final_interpolated.csv"
+        df_filled.to_csv(output_path_csv)
+        
+        # Export as Parquet to maintain precision and save space
+        output_path_parquet = output_dir / "OBSEA_final_interpolated.parquet"
+        df_filled.to_parquet(output_path_parquet)
+        
+        # Pre-compute Correlation Matrix for Webapp to prevent client-side freezing
+        logger.info("Pre-computing Correlation Matrix for Webapp...")
+        valid_cols = [c for c in df_filled.columns if not c.endswith('_QC') and not c.endswith('_STD') and pd.api.types.is_numeric_dtype(df_filled[c])]
+        corr_matrix = df_filled[valid_cols].corr(method='pearson').round(4)
+        
+        json_corr = []
+        for col in corr_matrix.columns:
+            row = {'': col, 'Variable': col}
+            for col2 in corr_matrix.columns:
+                row[col2] = corr_matrix.at[col, col2] if pd.notna(corr_matrix.at[col, col2]) else 0.0
+            json_corr.append(row)
+            
+        import json
+        with open(output_dir / "correlation_matrix.json", 'w') as f:
+            json.dump(json_corr, f)
+            
+        corr_matrix.to_csv(output_dir / "correlation_matrix.csv")
+        
+        logger.info(f"Pipeline complete. Production dataset and metadata exported to {output_dir}")
         return df_filled
         
     elif mode == "plot":

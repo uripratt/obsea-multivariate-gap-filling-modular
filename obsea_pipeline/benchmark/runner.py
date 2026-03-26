@@ -218,7 +218,8 @@ def benchmark_gap_filling(df: pd.DataFrame, test_variable: str = 'TEMP', gap_cat
         for i, block in enumerate(gap_blocks):
             logger.info(f"    Gap {i+1}: {block['start_time']} → {block['end_time']} ({block['length']} pts)")
         
-        df_test = df.copy()
+        cols_to_keep = [test_variable] + [c for c in predictor_vars if c in df.columns]
+        df_test = df[cols_to_keep].copy()
         df_test[test_variable] = df_simulated[test_variable]
         true_values = df[test_variable].loc[gap_mask]
         

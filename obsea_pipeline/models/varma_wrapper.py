@@ -23,26 +23,39 @@ def interpolate_var(df, target_var, max_gap=10):
         key_vars = [target_var, 'SVEL', 'PRES', 'BUOY_WSPD']
         available_vars = [v for v in key_vars if v in df.columns]
         
-        # Need contiguous blocks for VAR fitting
-        subset = df[available_vars].dropna()
-        min_samples = INTERPOLATION_CONFIG.get('min_samples', 200)
+        # Impute predictors so VAR doesn't fail on exogn gaps
+        df_imputed = df[available_vars].interpolate(method='time').bfill().ffill()
         
-        if len(subset) < min_samples:
-            logger.warning(f"  VAR: Not enough continuous data ({len(subset)}/{min_samples}). Falling back to time interpolation.")
+        # Fit on longest contiguous block or just imputed data
+        min_samples = INTERPOLATION_CONFIG.get('min_samples', 200)
+        if len(df_imputed) < min_samples:
+            logger.warning(f"  VAR: Not enough data ({len(df_imputed)}/{min_samples}). Falling back.")
             return result.interpolate(method='time', limit=max_gap)
         
-        # Fit on longest contiguous block
-        model = VAR(subset)
-        lag_order = min(5, len(subset) // 5)
+        model = VAR(df_imputed)
+        lag_order = min(5, len(df_imputed) // 5)
         if lag_order < 1:
             logger.warning("  VAR: Insufficient data for even 1 lag. Falling back.")
             return result.interpolate(method='time', limit=max_gap)
         
         fit_result = model.fit(maxlags=lag_order, ic='aic')
+        k_ar = fit_result.k_ar
         
-        # Use the VAR model to forecast into gaps
-        # First, fill short gaps with time interpolation as baseline
-        result = result.interpolate(method='time', limit=max_gap)
+        # Use the VAR model to recursively forecast into gaps
+        target_idx = available_vars.index(target_var)
+        y_values = df_imputed.values
+        gaps_mask = result.isna().values
+        
+        for idx in range(k_ar, len(y_values)):
+            if gaps_mask[idx]:
+                # Recursive 1-step forecast using past k_ar steps
+                lagged_values = y_values[idx-k_ar : idx]
+                pred = fit_result.forecast(lagged_values, steps=1)
+                y_values[idx, target_idx] = pred[0, target_idx]
+                result.iloc[idx] = pred[0, target_idx]
+                
+        # Fill any beginning gaps that lacked AR lag history
+        result = result.interpolate(method='time', limit=max_gap).bfill().ffill()
         
         # Physical clamping to prevent VARMA divergence
         observed = df[target_var].dropna()

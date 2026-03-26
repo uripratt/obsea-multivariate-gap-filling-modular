@@ -179,19 +179,25 @@ const App = {
         this.data.methods = results[2].status === 'fulfilled' ? results[2].value : loader.getSampleMethodComparison();
         this.data.timeseries = results[3].status === 'fulfilled' ? results[3].value : loader.getSampleTimeSeries();
 
-        // Dynamic Correlation: Compute from loaded timeseries if possible
-        if (window.MethodAnalysis && this.data.timeseries.length > 50) {
-            // Compute real correlation on the client side
+        // Dynamic Correlation: Always try to use server pre-computed matrix first
+        if (results[4] && results[4].status === 'fulfilled' && results[4].value.length > 0) {
+            this.data.correlation = results[4].value;
+            console.log('✅ Loaded pre-computed correlation matrix from server');
+        } else if (window.MethodAnalysis && this.data.timeseries.length > 50 && this.data.timeseries.length < 5000) {
+            // Compute real correlation on the client side ONLY if dataset is small enough
+            // to prevent browser tab from freezing with O(V²·N) complexity
+            console.log('⚠️ Computing correlation matrix on client-side (small dataset)');
             const vars = Object.keys(this.data.timeseries[0]).filter(k =>
                 !k.includes('_QC') && !k.includes('_STD') && k !== 'TIME' && k !== ''
             );
             // Limit to top 15 most important variables to prevent lag if too many
-            const keyVars = ['TEMP', 'PSAL', 'SVEL', 'CNDC', 'CUR_CSPD', 'WAV_VHM0', 'AIR_WSPD', 'AIR_AIRT', 'LAND_WSPD', 'LAND_AIRT', 'SIGMA0', 'N2', 'WIND_STRESS', 'WAVE_ENERGY', 'CUR_RMS'];
+            const keyVars = ['TEMP', 'PSAL', 'SVEL', 'CNDC', 'CUR_CSPD', 'WAV_VHM0', 'AIR_WSPD', 'AIR_AIRT', 'LAND_WSPD', 'LAND_AIRT', 'SIGMA_T', 'WIND_STRESS', 'WAVE_ENERGY', 'VB_FREQ'];
             const targetVars = vars.filter(v => keyVars.includes(v)).concat(vars.filter(v => !keyVars.includes(v))).slice(0, 15);
 
             this.data.correlation = this.computeCorrelation(this.data.timeseries, targetVars);
         } else {
-            this.data.correlation = results[4].status === 'fulfilled' ? results[4].value : loader.getSampleCorrelation();
+            console.warn('⚠️ Falling back to sample correlation matrix (Dataset too large for client compute)');
+            this.data.correlation = loader.getSampleCorrelation();
         }
 
         console.log('📊 Data Memory state:', {

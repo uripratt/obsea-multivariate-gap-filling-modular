@@ -430,12 +430,21 @@ class XGBoostProImputer:
                  all_feats.at[idx, 'gap_distance'] = prev_dist + 1.0
 
             # Predict
-            X_row = all_feats.iloc[[pos]][self.feature_columns]
+            # CRITICAL FIX: Direct NumPy array extraction averts pandas .iloc DataFrame instantiation overhead.
+            # We reshape to 1D to extract quickly, then reshape back to 2D for XGBoost.
+            x_vals = all_feats.iloc[pos][self.feature_columns].values.reshape(1, -1)
             
             try:
-                pred = model.predict(X_row, iteration_range=(0, model.best_iteration if hasattr(model, 'best_iteration') else 0))[0]
+                # XGBoost predicts drastically faster on raw numpy/DMatrix when iterating row-by-row
+                # Warning: We bypass feature names matching here for pure speed
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    pred = model.predict(x_vals, iteration_range=(0, model.best_iteration if hasattr(model, 'best_iteration') else 0))[0]
             except:
-                pred = model.predict(X_row)[0]
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    pred = model.predict(x_vals)[0]
             
             # EXPOSURE BIAS MITIGATION: Dynamic Residual Decay
             # At 576 steps (12 days), the autoregressive residual is mostly noise.
