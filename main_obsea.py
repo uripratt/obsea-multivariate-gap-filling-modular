@@ -47,7 +47,7 @@ def show_data_summary(df):
     
     console.print(table)
 
-def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True, methods=None):
+def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True, methods=None, csv_input_path=None):
     logger.info(f"Starting OBSEA Pipeline V2 in {mode.upper()} mode")
     
     output_dir = Path(CONFIG['output_dir'])
@@ -64,58 +64,82 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
         
     else:
         # 1. Ingestion
-        logger.info("Initializing STA v1.1 API Connector...")
-        sta = STAConnector()
-        try:
-            from datetime import datetime, timezone, timedelta
+        df_raw = pd.DataFrame()
+        if csv_input_path:
+            if Path(csv_input_path).exists():
+                logger.info(f"Loading external multivariate CSV dataset: {csv_input_path}")
+                df_raw = pd.read_csv(csv_input_path)
+                
+                if 'Timestamp' in df_raw.columns:
+                    df_raw['Timestamp'] = pd.to_datetime(df_raw['Timestamp'])
+                    df_raw.set_index('Timestamp', inplace=True)
+                else:
+                    first_col = df_raw.columns[0]
+                    logger.info(f"  Columna 'Timestamp' no encontrada. Usando la primera columna '{first_col}'.")
+                    df_raw[first_col] = pd.to_datetime(df_raw[first_col], errors='coerce')
+                    df_raw.set_index(first_col, inplace=True)
+                    df_raw.index.name = 'Timestamp'
+                    
+                if df_raw.index.tz is not None:
+                    df_raw.index = df_raw.index.tz_convert(None)
+                logger.info(f"Successfully loaded {df_raw.shape[0]} records from external CSV.")
+            else:
+                logger.error(f"External CSV file not found: {csv_input_path}")
+                return None
+                
+        if df_raw.empty and not csv_input_path:
+            logger.info("Initializing STA v1.1 API Connector...")
+            sta = STAConnector()
+            try:
+                from datetime import datetime, timezone, timedelta
+                
+                # Ventana temporal de consulta. Para producción, se calculará dinámicamente.
+                if start_date and end_date:
+                    start_str = f"{start_date}T00:00:00Z"
+                    end_str = f"{end_date}T23:59:59Z"
+                elif limit_days:
+                    end_time = datetime.now(timezone.utc)
+                    start_time = end_time - timedelta(days=limit_days)
+                    start_str = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    end_str = end_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+                else:
+                    # Default a un bloque de prueba si no se especifica explícitamente nada para no tumbar la API
+                    start_str = "2023-05-01T00:00:00Z"
+                    end_str = "2023-05-15T23:59:59Z"
             
-            # Ventana temporal de consulta. Para producción, se calculará dinámicamente.
-            if start_date and end_date:
-                start_str = f"{start_date}T00:00:00Z"
-                end_str = f"{end_date}T23:59:59Z"
-            elif limit_days:
-                end_time = datetime.now(timezone.utc)
-                start_time = end_time - timedelta(days=limit_days)
-                start_str = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-                end_str = end_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-            else:
-                # Default a un bloque de prueba si no se especifica explícitamente nada para no tumbar la API
-                start_str = "2023-05-01T00:00:00Z"
-                end_str = "2023-05-15T23:59:59Z"
-        
-            # Iterar sobre los 5 grupos de instrumentos seleccionados
-            dfs = []
-            for group_name, var_dict in STAConnector.INSTRUMENT_GROUPS.items():
-                logger.info(f"  Fetching instrument group: {group_name} ({len(var_dict)} variables)...")
+                # Iterar sobre los 5 grupos de instrumentos seleccionados
+                dfs = []
+                for group_name, var_dict in STAConnector.INSTRUMENT_GROUPS.items():
+                    logger.info(f"  Fetching instrument group: {group_name} ({len(var_dict)} variables)...")
+                    
+                    # Determinar si es un grupo AWAC con filtro de profundidad
+                    depth_bin = STAConnector.AWAC_DEPTH_BINS.get(group_name, None)
+                    if depth_bin is not None:
+                        logger.info(f"    → ADCP profile mode: selecting depth bin = {depth_bin}m")
+                    
+                    for var_name, ds_id in var_dict.items():
+                        try:
+                            df_var = sta.fetch_observations(ds_id, start_time=start_str, end_time=end_str, depth_bin=depth_bin)
+                            if not df_var.empty:
+                                df_var.rename(columns={'Value': var_name}, inplace=True)
+                                dfs.append(df_var)
+                                logger.info(f"    ✓ {var_name} (DS:{ds_id}): {len(df_var)} records")
+                            else:
+                                logger.warning(f"    ✗ {var_name} (DS:{ds_id}): 0 records")
+                        except Exception as e:
+                            logger.warning(f"    ✗ {var_name} (DS:{ds_id}) failed: {e}")
+                            
+                if dfs:
+                    df_raw = pd.concat(dfs, axis=1)
+                    df_raw.sort_index(inplace=True)
+                    logger.info(f"STA API Integration Successful. Unified DataFrame: {df_raw.shape[0]} rows × {df_raw.shape[1]} columns")
+                else:
+                    logger.warning("STA API Integration yielded 0 records across all instruments.")
+                    df_raw = pd.DataFrame()
                 
-                # Determinar si es un grupo AWAC con filtro de profundidad
-                depth_bin = STAConnector.AWAC_DEPTH_BINS.get(group_name, None)
-                if depth_bin is not None:
-                    logger.info(f"    → ADCP profile mode: selecting depth bin = {depth_bin}m")
-                
-                for var_name, ds_id in var_dict.items():
-                    try:
-                        df_var = sta.fetch_observations(ds_id, start_time=start_str, end_time=end_str, depth_bin=depth_bin)
-                        if not df_var.empty:
-                            df_var.rename(columns={'Value': var_name}, inplace=True)
-                            dfs.append(df_var)
-                            logger.info(f"    ✓ {var_name} (DS:{ds_id}): {len(df_var)} records")
-                        else:
-                            logger.warning(f"    ✗ {var_name} (DS:{ds_id}): 0 records")
-                    except Exception as e:
-                        logger.warning(f"    ✗ {var_name} (DS:{ds_id}) failed: {e}")
-                        
-            if dfs:
-                df_raw = pd.concat(dfs, axis=1)
-                df_raw.sort_index(inplace=True)
-                logger.info(f"STA API Integration Successful. Unified DataFrame: {df_raw.shape[0]} rows × {df_raw.shape[1]} columns")
-            else:
-                logger.warning("STA API Integration yielded 0 records across all instruments.")
+            except Exception as e:
+                logger.warning(f"STA API Master Fetch failed ({e}). Falling back to CSV Loader...")
                 df_raw = pd.DataFrame()
-            
-        except Exception as e:
-            logger.warning(f"STA API Master Fetch failed ({e}). Falling back to CSV Loader...")
-            df_raw = pd.DataFrame()
         
         if df_raw.empty:
             data_dict = load_all_data()
@@ -225,11 +249,14 @@ if __name__ == "__main__":
     parser.add_argument("--end", type=str, default=None, help="End date (YYYY-MM-DD)")
     parser.add_argument("--no-cache", action="store_true", help="Force fetching from API instead of loading the cache")
     parser.add_argument("--methods", nargs="+", default=None, help="List of specific models to benchmark (e.g. --methods linear time splines varma xgboost)")
+    parser.add_argument("--csv-input", type=str, default=None, help="Path to an external multivariate CSV dataset to bypass API ingestion.")
     args = parser.parse_args()
     
     try:
         run_pipeline(mode=args.mode, limit_days=args.limit, 
                      start_date=args.start, end_date=args.end, 
-                     use_cache=not args.no_cache, methods=args.methods)
+                     use_cache=not args.no_cache, methods=args.methods,
+                     csv_input_path=args.csv_input)
     except KeyboardInterrupt:
         logger.warning("Pipeline execution interrupted by user.")
+
