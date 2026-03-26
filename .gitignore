@@ -1,1 +1,18 @@
+
+# Junk and artifacts
+__pycache__/
+*.pyc
+output_lup/
+saits_models/
+imputeformer_models/
+brits_models/
+brits_pro_models/
+results_jupyterhub/
+results_jupyterhub_old_backup/
+obsea_pipeline_OLD_BACKUP/
+export_production/
 *.nc
+*.parquet
+*.csv
+!obsea_pipeline/**/*.csv
+!webapp/**/*.csv
