@@ -223,6 +223,7 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=None, help="Limit history days for faster debugging (e.g. 30)")
     parser.add_argument("--start", type=str, default=None, help="Start date (YYYY-MM-DD)")
     parser.add_argument("--end", type=str, default=None, help="End date (YYYY-MM-DD)")
+    parser.add_argument("--no-cache", action="store_true", help="Force fetching from API instead of loading the cache")
     parser.add_argument("--methods", nargs="+", default=None, help="List of specific models to benchmark (e.g. --methods linear time splines varma xgboost)")
     args = parser.parse_args()
     
