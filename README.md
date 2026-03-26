@@ -57,6 +57,17 @@ The pipeline is orchestrated via `main_obsea.py`, providing a declarative interf
 | **Production** | `--mode production` | Autonomous operation executing the Scale-Aware model routing. Resolves true missing values using the historically proven model per gap interval. |
 | **Plot** | `--mode plot` | Visualization utility for immediate instrumental QC auditing. |
 
+### Operational Flags
+The execution can be finely tuned using the following CLI arguments:
+
+| Flag | Parameter | Description |
+| :--- | :--- | :--- |
+| **`--start`** | `YYYY-MM-DD` | Historical start date for data ingestion and processing. |
+| **`--end`** | `YYYY-MM-DD` | Historical end date for data ingestion and processing. |
+| **`--limit`** | `Integer` | Restricts the execution to the last *N* days (calculated retroactively from `--end` or today). |
+| **`--no-cache`** | *N/A* | Forces the pipeline to bypass the local `.parquet` state and re-execute STA API ingestion and Vectorized QC processing from scratch. |
+| **`--methods`** | `string list` | (Benchmark Mode Only). A space-separated list of model keys to selectively evaluate (e.g., `linear varma xgboost_pro`), bypassing heavier unselected models. |
+
 ### Usage Example:
 To perform a local benchmarking routine spanning a pre-validated high-availability 3-year contiguous window:
 
