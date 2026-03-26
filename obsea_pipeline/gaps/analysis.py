@@ -107,14 +107,15 @@ def get_gap_mask(df):
 
 def simulate_gaps(df, columns, missing_ratio=0.1, pattern='random', lengths=None):
     """
-    Creador artificial de Gaps (MCAR/MAR). Usado en la fase de Benchmarking
-    para reventar a propósito un dataset limpio y validarlo contra Truth.
+    [LEGACY] Creador artificial de Gaps dispersos (MCAR/MAR). 
+    ADVERTENCIA: Esta función dispersa muchos fragmentos pequeños en vez de crear
+    bloques contiguos. Usar simulate_contiguous_gaps() para benchmarking riguroso.
     """
     df_simulated = df.copy()
     truth_mask = pd.DataFrame(False, index=df.index, columns=df.columns)
     
     if lengths is None:
-        lengths = [10, 50, 200, 1000] # micro, short, long, extended simulado
+        lengths = [10, 50, 200, 1000]
     
     for col in columns:
         valid_indices = df[df[col].notna()].index
@@ -122,26 +123,133 @@ def simulate_gaps(df, columns, missing_ratio=0.1, pattern='random', lengths=None
         current_missing = 0
         
         while current_missing < num_missing:
-            # Drop a consecutive chunk
             chunk_size = random.choice(lengths)
             chunk_size = min(chunk_size, num_missing - current_missing)
             
-            # Pick valid starting point
             try:
                  start_idx = random.choice(valid_indices)
                  start_loc = df.index.get_loc(start_idx)
                  end_loc = min(start_loc + chunk_size, len(df))
-                 
-                 # slice en index position
                  target_idx = df.index[start_loc:end_loc]
                  
                  df_simulated.loc[target_idx, col] = np.nan
                  truth_mask.loc[target_idx, col] = True
-                 
                  current_missing += chunk_size
-                 # Refresh valid indices for next loop to avoid overlaps artificially
                  valid_indices = valid_indices.difference(target_idx)
             except Exception:
                  break
                  
     return df_simulated, truth_mask
+
+
+def simulate_contiguous_gaps(df, column, n_gaps, min_pts, max_pts, context_margin=96):
+    """
+    Creador de Gaps CONTIGUOS para benchmarking científico riguroso.
+    
+    A diferencia de simulate_gaps(), esta función crea exactamente `n_gaps` bloques 
+    contiguos de tamaño aleatorio entre [min_pts, max_pts], cada uno separado por 
+    al menos `context_margin` puntos de datos observados para permitir el aprendizaje 
+    de contexto por parte de los modelos.
+    
+    Parámetros:
+    -----------
+    df : pd.DataFrame
+        Dataset completo con índice temporal.
+    column : str
+        Variable objetivo a enmascarar.
+    n_gaps : int
+        Número de gaps contiguos a crear.
+    min_pts : int
+        Longitud mínima del gap en puntos (30min cada uno).
+    max_pts : int
+        Longitud máxima del gap en puntos.
+    context_margin : int
+        Puntos mínimos de separación entre gaps y entre gaps y bordes del dataset.
+        Garantiza que los modelos tengan suficiente contexto observado.
+    
+    Returns:
+    --------
+    df_simulated : pd.DataFrame (copia con NaNs inyectados)
+    gap_mask : pd.Series booleana (True = punto enmascarado artificialmente)
+    gap_blocks : list[dict] con {start_loc, end_loc, length} de cada gap
+    """
+    df_simulated = df.copy()
+    gap_mask = pd.Series(False, index=df.index, name=column)
+    gap_blocks = []
+    
+    series = df[column]
+    n = len(series)
+    
+    # Solo trabajar con regiones ya observadas (no pre-existentes NaN)
+    observed_mask = series.notna()
+    
+    # Zona segura: evitar bordes del dataset para garantizar contexto bilateral
+    safe_start = context_margin
+    safe_end = n - context_margin - max_pts
+    
+    if safe_end <= safe_start:
+        logger.warning(f"  [simulate_contiguous_gaps] Dataset too short for {n_gaps} gaps of size {max_pts}")
+        return df_simulated, gap_mask, gap_blocks
+    
+    # Intentar colocar n_gaps gaps sin solapamiento
+    placed = 0
+    max_attempts = n_gaps * 50  # Evitar loop infinito
+    attempts = 0
+    
+    # Zonas reservadas (para evitar solapamientos)
+    reserved = np.zeros(n, dtype=bool)
+    
+    while placed < n_gaps and attempts < max_attempts:
+        attempts += 1
+        
+        # Tamaño aleatorio dentro del rango de la categoría
+        gap_length = random.randint(min_pts, min(max_pts, n - 2 * context_margin))
+        
+        # Posición aleatoria dentro de la zona segura
+        start_loc = random.randint(safe_start, max(safe_start, safe_end))
+        end_loc = start_loc + gap_length
+        
+        if end_loc >= n:
+            continue
+            
+        # Verificar que la zona candidata:
+        # 1. No solape con gaps ya colocados (incluyendo márgenes de contexto)
+        margin_start = max(0, start_loc - context_margin)
+        margin_end = min(n, end_loc + context_margin)
+        
+        if reserved[margin_start:margin_end].any():
+            continue
+            
+        # 2. Tenga suficientes datos observados (al menos 80% para ser realista)
+        candidate_region = observed_mask.iloc[start_loc:end_loc]
+        if candidate_region.mean() < 0.80:
+            continue
+        
+        # 3. Tenga contexto observado en ambos lados (para que linear no haga trampas)
+        left_context = observed_mask.iloc[max(0, start_loc - context_margin):start_loc]
+        right_context = observed_mask.iloc[end_loc:min(n, end_loc + context_margin)]
+        
+        if left_context.mean() < 0.5 or right_context.mean() < 0.5:
+            continue
+        
+        # ¡Colocar el gap!
+        target_idx = df.index[start_loc:end_loc]
+        df_simulated.loc[target_idx, column] = np.nan
+        gap_mask.loc[target_idx] = True
+        reserved[margin_start:margin_end] = True
+        
+        gap_blocks.append({
+            'start_loc': start_loc,
+            'end_loc': end_loc,
+            'length': gap_length,
+            'start_time': df.index[start_loc],
+            'end_time': df.index[end_loc - 1],
+        })
+        placed += 1
+    
+    if placed < n_gaps:
+        logger.warning(f"  [simulate_contiguous_gaps] Only placed {placed}/{n_gaps} gaps (dataset constraints)")
+    else:
+        logger.info(f"  [simulate_contiguous_gaps] Placed {placed} contiguous gaps [{min_pts}-{max_pts} pts each]")
+    
+    return df_simulated, gap_mask, gap_blocks

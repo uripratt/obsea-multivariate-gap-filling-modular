@@ -8,7 +8,7 @@ from obsea_pipeline.models.multivariate_lstm_model import MultivariateLSTMImpute
 logger = logging.getLogger(__name__)
 
 def interpolate_bilstm(df: pd.DataFrame, target_var: str, predictor_vars: list = None, max_gap_size: int = None):
-    """Wrapper for the Multivariate Bi-LSTM Imputer."""
+    """Wrapper for the Multivariate Bi-LSTM Imputer with physical clamping."""
     try:
         if predictor_vars is None:
             # Auto-select 4 most correlated features to provide support
@@ -42,8 +42,19 @@ def interpolate_bilstm(df: pd.DataFrame, target_var: str, predictor_vars: list =
         gaps_to_fill = result_series.isna() & predicted_filled.notna()
         result_series.loc[gaps_to_fill] = predicted_filled.loc[gaps_to_fill]
         
+        # Physical clamping: prevent impossible values
+        observed = df[target_var].dropna()
+        if not observed.empty:
+            obs_min, obs_max, obs_std = observed.min(), observed.max(), observed.std()
+            lo, hi = obs_min - 3 * obs_std, obs_max + 3 * obs_std
+            violations = ((result_series < lo) | (result_series > hi)) & result_series.notna()
+            if violations.sum() > 0:
+                logger.warning(f"  [BiLSTM CLAMP] {violations.sum()} values outside [{lo:.2f}, {hi:.2f}] → clamped")
+                result_series = result_series.clip(lower=lo, upper=hi)
+        
         return result_series
 
     except Exception as e:
         logger.error(f"Multivariate Bi-LSTM failed: {e}")
         return df[target_var].interpolate(method='time', limit=max_gap_size)
+
