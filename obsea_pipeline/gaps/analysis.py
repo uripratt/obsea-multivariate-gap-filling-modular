@@ -220,16 +220,16 @@ def simulate_contiguous_gaps(df, column, n_gaps, min_pts, max_pts, context_margi
         if reserved[margin_start:margin_end].any():
             continue
             
-        # 2. Tenga suficientes datos observados (al menos 80% para ser realista)
+        # 2. Tenga el 100% de los datos observados (Rigurosidad científica para Ground Truth)
         candidate_region = observed_mask.iloc[start_loc:end_loc]
-        if candidate_region.mean() < 0.80:
+        if candidate_region.mean() < 1.0:
             continue
         
-        # 3. Tenga contexto observado en ambos lados (para que linear no haga trampas)
+        # 3. Tenga contexto observado 100% completo en ambos lados (bilateralidad perfecta)
         left_context = observed_mask.iloc[max(0, start_loc - context_margin):start_loc]
         right_context = observed_mask.iloc[end_loc:min(n, end_loc + context_margin)]
         
-        if left_context.mean() < 0.5 or right_context.mean() < 0.5:
+        if left_context.mean() < 1.0 or right_context.mean() < 1.0:
             continue
         
         # ¡Colocar el gap!
