@@ -29,12 +29,23 @@ class STAConnector:
     
     # Instrumento 1: CTD SBE16-SN57353-6479 (Thing: OBSEA)
     # Cobertura histórica: 2010-02-26 -> 2026-01-15 (~16 años)
-    DATASTREAM_CTD = {
+    DATASTREAM_CTD_SBE16 = {
         'TEMP': 102,  # Temperatura del agua de mar
         'PRES': 103,  # Presión (profundidad)
         'CNDC': 104,  # Conductividad eléctrica
         'PSAL': 105,  # Salinidad práctica
         'SVEL': 106,  # Velocidad del sonido
+    }
+
+    # Instrument 1.1: CTD SBE37SMP-SN47472-5496 (Thing: OBSEA)
+    # Cobertura histórica: 2009-05-29 -> 2025-07-11
+    # Nota: Usamos la resolución 'full' (IDs 127-131) para asegurar cobertura desde 2009.
+    DATASTREAM_CTD_SBE37 = {
+        'TEMP': 127,
+        'PRES': 128,
+        'CNDC': 129,
+        'PSAL': 130,
+        'SVEL': 131,
     }
     
     # Instrumento 2: AWAC-SN5931 (Thing: OBSEA)
@@ -83,7 +94,8 @@ class STAConnector:
     
     # Mapa unificado con TODOS los Datastreams seleccionados
     DATASTREAM_MAP_30MIN = {
-        **DATASTREAM_CTD,
+        **DATASTREAM_CTD_SBE16,
+        **DATASTREAM_CTD_SBE37,
         **DATASTREAM_AWAC_2M,
         **DATASTREAM_AWAC_18M,
         **DATASTREAM_BUOY_METEO,
@@ -93,7 +105,8 @@ class STAConnector:
     # Agrupación por instrumento para iterar selectivamente
     # Los grupos AWAC llevan un campo 'depth_bin' especial
     INSTRUMENT_GROUPS = {
-        'CTD':        DATASTREAM_CTD,
+        'CTD_SBE16':  DATASTREAM_CTD_SBE16,
+        'CTD_SBE37':  DATASTREAM_CTD_SBE37,
         'AWAC_2M':    DATASTREAM_AWAC_2M,
         'AWAC_18M':   DATASTREAM_AWAC_18M,
         'BUOY_METEO': DATASTREAM_BUOY_METEO,

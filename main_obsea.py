@@ -47,7 +47,7 @@ def show_data_summary(df):
     
     console.print(table)
 
-def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True, methods=None, csv_input_path=None):
+def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True, methods=None, csv_input_path=None, ctd_sensor="sbe16"):
     logger.info(f"Starting OBSEA Pipeline V2 in {mode.upper()} mode")
     
     output_dir = Path(CONFIG['output_dir'])
@@ -107,9 +107,16 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
                     start_str = "2023-05-01T00:00:00Z"
                     end_str = "2023-05-15T23:59:59Z"
             
-                # Iterar sobre los 5 grupos de instrumentos seleccionados
+                # Iterar sobre instrumentos seleccionados (filtrando por modelo de CTD)
                 dfs = []
+                # Mapeo de prefijo para el filtro
+                ctd_prefix = "CTD_SBE16" if ctd_sensor == "sbe16" else "CTD_SBE37"
+                
                 for group_name, var_dict in STAConnector.INSTRUMENT_GROUPS.items():
+                    # Si es un grupo CTD pero no el seleccionado, saltar
+                    if group_name.startswith("CTD_") and group_name != ctd_prefix:
+                        continue
+                    
                     logger.info(f"  Fetching instrument group: {group_name} ({len(var_dict)} variables)...")
                     
                     # Determinar si es un grupo AWAC con filtro de profundidad
@@ -250,13 +257,15 @@ if __name__ == "__main__":
     parser.add_argument("--no-cache", action="store_true", help="Force fetching from API instead of loading the cache")
     parser.add_argument("--methods", nargs="+", default=None, help="List of specific models to benchmark (e.g. --methods linear time splines varma xgboost)")
     parser.add_argument("--csv-input", type=str, default=None, help="Path to an external multivariate CSV dataset to bypass API ingestion.")
+    parser.add_argument("--ctd-sensor", type=str, choices=["sbe16", "sbe37"], default="sbe16", 
+                        help="Choose CTD sensor (sbe16 for 2010+, sbe37 covers 2009+)")
     args = parser.parse_args()
     
     try:
         run_pipeline(mode=args.mode, limit_days=args.limit, 
                      start_date=args.start, end_date=args.end, 
                      use_cache=not args.no_cache, methods=args.methods,
-                     csv_input_path=args.csv_input)
+                     csv_input_path=args.csv_input, ctd_sensor=args.ctd_sensor)
     except KeyboardInterrupt:
         logger.warning("Pipeline execution interrupted by user.")
 
