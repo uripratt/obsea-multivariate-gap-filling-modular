@@ -1,10 +1,11 @@
 import os
 import sys
 
-# Add script base dir so we can reference 'obsea_pipeline' correctly
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
+# Add parent dir to sys.path so we can reference 'obsea_pipeline' correctly
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(TOOLS_DIR)
+if PROJECT_ROOT not in sys.path:
+    sys.path.append(PROJECT_ROOT)
 
 from obsea_pipeline.ingestion.csv_loader import load_all_data
 from obsea_pipeline.preprocessing.resampling import create_unified_dataset
