@@ -47,7 +47,7 @@ def show_data_summary(df):
     
     console.print(table)
 
-def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True, methods=None, csv_input_path=None, ctd_sensor="sbe16"):
+def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=None, use_cache=True, methods=None, extreme_mode=False, ctd_type="sbe16", csv_input_path=None):
     logger.info(f"Starting OBSEA Pipeline V2 in {mode.upper()} mode")
     
     output_dir = Path(CONFIG['output_dir'])
@@ -60,36 +60,28 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
     if use_cache and cache_file.exists():
         logger.info(f"Loading preprocessed dataset from local cache: {cache_file}")
         df_resampled = pd.read_parquet(cache_file)
+        
+        # Apply temporal filtering if specified by CLI, even on cache
+        if start_date and end_date:
+            logger.info(f"Slicing cached dataset to the requested window: {start_date} -> {end_date}")
+            df_resampled = df_resampled[(df_resampled.index >= start_date) & (df_resampled.index <= end_date)]
+            
         logger.info(f"Cache loaded successfully. Shape: {df_resampled.shape}")
         
     else:
         # 1. Ingestion
-        df_raw = pd.DataFrame()
-        if csv_input_path:
-            if Path(csv_input_path).exists():
-                logger.info(f"Loading external multivariate CSV dataset: {csv_input_path}")
-                df_raw = pd.read_csv(csv_input_path)
+        if csv_input_path and Path(csv_input_path).exists():
+            logger.info(f"Loading user-specified external fallback dataset: {csv_input_path}. Bypassing API...")
+            df_raw = pd.read_csv(csv_input_path, index_col=0, parse_dates=True)
+            
+            if limit_days is not None and not df_raw.empty:
+                logger.info(f"Clipping target dataset to the last {limit_days} days for rapid testing...")
+                cutoff_date = df_raw.index.max() - pd.Timedelta(days=limit_days)
+                df_raw = df_raw[df_raw.index >= cutoff_date]
                 
-                if 'Timestamp' in df_raw.columns:
-                    df_raw['Timestamp'] = pd.to_datetime(df_raw['Timestamp'])
-                    df_raw.set_index('Timestamp', inplace=True)
-                else:
-                    first_col = df_raw.columns[0]
-                    logger.info(f"  Columna 'Timestamp' no encontrada. Usando la primera columna '{first_col}'.")
-                    df_raw[first_col] = pd.to_datetime(df_raw[first_col], errors='coerce')
-                    df_raw.set_index(first_col, inplace=True)
-                    df_raw.index.name = 'Timestamp'
-                    
-                if df_raw.index.tz is not None:
-                    df_raw.index = df_raw.index.tz_convert(None)
-                logger.info(f"Successfully loaded {df_raw.shape[0]} records from external CSV.")
-            else:
-                logger.error(f"External CSV file not found: {csv_input_path}")
-                return None
-                
-        if df_raw.empty and not csv_input_path:
-            logger.info("Initializing STA v1.1 API Connector...")
-            sta = STAConnector()
+        else:
+            logger.info(f"Initializing STA v1.1 API Connector (Targeting CTD: {ctd_type.upper()})...")
+            sta = STAConnector(ctd_type=ctd_type)
             try:
                 from datetime import datetime, timezone, timedelta
                 
@@ -107,20 +99,13 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
                     start_str = "2023-05-01T00:00:00Z"
                     end_str = "2023-05-15T23:59:59Z"
             
-                # Iterar sobre instrumentos seleccionados (filtrando por modelo de CTD)
+                # Iterar sobre los 5 grupos de instrumentos seleccionados
                 dfs = []
-                # Mapeo de prefijo para el filtro
-                ctd_prefix = "CTD_SBE16" if ctd_sensor == "sbe16" else "CTD_SBE37"
-                
-                for group_name, var_dict in STAConnector.INSTRUMENT_GROUPS.items():
-                    # Si es un grupo CTD pero no el seleccionado, saltar
-                    if group_name.startswith("CTD_") and group_name != ctd_prefix:
-                        continue
-                    
+                for group_name, var_dict in sta.INSTRUMENT_GROUPS.items():
                     logger.info(f"  Fetching instrument group: {group_name} ({len(var_dict)} variables)...")
                     
                     # Determinar si es un grupo AWAC con filtro de profundidad
-                    depth_bin = STAConnector.AWAC_DEPTH_BINS.get(group_name, None)
+                    depth_bin = sta.AWAC_DEPTH_BINS.get(group_name, None)
                     if depth_bin is not None:
                         logger.info(f"    → ADCP profile mode: selecting depth bin = {depth_bin}m")
                     
@@ -147,18 +132,18 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
             except Exception as e:
                 logger.warning(f"STA API Master Fetch failed ({e}). Falling back to CSV Loader...")
                 df_raw = pd.DataFrame()
-        
-        if df_raw.empty:
-            data_dict = load_all_data()
-            if not data_dict:
-                logger.error("No data available from API or CSV. Exiting.")
-                return None
-            # Use primary instrument data generically
-            df_raw = list(data_dict.values())[0]
-            if limit_days is not None:
-                logger.info(f"Clipping target dataset to the last {limit_days} days for rapid testing...")
-                cutoff_date = df_raw.index.max() - pd.Timedelta(days=limit_days)
-                df_raw = df_raw[df_raw.index >= cutoff_date]
+            
+            if df_raw.empty:
+                data_dict = load_all_data()
+                if not data_dict:
+                    logger.error("No data available from API or CSV. Exiting.")
+                    return None
+                # Use primary instrument data generically
+                df_raw = list(data_dict.values())[0]
+                if limit_days is not None:
+                    logger.info(f"Clipping target dataset to the last {limit_days} days for rapid testing...")
+                    cutoff_date = df_raw.index.max() - pd.Timedelta(days=limit_days)
+                    df_raw = df_raw[df_raw.index >= cutoff_date]
         
         # 2. QC & Preprocessing
         # Sanitize: la API STA puede devolver None en lugar de NaN para valores faltantes
@@ -195,7 +180,9 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
         
     elif mode == "benchmark":
         logger.info("Executing Artificial Benchmark Simulation...")
-        results = benchmark_gap_filling(df_resampled, test_variable='TEMP', gap_categories=list(GAP_CATEGORIES.keys()), methods=methods)
+        if extreme_mode:
+            logger.info("  => FASTEN SEATBELTS: Extreme targeting mode enabled. AI will be tested exclusively against storms!")
+        results = benchmark_gap_filling(df_resampled, test_variable='TEMP', gap_categories=list(GAP_CATEGORIES.keys()), methods=methods, extreme_mode=extreme_mode)
         logger.info("Benchmark complete.")
         return results
         
@@ -256,16 +243,15 @@ if __name__ == "__main__":
     parser.add_argument("--end", type=str, default=None, help="End date (YYYY-MM-DD)")
     parser.add_argument("--no-cache", action="store_true", help="Force fetching from API instead of loading the cache")
     parser.add_argument("--methods", nargs="+", default=None, help="List of specific models to benchmark (e.g. --methods linear time splines varma xgboost)")
-    parser.add_argument("--csv-input", type=str, default=None, help="Path to an external multivariate CSV dataset to bypass API ingestion.")
-    parser.add_argument("--ctd-sensor", type=str, choices=["sbe16", "sbe37"], default="sbe16", 
-                        help="Choose CTD sensor (sbe16 for 2010+, sbe37 covers 2009+)")
+    parser.add_argument("--extreme", action="store_true", help="Force benchmark gap generation to target top 5% extreme events/storms.")
+    parser.add_argument("--ctd", type=str, choices=["sbe16", "sbe37"], default="sbe16", help="Select which CTD instrument datastreams to fetch from the OBSEA API.")
+    parser.add_argument("--csv-input", type=str, default=None, help="Inject a static unified CSV file dataset to bypass ingestion APIs.")
     args = parser.parse_args()
     
     try:
         run_pipeline(mode=args.mode, limit_days=args.limit, 
                      start_date=args.start, end_date=args.end, 
                      use_cache=not args.no_cache, methods=args.methods,
-                     csv_input_path=args.csv_input, ctd_sensor=args.ctd_sensor)
+                     extreme_mode=args.extreme, ctd_type=args.ctd, csv_input_path=args.csv_input)
     except KeyboardInterrupt:
         logger.warning("Pipeline execution interrupted by user.")
-

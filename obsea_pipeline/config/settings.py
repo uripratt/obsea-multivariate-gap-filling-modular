@@ -149,7 +149,9 @@ CONFIG = {
 }
 
 CONFIG['data_paths'] = {
-    'CTD': '/home/uripratt/Documents/PhD/OBSEA_data/CTD/OBSEA_CTD_multivar_QC_minimal_small_interpolated.csv'
+    'CTD': 'exported_data/RAW/OBSEA_CTD_30min_nc_RAW.csv',
+    'BUOY_METEO': 'exported_data/RAW/OBSEA_Airmar_30min_nc_RAW.csv',
+    'CTVG_METEO': 'exported_data/RAW/OBSEA_CTVG_Vantage_Pro2_30min_nc_RAW.csv',
 }
 
 CONFIG['variables'] = {

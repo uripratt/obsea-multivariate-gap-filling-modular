@@ -326,15 +326,15 @@ class MultivariateLSTMImputer:
         # -------------------------------------------------------------
         if self.max_gap_size is not None:
             original_seq = self.sequence_length
-            
-            # Ensure the contextual sequence length is always larger than the gap
-            # to guarantee bilateral historical context. We aim for 3x the gap.
-            min_context = self.max_gap_size * 3
-            
-            # Hardware safety clamp for RNN unrolling: max 1024 points
-            # 1024 points = ~21 days of continuous sequence memory
-            self.sequence_length = int(max(24, min(min_context, 1024)))
-            
+            if self.max_gap_size <= 12: # Micro/Short (6 hours)
+                self.sequence_length = 24  # 12 hours of sharp, reactive memory
+            elif self.max_gap_size <= 144: # Medium (3 days)
+                self.sequence_length = 192 # 4 days of contextual memory
+            elif self.max_gap_size <= 480: # Long (7-10 days)
+                self.sequence_length = 512 # 10 days of stable structural memory
+            else: # Extended/Gigant
+                self.sequence_length = 720 # 15 days of deep seasonal memory
+                
             logger.info(f"Scale-Aware Triggered: Adjusted {target_var} BiLSTM sequence_length from {original_seq} -> {self.sequence_length} to match gap scale ({self.max_gap_size} pts).")
         
         # Will be set during training

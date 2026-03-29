@@ -142,7 +142,7 @@ def simulate_gaps(df, columns, missing_ratio=0.1, pattern='random', lengths=None
     return df_simulated, truth_mask
 
 
-def simulate_contiguous_gaps(df, column, n_gaps, min_pts, max_pts, context_margin=96):
+def simulate_contiguous_gaps(df, column, n_gaps, min_pts, max_pts, context_margin=96, extreme_mode=False):
     """
     Creador de Gaps CONTIGUOS para benchmarking científico riguroso.
     
@@ -190,6 +190,17 @@ def simulate_contiguous_gaps(df, column, n_gaps, min_pts, max_pts, context_margi
     if safe_end <= safe_start:
         logger.warning(f"  [simulate_contiguous_gaps] Dataset too short for {n_gaps} gaps of size {max_pts}")
         return df_simulated, gap_mask, gap_blocks
+        
+    extreme_candidates = []
+    if extreme_mode:
+        logger.info(f"  [simulate_contiguous_gaps] EXTREME MODE ON: Calculating top 5% variance anomalies for {column}...")
+        try:
+            roll_var = series.rolling(window=48, min_periods=24).var()
+            threshold = roll_var.quantile(0.95)
+            extreme_mask = roll_var >= threshold
+            extreme_candidates = np.where(extreme_mask.iloc[safe_start:safe_end])[0] + safe_start
+        except Exception as e:
+            logger.warning(f"  Failed to calculate extreme bounds: {e}. Falling back to random.")
     
     # Intentar colocar n_gaps gaps sin solapamiento
     placed = 0
@@ -205,8 +216,14 @@ def simulate_contiguous_gaps(df, column, n_gaps, min_pts, max_pts, context_margi
         # Tamaño aleatorio dentro del rango de la categoría
         gap_length = random.randint(min_pts, min(max_pts, n - 2 * context_margin))
         
-        # Posición aleatoria dentro de la zona segura
-        start_loc = random.randint(safe_start, max(safe_start, safe_end))
+        # Posición aleatoria dentro de la zona segura, sesgada hacia extremos si está activado
+        if extreme_mode and len(extreme_candidates) > 0:
+            peak_loc = random.choice(extreme_candidates)
+            # Center the gap around the storm peak
+            start_loc = max(safe_start, peak_loc - int(gap_length / 2))
+        else:
+            start_loc = random.randint(safe_start, max(safe_start, safe_end))
+            
         end_loc = start_loc + gap_length
         
         if end_loc >= n:

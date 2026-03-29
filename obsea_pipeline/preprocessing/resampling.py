@@ -47,18 +47,31 @@ def resample_with_qc(df, var_name, freq='30min'):
     """
     QC-Aware Resampling: excluye valores FAIL del promedio y propaga el peor flag
     del bin temporal como el QC del punto remuestreado.
+    También computa el promedio de las desviaciones estándar (STD).
     
-    Returns: (resampled_values, resampled_qc) o (resampled_values, None) si no hay QC.
+    Returns: (resampled_values, resampled_qc, resampled_std)
     """
     qc_col = f"{var_name}_QC"
+    std_col = f"{var_name}_STD"
+    
+    resampled_qc = None
+    resampled_std = None
+    
     if qc_col in df.columns:
         # Solo promediar datos con flag <= 3 (Pass + Suspect)
         clean = df[var_name].where(df[qc_col] <= 3)
         resampled_val = resample_variable(clean, var_name, freq)
         resampled_qc = df[qc_col].resample(freq).max()  # Peor flag del bin
-        return resampled_val, resampled_qc
     else:
-        return resample_variable(df[var_name], var_name, freq), None
+        resampled_val = resample_variable(df[var_name], var_name, freq)
+        
+    if std_col in df.columns:
+        std_clean = df[std_col]
+        if qc_col in df.columns:
+            std_clean = std_clean.where(df[qc_col] <= 3)
+        resampled_std = std_clean.resample(freq).mean()
+        
+    return resampled_val, resampled_qc, resampled_std
 
 def resample_dataframe(df, freq='30min'):
     """
@@ -78,10 +91,12 @@ def resample_dataframe(df, freq='30min'):
         if col.endswith('_QC') or col.endswith('_STD'):
             continue  # QC/STD columns are handled inside resample_with_qc
             
-        resampled_val, resampled_qc = resample_with_qc(df, col, freq)
+        resampled_val, resampled_qc, resampled_std = resample_with_qc(df, col, freq)
         resampled_cols[col] = resampled_val
         if resampled_qc is not None:
             resampled_cols[f"{col}_QC"] = resampled_qc
+        if resampled_std is not None:
+            resampled_cols[f"{col}_STD"] = resampled_std
         
     return pd.DataFrame(resampled_cols)
 

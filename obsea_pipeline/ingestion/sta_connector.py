@@ -29,6 +29,8 @@ class STAConnector:
     
     # Instrumento 1: CTD SBE16-SN57353-6479 (Thing: OBSEA)
     # Cobertura histórica: 2010-02-26 -> 2026-01-15 (~16 años)
+    # Instrumento 1: CTD SBE16-SN57353-6479 (Thing: OBSEA)
+    # Cobertura histórica: 2010-02-26 -> 2026-01-15 (~16 años)
     DATASTREAM_CTD_SBE16 = {
         'TEMP': 102,  # Temperatura del agua de mar
         'PRES': 103,  # Presión (profundidad)
@@ -36,16 +38,14 @@ class STAConnector:
         'PSAL': 105,  # Salinidad práctica
         'SVEL': 106,  # Velocidad del sonido
     }
-
-    # Instrument 1.1: CTD SBE37SMP-SN47472-5496 (Thing: OBSEA)
-    # Cobertura histórica: 2009-05-29 -> 2025-07-11
-    # Nota: Usamos la resolución 'full' (IDs 127-131) para asegurar cobertura desde 2009.
+    
+    # Instrumento 1B: CTD Secundario SBE37-SN47472
     DATASTREAM_CTD_SBE37 = {
-        'TEMP': 127,
-        'PRES': 128,
-        'CNDC': 129,
-        'PSAL': 130,
-        'SVEL': 131,
+        'TEMP': 132,
+        'PRES': 133,
+        'CNDC': 134,
+        'PSAL': 135,
+        'SVEL': 136,
     }
     
     # Instrumento 2: AWAC-SN5931 (Thing: OBSEA)
@@ -93,28 +93,35 @@ class STAConnector:
     }
     
     # Mapa unificado con TODOS los Datastreams seleccionados
-    DATASTREAM_MAP_30MIN = {
-        **DATASTREAM_CTD_SBE16,
-        **DATASTREAM_CTD_SBE37,
-        **DATASTREAM_AWAC_2M,
-        **DATASTREAM_AWAC_18M,
-        **DATASTREAM_BUOY_METEO,
-        **DATASTREAM_CTVG_METEO,
-    }
-    
-    # Agrupación por instrumento para iterar selectivamente
-    # Los grupos AWAC llevan un campo 'depth_bin' especial
-    INSTRUMENT_GROUPS = {
-        'CTD_SBE16':  DATASTREAM_CTD_SBE16,
-        'CTD_SBE37':  DATASTREAM_CTD_SBE37,
-        'AWAC_2M':    DATASTREAM_AWAC_2M,
-        'AWAC_18M':   DATASTREAM_AWAC_18M,
-        'BUOY_METEO': DATASTREAM_BUOY_METEO,
-        'CTVG_METEO': DATASTREAM_CTVG_METEO,
-    }
-
-    def __init__(self, base_url: str = "https://data.obsea.es/sta-timeseries/v1.1"):
+    def __init__(self, base_url: str = "https://data.obsea.es/sta-timeseries/v1.1", ctd_type="sbe16"):
+        """
+        Inicializa el conector definiendo qué CTD utilizar.
+        """
         self.base_url = base_url.rstrip("/")
+        self.ctd_type = ctd_type.lower()
+        if self.ctd_type == "sbe37":
+            self.DATASTREAM_CTD = self.DATASTREAM_CTD_SBE37
+            logger.info("  [STA] Configurado para usar CTD Secundario (SBE37).")
+        else:
+            self.DATASTREAM_CTD = self.DATASTREAM_CTD_SBE16
+            logger.info("  [STA] Configurado para usar CTD Principal (SBE16).")
+            
+        # Mapa unificado interactivo
+        self.DATASTREAM_MAP_30MIN = {
+            **self.DATASTREAM_CTD,
+            **self.DATASTREAM_AWAC_2M,
+            **self.DATASTREAM_AWAC_18M,
+            **self.DATASTREAM_BUOY_METEO,
+            **self.DATASTREAM_CTVG_METEO,
+        }
+        
+        self.INSTRUMENT_GROUPS = {
+            'CTD':        self.DATASTREAM_CTD,
+            'AWAC_2M':    self.DATASTREAM_AWAC_2M,
+            'AWAC_18M':   self.DATASTREAM_AWAC_18M,
+            'BUOY_METEO': self.DATASTREAM_BUOY_METEO,
+            'CTVG_METEO': self.DATASTREAM_CTVG_METEO,
+        }
 
     def get_datastream_id(self, variable_name: str) -> int:
         """Traduce una variable de alto nivel (ej. 'TEMP') a su ID en la API resolucion 30min"""
@@ -135,8 +142,8 @@ class STAConnector:
             Útil para AWAC/ADCP profiles que contienen múltiples bins por timestamp.
         """
         
-        # Construimos la query (ordenado temporalmente ascendente para rellenar el DataFrame cronológico)
-        url = f"{self.base_url}/Datastreams({datastream_id})/Observations?$orderBy=phenomenonTime%20asc"
+        # Construimos la query (ordenado temporalmente ascendente y max pagesize para acelerar)
+        url = f"{self.base_url}/Datastreams({datastream_id})/Observations?$orderBy=phenomenonTime%20asc&$top=10000"
         
         # Aplicar filtros temporales si existen (OGC Filter syntax)
         filters = []

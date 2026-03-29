@@ -35,7 +35,7 @@ from obsea_pipeline.utils.visualization import (
     plot_multi_model_comparison, plot_residual_distributions
 )
 
-def benchmark_gap_filling(df: pd.DataFrame, test_variable: str = 'TEMP', gap_categories: list = None, methods: list = None) -> pd.DataFrame:
+def benchmark_gap_filling(df: pd.DataFrame, test_variable: str = 'TEMP', gap_categories: list = None, methods: list = None, extreme_mode: bool = False) -> pd.DataFrame:
     """
     Benchmark de interpolación con gaps CONTIGUOS por categoría.
     
@@ -228,7 +228,8 @@ def benchmark_gap_filling(df: pd.DataFrame, test_variable: str = 'TEMP', gap_cat
             n_gaps=params['n_gaps'],
             min_pts=params['min_pts'],
             max_pts=params['max_pts'],
-            context_margin=96  # 48h of context on each side
+            context_margin=96,  # 48h of context on each side
+            extreme_mode=extreme_mode
         )
         
         if not gap_blocks:
