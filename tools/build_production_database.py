@@ -1,56 +1,67 @@
 import os
 import sys
+import subprocess
 
-# Add parent dir to sys.path so we can reference 'obsea_pipeline' correctly
+# Add parent dir to sys.path
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(TOOLS_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 
-from obsea_pipeline.ingestion.csv_loader import load_all_data
-from obsea_pipeline.preprocessing.resampling import create_unified_dataset
 from obsea_pipeline.config.settings import CONFIG
 from obsea_pipeline.ingestion.awac_processor import AWACProcessor
+from obsea_pipeline.preprocessing.oceanography import add_derived_features
 
-def build_database():
-    print("=== Step 1: Loading RAW Baseline Datasets ===")
-    # This automatically loads paths defined in settings.py's CONFIG['data_paths']
-    raw_data_dict = load_all_data()
+def build_golden_database(start_date="2018-01-01", end_date="2019-12-31"):
+    print(f"=== Building Golden Dataset (API + AWAC + TEOS-10) for {start_date} to {end_date} ===")
     
-    print("\n=== Step 2: Quality-Aware Resampling & Synchronizing (QARTOD standard) ===")
-    # Creates the synchronized 30-min framework. 
-    # QCs are kept as integers by taking the `.max()` of the 30-min bin.
-    unified_base_df = create_unified_dataset(raw_data_dict, freq='30T')
+    # Step 1: Ingest RAW data from STA API using the modular orchestrator
+    print("\n[1/4] Fetching raw telemetry from STA API (CTD, Airmar, Buoy)...")
+    cmd = [
+        "python3", "main_obsea.py", 
+        "--mode", "ingest", 
+        "--start", start_date, 
+        "--end", end_date, 
+        "--no-cache"
+    ]
+    subprocess.run(cmd, cwd=PROJECT_ROOT, check=True)
     
-    # Save the strictly processed base to disk
-    base_out = os.path.join(CONFIG['output_dir'], "OBSEA_base_raw_30min.csv")
-    unified_base_df.to_csv(base_out)
-    print(f"Strict baseline dataset saved to: {base_out}")
-    print(f"Base data shape: {unified_base_df.shape}")
-    
-    print("\n=== Step 3: Applying TEOS-10 Bio-fouling Correction (CTD Drift) ===")
-    from obsea_pipeline.preprocessing.oceanography import add_derived_features
-    # We apply the inverse slope correction calculated today in teos_correction.py
-    # SBE16 Conductivity restoration: C_new = C_raw * (1 / (1 - 0.0526 * months))
-    # For a 2-year period, we apply the vectorized restoration logic
-    unified_base_df = add_derived_features(unified_base_df) 
-    print("TEOS-10 restoration applied to SBE16 datastreams.")
+    # Step 2: Load the ingested data
+    import pandas as pd
+    ingested_path = os.path.join(CONFIG['output_dir'], "ingested_data.csv")
+    df = pd.read_csv(ingested_path, index_with=False) # Simplified for example
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+    df.set_index('Timestamp', inplace=True)
 
-    print("\n=== Step 4: Injecting Tiered Multi-Variant ADCP/AWAC Data ===")
+    # Step 3: Apply TEOS-10 Bio-fouling Correction
+    print("\n[2/4] Applying TEOS-10 Bio-fouling restoration to CTD Datastreams...")
+    df = add_derived_features(df)
+    
+    # Step 4: Inject 15-Year AWAC Archives
+    print("\n[3/4] Fusing high-fidelity AWAC/ADCP Archival data...")
     processor = AWACProcessor()
     
-    out_final = os.path.join(CONFIG['output_dir'], "OBSEA_unified_high_fidelity_30min.csv")
+    # IMPORTANT: These files must exist in your 'data/exported_data' folder
+    hist_csv = "data/exported_data/adcp/historical_adcp_unified_2010_2025.csv"
+    api_cur_csv = "data/exported_data/OBSEA_AWAC_currents_API_binned.csv"
+    api_wav_csv = "data/exported_data/RAW/OBSEA_AWAC_waves_full_nc_RAW.csv"
     
-    # Use the processor to fuse historical 15-year archives with the new base
+    final_out = os.path.join(CONFIG['output_dir'], "OBSEA_golden_unified_2018_2019.csv")
+    
+    # Prepare a temporary base for fusion
+    temp_base = os.path.join(CONFIG['output_dir'], "temp_base_for_fusion.csv")
+    df.to_csv(temp_base)
+    
     processor.fuse_and_export(
-        hist_csv="data/exported_data/adcp/historical_adcp_unified_2010_2025.csv",
-        api_cur_csv="data/exported_data/OBSEA_AWAC_currents_API_binned.csv",
-        api_wav_csv="data/exported_data/RAW/OBSEA_AWAC_waves_full_nc_RAW.csv",
-        prod_csv=base_out,
-        output_csv=out_final
+        hist_csv=hist_csv,
+        api_cur_csv=api_cur_csv,
+        api_wav_csv=api_wav_csv,
+        prod_csv=temp_base,
+        output_csv=final_out
     )
     
-    print(f"\nSUCCESS: Golden Dataset (API + AWAC + TEOS-10) built: {out_final}")
+    print(f"\n[4/4] SUCCESS! Golden Dataset generated at: {final_out}")
 
 if __name__ == '__main__':
-    build_database()
+    # Defaulting to the 2-year Golden Window requested by the user
+    build_golden_database(start_date="2018-01-01", end_date="2019-12-31")
