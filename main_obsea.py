@@ -99,23 +99,26 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
                     start_str = "2023-05-01T00:00:00Z"
                     end_str = "2023-05-15T23:59:59Z"
             
-                # Iterar sobre los 5 grupos de instrumentos seleccionados
+                # Iterar sobre los grupos de instrumentos seleccionados
                 dfs = []
                 for group_name, var_dict in sta.INSTRUMENT_GROUPS.items():
                     logger.info(f"  Fetching instrument group: {group_name} ({len(var_dict)} variables)...")
-                    
-                    # Determinar si es un grupo AWAC con filtro de profundidad
                     depth_bin = sta.AWAC_DEPTH_BINS.get(group_name, None)
-                    if depth_bin is not None:
-                        logger.info(f"    → ADCP profile mode: selecting depth bin = {depth_bin}m")
                     
                     for var_name, ds_id in var_dict.items():
                         try:
                             df_var = sta.fetch_observations(ds_id, start_time=start_str, end_time=end_str, depth_bin=depth_bin)
                             if not df_var.empty:
-                                df_var.rename(columns={'Value': var_name}, inplace=True)
+                                # Prefix naming to allow multi-instrument fusion later
+                                # e.g. CTD_SBE16_TEMP vs CTD_SBE37_TEMP
+                                if "CTD" in group_name or "METEO" in group_name:
+                                    final_col = f"{group_name}_{var_name}"
+                                else:
+                                    final_col = var_name
+                                    
+                                df_var.rename(columns={'Value': final_col}, inplace=True)
                                 dfs.append(df_var)
-                                logger.info(f"    ✓ {var_name} (DS:{ds_id}): {len(df_var)} records")
+                                logger.info(f"    ✓ {final_col} (DS:{ds_id}): {len(df_var)} records")
                             else:
                                 logger.warning(f"    ✗ {var_name} (DS:{ds_id}): 0 records")
                         except Exception as e:
@@ -124,6 +127,39 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
                 if dfs:
                     df_raw = pd.concat(dfs, axis=1)
                     df_raw.sort_index(inplace=True)
+                    
+                    # --- NEW: Multi-Instrument Fusion Layer (Missingness Mitigation) ---
+                    logger.info("Fusing redundant instruments to minimize missingness...")
+                    
+                    # 1. CTD Fusion (SBE16 primary, SBE37 fallback)
+                    ctd_vars = ['TEMP', 'PSAL', 'CNDC', 'PRES', 'SVEL']
+                    for v in ctd_vars:
+                        s16 = f"CTD_SBE16_{v}"
+                        s37 = f"CTD_SBE37_{v}"
+                        if s16 in df_raw.columns:
+                            if s37 in df_raw.columns:
+                                logger.info(f"  ✓ Fusing {v}: SBE16 + SBE37 (Gaps filled: {df_raw[s16].isna().sum() - df_raw[s16].combine_first(df_raw[s37]).isna().sum()})")
+                                df_raw[v] = df_raw[s16].combine_first(df_raw[s37])
+                            else:
+                                df_raw[v] = df_raw[s16]
+                    
+                    # 2. Meteo Fusion (Buoy primary, Land fallback)
+                    meteo_pairs = {
+                        'AIRT': ('BUOY_METEO_BUOY_AIRT', 'CTVG_METEO_CTVG_AIRT'),
+                        'CAPH': ('BUOY_METEO_BUOY_CAPH', 'CTVG_METEO_CTVG_CAPH'),
+                        'WDIR': ('BUOY_METEO_BUOY_WDIR', 'CTVG_METEO_CTVG_WDIR'),
+                        'WSPD': ('BUOY_METEO_BUOY_WSPD', 'CTVG_METEO_CTVG_WSPD'),
+                    }
+                    for final_v, (buoy_v, land_v) in meteo_pairs.items():
+                        if buoy_v in df_raw.columns:
+                            if land_v in df_raw.columns:
+                                logger.info(f"  ✓ Fusing {final_v}: BUOY + CTVG")
+                                df_raw[final_v] = df_raw[buoy_v].combine_first(df_raw[land_v])
+                            else:
+                                df_raw[final_v] = df_raw[buoy_v]
+                        elif land_v in df_raw.columns:
+                            df_raw[final_v] = df_raw[land_v]
+
                     logger.info(f"STA API Integration Successful. Unified DataFrame: {df_raw.shape[0]} rows × {df_raw.shape[1]} columns")
                 else:
                     logger.warning("STA API Integration yielded 0 records across all instruments.")
