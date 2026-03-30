@@ -12,11 +12,13 @@ from obsea_pipeline.config.settings import CONFIG
 from obsea_pipeline.ingestion.awac_processor import AWACProcessor
 from obsea_pipeline.preprocessing.oceanography import add_derived_features
 
-def build_golden_database(start_date="2018-01-01", end_date="2019-12-31"):
+import argparse
+
+def build_golden_database(start_date, end_date):
     print(f"=== Building Golden Dataset (API + AWAC + TEOS-10) for {start_date} to {end_date} ===")
     
     # Step 1: Ingest RAW data from STA API using the modular orchestrator
-    print("\n[1/4] Fetching raw telemetry from STA API (CTD, Airmar, Buoy)...")
+    print(f"\n[1/4] Fetching raw telemetry from STA API ({start_date} -> {end_date})...")
     cmd = [
         "python3", "main_obsea.py", 
         "--mode", "ingest", 
@@ -29,7 +31,7 @@ def build_golden_database(start_date="2018-01-01", end_date="2019-12-31"):
     # Step 2: Load the ingested data
     import pandas as pd
     ingested_path = os.path.join(CONFIG['output_dir'], "ingested_data.csv")
-    df = pd.read_csv(ingested_path, index_with=False) # Simplified for example
+    df = pd.read_csv(ingested_path)
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
     df.set_index('Timestamp', inplace=True)
 
@@ -41,12 +43,11 @@ def build_golden_database(start_date="2018-01-01", end_date="2019-12-31"):
     print("\n[3/4] Fusing high-fidelity AWAC/ADCP Archival data...")
     processor = AWACProcessor()
     
-    # IMPORTANT: These files must exist in your 'data/exported_data' folder
     hist_csv = "data/exported_data/adcp/historical_adcp_unified_2010_2025.csv"
     api_cur_csv = "data/exported_data/OBSEA_AWAC_currents_API_binned.csv"
     api_wav_csv = "data/exported_data/RAW/OBSEA_AWAC_waves_full_nc_RAW.csv"
     
-    final_out = os.path.join(CONFIG['output_dir'], "OBSEA_golden_unified_2018_2019.csv")
+    final_out = os.path.join(CONFIG['output_dir'], "OBSEA_full_golden_dataset.csv")
     
     # Prepare a temporary base for fusion
     temp_base = os.path.join(CONFIG['output_dir'], "temp_base_for_fusion.csv")
@@ -60,8 +61,12 @@ def build_golden_database(start_date="2018-01-01", end_date="2019-12-31"):
         output_csv=final_out
     )
     
-    print(f"\n[4/4] SUCCESS! Golden Dataset generated at: {final_out}")
+    print(f"\n[4/4] SUCCESS! Full Golden Dataset generated at: {final_out}")
 
 if __name__ == '__main__':
-    # Defaulting to the 2-year Golden Window requested by the user
-    build_golden_database(start_date="2018-01-01", end_date="2019-12-31")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--start", type=str, default="2010-01-01")
+    parser.add_argument("--end", type=str, default="2025-01-01")
+    args = parser.parse_args()
+    
+    build_golden_database(start_date=args.start, end_date=args.end)
