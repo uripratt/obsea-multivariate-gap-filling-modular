@@ -28,40 +28,12 @@ def build_golden_database(start_date, end_date):
     ]
     subprocess.run(cmd, cwd=PROJECT_ROOT, check=True)
     
-    # Step 2: Load the ingested API data
+    # Step 2: Load the ingested data
     import pandas as pd
-    import numpy as np
     ingested_path = os.path.join(CONFIG['output_dir'], "ingested_data.csv")
-    df_api = pd.read_csv(ingested_path)
-    df_api['Timestamp'] = pd.to_datetime(df_api['Timestamp']).dt.tz_localize(None)
-    df_api.set_index('Timestamp', inplace=True)
-
-    # NEW: Step 2.5: Fuse with High-Density CTD NetCDF Archive
-    print("\n[1.5/4] Fusing high-density CTD NetCDF Archive (2009-2024)...")
-    ctd_arch_path = "data/exported_data/RAW/OBSEA_CTD_30min_nc_RAW.csv"
-    if os.path.exists(ctd_arch_path):
-        df_ctd_arch = pd.read_csv(ctd_arch_path)
-        df_ctd_arch['TIME'] = pd.to_datetime(df_ctd_arch['TIME']).dt.tz_localize(None)
-        df_ctd_arch.set_index('TIME', inplace=True)
-        # Standardize column names to match main pipeline
-        ctd_map = {'TEMP': 'TEMP', 'PSAL': 'PSAL', 'CNDC': 'CNDC', 'PRES': 'PRES', 'SVEL': 'SVEL'}
-        # Clean archive: -999 to NaN
-        df_ctd_arch.replace([-999.0, -999.99, 99.99], np.nan, inplace=True)
-        
-        # Priority merge: Archive first, then API gaps
-        for var in ctd_map.keys():
-            if var in df_api.columns and var in df_ctd_arch.columns:
-                print(f"  Merging {var} (Arch: {df_ctd_arch[var].count()}, API: {df_api[var].count()})")
-                df_api[var] = df_ctd_arch[var].combine_first(df_api[var])
-                # Also merge QC flags if present
-                qc_col = f"{var}_QC"
-                if qc_col in df_api.columns and qc_col in df_ctd_arch.columns:
-                    df_api[qc_col] = df_ctd_arch[qc_col].combine_first(df_api[qc_col])
-        
-        df = df_api
-    else:
-        print("  WARNING: CTD Archive not found. Proceeding with API telemetry only.")
-        df = df_api
+    df = pd.read_csv(ingested_path)
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+    df.set_index('Timestamp', inplace=True)
 
     # Step 3: Apply TEOS-10 Bio-fouling Correction
     print("\n[2/4] Applying TEOS-10 Bio-fouling restoration to CTD Datastreams...")

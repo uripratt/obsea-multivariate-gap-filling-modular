@@ -116,8 +116,7 @@ class STAConnector:
         }
         
         self.INSTRUMENT_GROUPS = {
-            'CTD_SBE16':  self.DATASTREAM_CTD_SBE16,
-            'CTD_SBE37':  self.DATASTREAM_CTD_SBE37,
+            'CTD':        self.DATASTREAM_CTD,
             'AWAC_2M':    self.DATASTREAM_AWAC_2M,
             'AWAC_18M':   self.DATASTREAM_AWAC_18M,
             'BUOY_METEO': self.DATASTREAM_BUOY_METEO,
