@@ -99,23 +99,29 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
                     start_str = "2023-05-01T00:00:00Z"
                     end_str = "2023-05-15T23:59:59Z"
             
-                # Iterar sobre los grupos de instrumentos seleccionados
+                # Iterar sobre los grupos de instrumentos seleccionados (SBE16 es primario, SBE37 es backup)
                 dfs = []
+                # Forzamos la descarga de ambos CTDs para la fusión con criterio
+                sta.INSTRUMENT_GROUPS['CTD_SBE16'] = sta.DATASTREAM_CTD_SBE16
+                sta.INSTRUMENT_GROUPS['CTD_SBE37'] = sta.DATASTREAM_CTD_SBE37
+                
                 for group_name, var_dict in sta.INSTRUMENT_GROUPS.items():
                     logger.info(f"  Fetching instrument group: {group_name} ({len(var_dict)} variables)...")
-                    
-                    # Determinar si es un grupo AWAC con filtro de profundidad
                     depth_bin = sta.AWAC_DEPTH_BINS.get(group_name, None)
-                    if depth_bin is not None:
-                        logger.info(f"    → ADCP profile mode: selecting depth bin = {depth_bin}m")
                     
                     for var_name, ds_id in var_dict.items():
                         try:
                             df_var = sta.fetch_observations(ds_id, start_time=start_str, end_time=end_str, depth_bin=depth_bin)
                             if not df_var.empty:
-                                df_var.rename(columns={'Value': var_name}, inplace=True)
+                                # Usamos prefijos para CTD para poder fusionarlos con criterio después
+                                if "CTD" in group_name:
+                                    final_col = f"{group_name}_{var_name}"
+                                else:
+                                    final_col = var_name # Mantener nombres originales para AWAC y METEO (Buoy/CTVG ya tienen nombres distintos)
+                                    
+                                df_var.rename(columns={'Value': final_col}, inplace=True)
                                 dfs.append(df_var)
-                                logger.info(f"    ✓ {var_name} (DS:{ds_id}): {len(df_var)} records")
+                                logger.info(f"    ✓ {final_col} (DS:{ds_id}): {len(df_var)} records")
                             else:
                                 logger.warning(f"    ✗ {var_name} (DS:{ds_id}): 0 records")
                         except Exception as e:
@@ -124,6 +130,41 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
                 if dfs:
                     df_raw = pd.concat(dfs, axis=1)
                     df_raw.sort_index(inplace=True)
+                    
+                    # --- FUSIÓN CIENTÍFICA DE CTDs (CRITERIO AUDITADO) ---
+                    # Basado en ctd_calibration_report.md:
+                    # TEMP: Correlación 0.9999 -> Fusión directa.
+                    # PRES: Offset de 0.5214 dbar (SBE16 es más profundo).
+                    # PSAL: Bias de -1.76 PSU en SBE37 (requiere compensación).
+                    
+                    logger.info("Applying Scientific Fusion Criteria for Dual-CTD (SBE16 + SBE37)...")
+                    ctd_map = {
+                        'TEMP': 0.0,      # Sin offset
+                        'PRES': 0.5214,   # SBE37 + 0.52 = SBE16
+                        'PSAL': 1.7612,   # SBE37 + 1.76 = SBE16
+                        'CNDC': 0.187,    # SBE37 + 0.18 = SBE16
+                        'SVEL': 0.0       # Sin offset reportado
+                    }
+                    
+                    for var, offset in ctd_map.items():
+                        s16 = f"CTD_SBE16_{var}"
+                        s37 = f"CTD_SBE37_{var}"
+                        
+                        if s16 in df_raw.columns:
+                            if s37 in df_raw.columns:
+                                # Aplicar criterio científico: Corregir SBE37 antes de fusionar
+                                s37_corrected = df_raw[s37] + offset
+                                gaps_filled = df_raw[s16].isna().sum() - df_raw[s16].combine_first(s37_corrected).isna().sum()
+                                logger.info(f"  ✓ {var}: Fused SBE16 + SBE37 (Offset: {offset}, Gaps filled: {gaps_filled})")
+                                df_raw[var] = df_raw[s16].combine_first(s37_corrected)
+                            else:
+                                df_raw[var] = df_raw[s16]
+                        elif s37 in df_raw.columns:
+                            # Si solo hay SBE37, lo usamos con su corrección
+                            df_raw[var] = df_raw[s37] + offset
+
+                    # METEO: Se quedan separadas (BUOY_AIRT vs CTVG_AIRT) como pediste.
+                    
                     logger.info(f"STA API Integration Successful. Unified DataFrame: {df_raw.shape[0]} rows × {df_raw.shape[1]} columns")
                 else:
                     logger.warning("STA API Integration yielded 0 records across all instruments.")
