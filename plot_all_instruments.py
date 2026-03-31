@@ -107,6 +107,7 @@ INSTRUMENT_TITLES = {
     'CTD':        'CTD SBE16 – Oceanographic Variables (20m depth)',
     'AWAC_2M':    'AWAC ADCP – Sea Currents at 2m (Surface Layer)',
     'AWAC_18M':   'AWAC ADCP – Sea Currents at 18m (Bottom Layer)',
+    'AWAC_WAVES': 'AWAC ADCP – Wave Parameters (VHM0, VTPK, VMDR)',
     'BUOY_METEO': 'Airmar 200WX – Besos Buoy Meteorology (Offshore)',
     'CTVG_METEO': 'Vantage Pro2 – CTVG Land Station (4km Inland)',
 }
@@ -165,24 +166,27 @@ def plot_instrument_timeseries(df: pd.DataFrame, instrument_name: str,
             plot_data = df[var]
             data_label = 'Data (30min)'
         
+        # Plot with filled area for a "premium" look
+        ax.fill_between(plot_data.index, plot_data.values, color=LINE_COLORS[i % len(LINE_COLORS)], alpha=0.1, zorder=1)
         ax.plot(plot_data.index, plot_data.values,
-                lw=0.7, alpha=0.9, color=LINE_COLORS[i % len(LINE_COLORS)], zorder=2)
+                lw=1.0, alpha=0.85, color=LINE_COLORS[i % len(LINE_COLORS)], zorder=3)
         
         # Overlay gap bands
         for _, gap in var_gaps.iterrows():
             cat = gap['category']
             if pd.notna(cat) and cat in GAP_COLORS:
                 ax.axvspan(gap['start'], gap['end'],
-                          color=GAP_COLORS[cat], alpha=0.3, zorder=1)
+                          color=GAP_COLORS[cat], alpha=0.15, zorder=2)
         
         # Clean label (remove prefix for readability)
         label = var
         for prefix in ['AWAC2M_', 'AWAC18M_', 'BUOY_', 'CTVG_']:
             label = label.replace(prefix, '')
         
-        ax.set_ylabel(label, fontsize=11, fontweight='bold')
-        ax.grid(True, alpha=0.25, zorder=0, linestyle='--')
-        ax.tick_params(axis='both', labelsize=9)
+        ax.set_ylabel(label, fontsize=12, fontweight='bold', color='#333')
+        ax.grid(True, which='major', axis='both', alpha=0.3, zorder=0, linestyle='-')
+        ax.grid(True, which='minor', axis='x', alpha=0.1, zorder=0, linestyle=':')
+        ax.tick_params(axis='both', labelsize=10)
         
         # Statistics annotation box
         valid = df[var].dropna()
@@ -190,14 +194,14 @@ def plot_instrument_timeseries(df: pd.DataFrame, instrument_name: str,
         n_gaps = len(var_gaps)
         
         if len(valid) > 0:
-            stats_text = f"μ={valid.mean():.2f} | σ={valid.std():.2f} | Missing: {missing_pct:.1f}% | Gaps: {n_gaps}"
+            stats_text = f"N={len(valid):,} | μ={valid.mean():.2f} | σ={valid.std():.2f}\nMissing: {missing_pct:.1f}% | Gaps: {n_gaps}"
         else:
             stats_text = f"Missing: {missing_pct:.1f}% | Gaps: {n_gaps}"
             
         ax.annotate(stats_text, xy=(0.99, 0.95), xycoords='axes fraction',
-                   ha='right', va='top', fontsize=8, color='#555',
-                   bbox=dict(boxstyle='round,pad=0.3', facecolor='white', 
-                            edgecolor='#ccc', alpha=0.85))
+                   ha='right', va='top', fontsize=9, color='#444', fontfamily='monospace',
+                   bbox=dict(boxstyle='round,pad=0.5', facecolor='white', 
+                            edgecolor='#ccc', alpha=0.9, lw=0.5))
     
     axes[-1].set_xlabel('Date', fontsize=11, fontweight='bold')
     

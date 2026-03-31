@@ -313,7 +313,7 @@ if __name__ == "__main__":
     parser.add_argument("--end", type=str, default=None, help="End date (YYYY-MM-DD)")
     parser.add_argument("--no-cache", action="store_true", help="Force fetching from API instead of loading the cache")
     parser.add_argument("--methods", nargs="+", default=None, help="List of specific models to benchmark (e.g. --methods linear time splines varma xgboost)")
-    parser.add_argument("--extreme", action="store_true", help="Force benchmark gap generation to target top 5% extreme events/storms.")
+    parser.add_argument("--extreme", action="store_true", help="Force benchmark gap generation to target top 5%% extreme events/storms.")
     parser.add_argument("--ctd", type=str, choices=["sbe16", "sbe37"], default="sbe16", help="Select which CTD instrument datastreams to fetch from the OBSEA API.")
     parser.add_argument("--csv-input", type=str, default=None, help="Inject a static unified CSV file dataset to bypass ingestion APIs.")
     args = parser.parse_args()

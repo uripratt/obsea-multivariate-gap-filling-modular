@@ -29,8 +29,6 @@ class STAConnector:
     
     # Instrumento 1: CTD SBE16-SN57353-6479 (Thing: OBSEA)
     # Cobertura histórica: 2010-02-26 -> 2026-01-15 (~16 años)
-    # Instrumento 1: CTD SBE16-SN57353-6479 (Thing: OBSEA)
-    # Cobertura histórica: 2010-02-26 -> 2026-01-15 (~16 años)
     DATASTREAM_CTD_SBE16 = {
         'TEMP': 102,  # Temperatura del agua de mar
         'PRES': 103,  # Presión (profundidad)
@@ -75,12 +73,24 @@ class STAConnector:
     
     # Instrumento 3: Airmar_200WX-SN60390327 (Thing: OBSEA_Besos_Buoy)
     # Cobertura histórica: 2022-08-02 -> 2026-03-11 (boya justo encima de OBSEA)
-    DATASTREAM_BUOY_METEO = {
+    DATASTREAM_BUOY_200WX = {
         'BUOY_CAPH': 92,   # Presión atmosférica (boya)
         'BUOY_AIRT': 93,   # Temperatura del aire (boya)
         'BUOY_WDIR': 94,   # Dirección del viento (boya)
         'BUOY_WSPD': 95,   # Velocidad del viento (boya)
     }
+
+    # Instrumento 3B: Airmar_150WX-SN57323 (Thing: OBSEA_Buoy)
+    # Cobertura histórica: 2011-10-06 -> 2021-12-09
+    DATASTREAM_BUOY_150WX = {
+        'BUOY_CAPH': 56,
+        'BUOY_AIRT': 57,
+        'BUOY_WDIR': 58,
+        'BUOY_WSPD': 59,
+    }
+
+    # Mantenemos BUOY_METEO apuntando a la más reciente por compatibilidad
+    DATASTREAM_BUOY_METEO = DATASTREAM_BUOY_200WX
     
     # Instrumento 4: Vantage_Pro2-SN6150CEU (Thing: CTVG)
     # Cobertura histórica: 2010-04-08 -> 2025-02-12 (~15 años, estación terrestre a 4km)
@@ -111,6 +121,8 @@ class STAConnector:
             **self.DATASTREAM_CTD,
             **self.DATASTREAM_AWAC_2M,
             **self.DATASTREAM_AWAC_18M,
+            **self.DATASTREAM_BUOY_200WX,
+            **self.DATASTREAM_BUOY_150WX,
             **self.DATASTREAM_BUOY_METEO,
             **self.DATASTREAM_CTVG_METEO,
         }
@@ -119,6 +131,8 @@ class STAConnector:
             'CTD':        self.DATASTREAM_CTD,
             'AWAC_2M':    self.DATASTREAM_AWAC_2M,
             'AWAC_18M':   self.DATASTREAM_AWAC_18M,
+            'BUOY_200WX': self.DATASTREAM_BUOY_200WX,
+            'BUOY_150WX': self.DATASTREAM_BUOY_150WX,
             'BUOY_METEO': self.DATASTREAM_BUOY_METEO,
             'CTVG_METEO': self.DATASTREAM_CTVG_METEO,
         }
@@ -200,6 +214,7 @@ class STAConnector:
                 import re
                 next_link = next_link.replace("$orderby=", "$orderBy=")
                 # Arreglar bug critico 2: El servidor inyecta $skipFilter que el mismo rechaza luego
+                # re lib is used here
                 next_link = re.sub(r'&\$skipFilter=[^&]+', '', next_link)
 
                 
@@ -232,4 +247,3 @@ class STAConnector:
             df.index = df.index.tz_convert(None)
             
         return df
-

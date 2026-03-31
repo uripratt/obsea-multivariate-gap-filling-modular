@@ -36,6 +36,9 @@ class AWACProcessor:
             
         for col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        # Filter NoData
+        df.replace([-999.0, -999.9, -999.99, 99.9, 99.99], np.nan, inplace=True)
         return df.resample('30T').mean()
 
     def fuse_and_export(self, hist_csv, api_cur_csv, api_wav_csv, prod_csv, output_csv):

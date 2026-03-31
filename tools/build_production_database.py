@@ -95,6 +95,49 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", type=str, default="2010-01-01")
     parser.add_argument("--end", type=str, default="2025-01-01")
+    parser.add_argument("--csv-file", type=str, help="Path to prebuilt multivariate CSV (skips API fetch)")
     args = parser.parse_args()
     
-    build_golden_database(start_date=args.start, end_date=args.end)
+    if args.csv_file:
+        print(f"=== Injecting Prebuilt Dataset: {args.csv_file} ===")
+        import pandas as pd
+        import numpy as np
+        df = pd.read_csv(args.csv_file)
+        if 'Timestamp' in df.columns:
+            df['Timestamp'] = pd.to_datetime(df['Timestamp']).dt.tz_localize(None)
+            df.set_index('Timestamp', inplace=True)
+        elif 'TIME' in df.columns:
+            df['TIME'] = pd.to_datetime(df['TIME']).dt.tz_localize(None)
+            df.set_index('TIME', inplace=True)
+        
+        # Step 3: Apply TEOS-10 Bio-fouling Correction
+        print("\n[2/4] Applying TEOS-10 Bio-fouling restoration...")
+        df = add_derived_features(df)
+        
+        # Step 4: Inject 15-Year AWAC Archives
+        print("\n[3/4] Standardizing AWAC/ADCP data...")
+        processor = AWACProcessor()
+        hist_csv = "data/exported_data/adcp/historical_adcp_unified_2010_2025.csv"
+        api_cur_csv = "data/exported_data/OBSEA_AWAC_currents_API_binned.csv"
+        api_wav_csv = "data/exported_data/RAW/OBSEA_AWAC_waves_full_nc_RAW.csv"
+        
+        # Ensure dummy API files exist to avoid loader crashes
+        for p in [api_cur_csv, api_wav_csv]:
+            if not os.path.exists(p):
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                pd.DataFrame(columns=['TIME','Value']).to_csv(p)
+
+        final_out = os.path.join(CONFIG['output_dir'], "OBSEA_full_golden_dataset.csv")
+        temp_base = os.path.join(CONFIG['output_dir'], "temp_base_for_fusion.csv")
+        df.to_csv(temp_base)
+        
+        processor.fuse_and_export(
+            hist_csv=hist_csv, 
+            api_cur_csv=api_cur_csv, 
+            api_wav_csv=api_wav_csv, 
+            prod_csv=temp_base, 
+            output_csv=final_out
+        )
+        print(f"\n[4/4] SUCCESS! Golden Dataset from CSV generated at: {final_out}")
+    else:
+        build_golden_database(start_date=args.start, end_date=args.end)

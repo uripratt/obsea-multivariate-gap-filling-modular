@@ -143,6 +143,12 @@ CONFIG = {
     'CTVG_AIRT': (-5, 45, 'ºC', 'Air Temperature (CTVG)', 2.0, 1.0, 10),
     'CTVG_CAPH': (950, 1050, 'hPa', 'Atmospheric Pressure (CTVG)', 10.0, 5.0, 24),
     'CTVG_RELH': (0, 100, '%', 'Relative Humidity (CTVG)', 15.0, 10.0, 24),
+    
+    # AWAC WAVES
+    'AWAC_VHM0': (0, 10, 'm', 'Significant Wave Height', 2.0, 1.0, 24),
+    'AWAC_VTPK': (2, 25, 's', 'Peak Wave Period', 5.0, 2.0, 24),
+    'AWAC_VMDR': (0, 360, 'deg', 'Mean Wave Direction', 180.0, 90.0, 24),
+    'AWAC_Hmax': (0, 15, 'm', 'Maximum Wave Height', 3.0, 1.5, 24),
 
     # DERIVADAS (No aplican checks estrictos QARTOD general)
     'SIGMA_T': (20, 30, 'kg/m^3', 'Density anomaly', 2.0, 1.0, 10),
@@ -158,6 +164,7 @@ CONFIG['variables'] = {
     'CTD':        ['TEMP', 'PSAL', 'PRES', 'CNDC', 'SVEL'],
     'AWAC_2M':    ['AWAC2M_CSPD', 'AWAC2M_CDIR', 'AWAC2M_UCUR', 'AWAC2M_VCUR', 'AWAC2M_ZCUR'],
     'AWAC_18M':   ['AWAC18M_CSPD', 'AWAC18M_CDIR', 'AWAC18M_UCUR', 'AWAC18M_VCUR', 'AWAC18M_ZCUR'],
+    'AWAC_WAVES': ['AWAC_VHM0', 'AWAC_VTPK', 'AWAC_VMDR', 'AWAC_Hmax'],
     'BUOY_METEO': ['BUOY_WSPD', 'BUOY_WDIR', 'BUOY_AIRT', 'BUOY_CAPH'],
     'CTVG_METEO': ['CTVG_WSPD', 'CTVG_WDIR', 'CTVG_AIRT', 'CTVG_CAPH', 'CTVG_RELH'],
 }
