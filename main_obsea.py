@@ -8,6 +8,7 @@ from obsea_pipeline.ingestion.csv_loader import load_all_data
 from obsea_pipeline.qc.checks import apply_instrumental_qc
 from obsea_pipeline.preprocessing.oceanography import add_derived_features
 from obsea_pipeline.preprocessing.resampling import resample_dataframe
+from obsea_pipeline.preprocessing.climatology import calculate_climatology, apply_climatology_feature
 from obsea_pipeline.gaps.analysis import detect_gaps
 from plot_all_instruments import plot_instrument_timeseries
 from obsea_pipeline.models.selector import selective_interpolation
@@ -232,6 +233,19 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
         # Save cache to bypass this entire block next time (siempre se guarda tras una recarga exitosa)
         logger.info(f"Saving preprocessed dataset to cache: {cache_file}...")
         df_resampled.to_parquet(cache_file)
+        
+    # 2.5 Climatological Augmentation (PhD Thesis Improvement)
+    # Use the 15-year Golden Dataset to compute historical norms
+    golden_path = Path("output_lup/data/OBSEA_full_golden_dataset.csv")
+    if golden_path.exists():
+        logger.info(f"Augmenting dataset with 15-year Climatology from {golden_path}...")
+        df_gold = pd.read_csv(golden_path, index_col=0, parse_dates=True)
+        # Select variables that are in both
+        target_vars = [v for v in CONFIG['variables'].get('CTD', []) if v in df_gold.columns]
+        climatology_map = calculate_climatology(df_gold, target_vars)
+        df_resampled = apply_climatology_feature(df_resampled, climatology_map, target_vars)
+    else:
+        logger.warning("Golden Dataset not found. Skipping Climatological Augmentation.")
     
     # Audit Table (Rich)
     show_data_summary(df_resampled)

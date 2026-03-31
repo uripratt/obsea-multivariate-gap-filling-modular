@@ -34,6 +34,16 @@ def apply_selected_model(df, col, method, gap=None):
     """
     max_gap = gap.length if gap else None
     
+    # Identify multivariate predictors (including Climatology if available)
+    clim_col = f'{col}_CLIM'
+    if clim_col in df.columns:
+         predictor_vars = [col, clim_col]
+         # Add top 3 correlated variables if they exist
+         corrs = df.drop(columns=[col, clim_col]).select_dtypes(include=[np.number]).corrwith(df[col]).abs().sort_values(ascending=False)
+         predictor_vars += corrs.head(3).index.tolist()
+    else:
+         predictor_vars = None # Use default internal selection
+
     if method == 'linear':
         df[col] = interpolate_linear(df[col], max_gap)
     elif method == 'time':
@@ -46,42 +56,32 @@ def apply_selected_model(df, col, method, gap=None):
         df[col] = interpolate_varma(df, col, max_gap_size=max_gap)
     elif method == 'bilstm':
         if DL_AVAILABLE and interpolate_bilstm:
-            df[col] = interpolate_bilstm(df, col, max_gap_size=max_gap)
+            df[col] = interpolate_bilstm(df, col, predictor_vars=predictor_vars, max_gap_size=max_gap)
         else:
             logger.warning(f"  [FALLBACK] BiLSTM no disponible para {col}. Usando XGBoost Pro.")
             prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
             df[col] = prediction
     elif method == 'saits':
         if DL_AVAILABLE and interpolate_saits:
-            df[col] = interpolate_saits(df, col, max_gap_size=max_gap)
+            df[col] = interpolate_saits(df, col, predictor_vars=predictor_vars, max_gap_size=max_gap)
         else:
             logger.warning(f"  [FALLBACK] SAITS no disponible para {col}. Usando XGBoost Pro.")
             prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
             df[col] = prediction
     elif method == 'imputeformer':
         if DL_AVAILABLE and interpolate_imputeformer:
-            df[col] = interpolate_imputeformer(df, col, max_gap_size=max_gap)
+            df[col] = interpolate_imputeformer(df, col, predictor_vars=predictor_vars, max_gap_size=max_gap)
         else:
             logger.warning(f"  [FALLBACK] ImputeFormer no disponible para {col}. Usando XGBoost Pro.")
             prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
             df[col] = prediction
     elif method == 'brits':
         if DL_AVAILABLE and interpolate_brits:
-            df[col] = interpolate_brits(df, col, max_gap_size=max_gap)
+            df[col] = interpolate_brits(df, col, predictor_vars=predictor_vars, max_gap_size=max_gap)
         else:
             logger.warning(f"  [FALLBACK] BRITS no disponible para {col}. Usando XGBoost Pro.")
             prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
             df[col] = prediction
-    elif method == 'brits_pro':
-        if DL_AVAILABLE and interpolate_brits_pro:
-            df[col] = interpolate_brits_pro(df, col)
-        else:
-            logger.warning(f"  [FALLBACK] BRITS Pro no disponible para {col}. Usando XGBoost Pro.")
-            prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
-            df[col] = prediction
-    elif method == 'xgboost':
-        prediction, _ = interpolate_xgboost(df, col, max_gap_size=max_gap)
-        df[col] = prediction
     elif method == 'xgboost_pro':
         prediction, _ = interpolate_xgboost_pro(df, col, max_gap_size=max_gap)
         df[col] = prediction

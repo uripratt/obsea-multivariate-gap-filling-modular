@@ -83,7 +83,7 @@ HARDWARE_CONFIG = {
 
 # General Interpolation configuration
 INTERPOLATION_CONFIG = {
-    'sequence_length': 720,    # Aumentado de 512 a 720 para A40 (15 días de memoria)
+    'sequence_length': 1440,   # Aumentado a 1440 para A40 (30 días de memoria stacional)
     'min_samples': 48,         
 }
 
@@ -161,9 +161,9 @@ CONFIG['data_paths'] = {
 }
 
 CONFIG['variables'] = {
-    'CTD':        ['TEMP', 'PSAL', 'PRES', 'CNDC', 'SVEL'],
-    'AWAC_2M':    ['AWAC2M_CSPD', 'AWAC2M_CDIR', 'AWAC2M_UCUR', 'AWAC2M_VCUR', 'AWAC2M_ZCUR'],
-    'AWAC_18M':   ['AWAC18M_CSPD', 'AWAC18M_CDIR', 'AWAC18M_UCUR', 'AWAC18M_VCUR', 'AWAC18M_ZCUR'],
+    'CTD':        ['TEMP', 'PSAL', 'PRES', 'CNDC', 'SVEL', 'TEMP_CLIM', 'PSAL_CLIM', 'PRES_CLIM'],
+    'AWAC_2M':    ['AWAC2M_CSPD', 'AWAC2M_CDIR', 'AWAC2M_UCUR', 'AWAC2M_VCUR', 'AWAC2M_ZCUR', 'AWAC2M_CSPD_CLIM'],
+    'AWAC_18M':   ['AWAC18M_CSPD', 'AWAC18M_CDIR', 'AWAC18M_UCUR', 'AWAC18M_VCUR', 'AWAC18M_ZCUR', 'AWAC18M_CSPD_CLIM'],
     'AWAC_WAVES': ['AWAC_VHM0', 'AWAC_VTPK', 'AWAC_VMDR', 'AWAC_Hmax'],
     'BUOY_METEO': ['BUOY_WSPD', 'BUOY_WDIR', 'BUOY_AIRT', 'BUOY_CAPH'],
     'CTVG_METEO': ['CTVG_WSPD', 'CTVG_WDIR', 'CTVG_AIRT', 'CTVG_CAPH', 'CTVG_RELH'],
