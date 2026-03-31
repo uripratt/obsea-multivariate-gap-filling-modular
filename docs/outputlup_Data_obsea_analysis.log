@@ -1,0 +1,261 @@
+nohup: ignoring input
+
+======================================================================
+OBSEA Multivariate Data Analysis Pipeline (LUP Version)
+======================================================================
+
+Step 1: Loading Data
+  ✓ ctd: 239,341 records, 2009-05-29 18:30:00 to 2024-12-16 13:30:00
+  ✓ currents: 52,041 records, 2010-04-08 10:30:00 to 2023-12-22 03:30:00
+  ✓ waves: 23,821 records, 2018-04-05 10:14:01 to 2024-10-08 19:47:05
+  ✓ airmar: 110,517 records, 2011-10-06 11:00:00 to 2024-08-29 11:00:00
+  ✓ ctvg: 203,269 records, 2010-04-08 10:00:00 to 2024-12-16 13:30:00
+  Loading ctvg...
+
+Step 2: Applying Instrumental QC
+  ✓ ctd: 84,410 values flagged
+  ✓ currents: 129 values flagged
+  ✓ waves: 1,332 values flagged
+  ✓ airmar: 17,191 values flagged
+  ✓ ctvg: 59,719 values flagged
+
+Step 3: Creating Unified Dataset
+
+Creating unified dataset...
+  Time range: 2009-05-29 18:30:00 to 2024-12-16 13:30:00
+  ✓ ctd: 209,861 timestamps with data
+  ✓ currents: 52,041 timestamps with data
+  ✓ waves: 23,787 timestamps with data
+  ✓ airmar: 110,444 timestamps with data
+  ✓ ctvg: 203,125 timestamps with data
+
+Unified dataset: 244,524 records, 91 variables
+
+Step 3.5: Phase 3 - Oceanographic Feature Extraction
+
+Adding Phase 3 derived features...
+  Computing σ_θ (potential density)...
+  Computing N² (stratification)...
+  Computing wind U/V components...
+  Computing wind stress...
+  Computing wave energy flux...
+  Computing RMS currents...
+  Computing climatological anomalies...
+  ✓ Added 9 derived features: ['SIGMA0', 'N2', 'WIND_U', 'WIND_V', 
+'WIND_STRESS', 'WAVE_ENERGY', 'CUR_RMS', 'TEMP_ANOMALY', 'PSAL_ANOMALY']
+
+Step 4: Statistical Analysis
+  ✓ Computed descriptive statistics for 33 variables
+  ✓ Computed correlation matrix
+
+Step 5: Gap Analysis
+  ✓ Identified 201,887 gaps across all variables
+             Gap Summary by Category             
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┓
+┃ Variable     ┃ Category ┃ Count ┃ Total Hours ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━┩
+│ AIR_AIRT     │ extended │     3 │      3521.0 │
+│ AIR_AIRT     │ gigant   │     8 │     61928.5 │
+│ AIR_AIRT     │ long     │    20 │      4426.0 │
+│ AIR_AIRT     │ medium   │   217 │      3747.0 │
+│ AIR_AIRT     │ micro    │  6854 │       211.5 │
+│ AIR_AIRT     │ short    │   562 │       981.0 │
+│ AIR_CAPH     │ extended │     3 │      3521.0 │
+│ AIR_CAPH     │ gigant   │     8 │     61928.5 │
+│ AIR_CAPH     │ long     │    20 │      4426.5 │
+│ AIR_CAPH     │ medium   │   216 │      3739.0 │
+│ AIR_CAPH     │ micro    │  6801 │       213.5 │
+│ AIR_CAPH     │ short    │   566 │      1000.5 │
+│ AIR_WDIR     │ extended │     3 │      3521.0 │
+│ AIR_WDIR     │ gigant   │     8 │     62121.5 │
+│ AIR_WDIR     │ long     │    22 │      5008.0 │
+│ AIR_WDIR     │ medium   │   355 │      6157.5 │
+│ AIR_WDIR     │ micro    │  6543 │       197.5 │
+│ AIR_WDIR     │ short    │   614 │      1185.0 │
+│ AIR_WSPD     │ extended │     3 │      3521.0 │
+│ AIR_WSPD     │ gigant   │     8 │     62121.5 │
+│ AIR_WSPD     │ long     │    22 │      5012.5 │
+│ AIR_WSPD     │ medium   │   356 │      6184.5 │
+│ AIR_WSPD     │ micro    │  6527 │       197.5 │
+│ AIR_WSPD     │ short    │   617 │      1180.0 │
+│ CNDC         │ extended │     4 │      3767.5 │
+│ CNDC         │ gigant   │     5 │     17729.5 │
+│ CNDC         │ long     │    16 │      3338.5 │
+│ CNDC         │ medium   │    93 │      1925.0 │
+│ CNDC         │ micro    │    64 │        10.5 │
+│ CNDC         │ short    │    82 │       216.5 │
+│ CUR_CDIR     │ extended │     5 │      4982.5 │
+│ CUR_CDIR     │ gigant   │    11 │     98001.5 │
+│ CUR_CDIR     │ long     │    22 │      4940.5 │
+│ CUR_CDIR     │ medium   │    69 │      1631.0 │
+│ CUR_CDIR     │ micro    │    52 │         4.0 │
+│ CUR_CDIR     │ short    │    47 │       117.5 │
+│ CUR_CSPD     │ extended │     5 │      4983.0 │
+│ CUR_CSPD     │ gigant   │    11 │     98002.5 │
+│ CUR_CSPD     │ long     │    22 │      4941.5 │
+│ CUR_CSPD     │ medium   │    69 │      1638.5 │
+│ CUR_CSPD     │ micro    │    63 │         5.0 │
+│ CUR_CSPD     │ short    │    46 │       116.5 │
+│ CUR_RMS      │ extended │     5 │      4983.0 │
+│ CUR_RMS      │ gigant   │    11 │     98002.5 │
+│ CUR_RMS      │ long     │    22 │      4941.5 │
+│ CUR_RMS      │ medium   │    69 │      1638.5 │
+│ CUR_RMS      │ micro    │    63 │         5.0 │
+│ CUR_RMS      │ short    │    46 │       116.5 │
+│ CUR_UCUR     │ extended │     5 │      4983.0 │
+│ CUR_UCUR     │ gigant   │    11 │     98002.5 │
+│ CUR_UCUR     │ long     │    22 │      4941.5 │
+│ CUR_UCUR     │ medium   │    69 │      1638.5 │
+│ CUR_UCUR     │ micro    │    63 │         5.0 │
+│ CUR_UCUR     │ short    │    46 │       116.5 │
+│ CUR_VCUR     │ extended │     5 │      4983.0 │
+│ CUR_VCUR     │ gigant   │    11 │     98002.5 │
+│ CUR_VCUR     │ long     │    22 │      4941.5 │
+│ CUR_VCUR     │ medium   │    69 │      1638.5 │
+│ CUR_VCUR     │ micro    │    63 │         5.0 │
+│ CUR_VCUR     │ short    │    46 │       116.5 │
+│ CUR_ZCUR     │ extended │     5 │      4983.0 │
+│ CUR_ZCUR     │ gigant   │    11 │     98002.5 │
+│ CUR_ZCUR     │ long     │    22 │      4941.5 │
+│ CUR_ZCUR     │ medium   │    69 │      1638.5 │
+│ CUR_ZCUR     │ micro    │    63 │         5.0 │
+│ CUR_ZCUR     │ short    │    46 │       116.5 │
+│ LAND_AIRT    │ extended │     2 │      1913.0 │
+│ LAND_AIRT    │ gigant   │     2 │     17128.0 │
+│ LAND_AIRT    │ long     │    20 │      4271.5 │
+│ LAND_AIRT    │ medium   │    94 │      2149.5 │
+│ LAND_AIRT    │ micro    │   171 │        19.5 │
+│ LAND_AIRT    │ short    │    91 │       243.5 │
+│ LAND_CAPH    │ extended │     2 │      1539.0 │
+│ LAND_CAPH    │ gigant   │     2 │     17128.0 │
+│ LAND_CAPH    │ long     │    19 │      3720.0 │
+│ LAND_CAPH    │ medium   │    97 │      2277.0 │
+│ LAND_CAPH    │ micro    │   173 │        18.0 │
+│ LAND_CAPH    │ short    │    89 │       243.0 │
+│ LAND_RELH    │ extended │     2 │      1539.0 │
+│ LAND_RELH    │ gigant   │     2 │     17128.0 │
+│ LAND_RELH    │ long     │    20 │      4272.0 │
+│ LAND_RELH    │ medium   │    94 │      2144.0 │
+│ LAND_RELH    │ micro    │   908 │       128.5 │
+│ LAND_RELH    │ short    │   250 │       466.5 │
+│ LAND_WDIR    │ extended │     2 │      1539.0 │
+│ LAND_WDIR    │ gigant   │     2 │     17128.0 │
+│ LAND_WDIR    │ long     │    20 │      4214.5 │
+│ LAND_WDIR    │ medium   │    91 │      2116.5 │
+│ LAND_WDIR    │ micro    │   352 │        34.5 │
+│ LAND_WDIR    │ short    │   155 │       370.5 │
+│ LAND_WSPD    │ extended │     2 │      1539.0 │
+│ LAND_WSPD    │ gigant   │     2 │     17128.0 │
+│ LAND_WSPD    │ long     │    20 │      4270.5 │
+│ LAND_WSPD    │ medium   │    93 │      2126.0 │
+│ LAND_WSPD    │ micro    │   351 │        34.5 │
+│ LAND_WSPD    │ short    │   153 │       362.0 │
+│ N2           │ extended │     3 │      2467.5 │
+│ N2           │ gigant   │     7 │     28208.5 │
+│ N2           │ long     │    16 │      4429.5 │
+│ N2           │ medium   │    77 │      1741.0 │
+│ N2           │ micro    │    47 │        23.5 │
+│ N2           │ short    │    86 │       223.5 │
+│ PRES         │ extended │     3 │      2466.0 │
+│ PRES         │ gigant   │     7 │     25985.0 │
+│ PRES         │ long     │    15 │      3550.0 │
+│ PRES         │ medium   │    75 │      1688.5 │
+│ PRES         │ micro    │    60 │         9.5 │
+│ PRES         │ short    │    69 │       179.0 │
+│ PSAL         │ extended │     4 │      3767.5 │
+│ PSAL         │ gigant   │     4 │     13391.0 │
+│ PSAL         │ long     │    15 │      3396.0 │
+│ PSAL         │ medium   │    92 │      1902.5 │
+│ PSAL         │ micro    │    82 │         9.5 │
+│ PSAL         │ short    │    80 │       208.0 │
+│ PSAL_ANOMALY │ extended │     4 │      3767.5 │
+│ PSAL_ANOMALY │ gigant   │     4 │     13391.0 │
+│ PSAL_ANOMALY │ long     │    15 │      3396.0 │
+│ PSAL_ANOMALY │ medium   │    92 │      1902.5 │
+│ PSAL_ANOMALY │ micro    │    82 │         9.5 │
+│ PSAL_ANOMALY │ short    │    80 │       208.0 │
+│ SIGMA0       │ extended │     3 │      2466.0 │
+│ SIGMA0       │ gigant   │     7 │     25985.0 │
+│ SIGMA0       │ long     │    14 │      3607.5 │
+│ SIGMA0       │ medium   │    76 │      1709.5 │
+│ SIGMA0       │ micro    │    80 │         8.0 │
+│ SIGMA0       │ short    │    70 │       175.5 │
+│ SVEL         │ extended │     4 │      3761.0 │
+│ SVEL         │ gigant   │     5 │     17729.5 │
+│ SVEL         │ long     │    16 │      3338.5 │
+│ SVEL         │ medium   │    93 │      1931.0 │
+│ SVEL         │ micro    │    65 │        11.5 │
+│ SVEL         │ short    │    79 │       210.0 │
+│ TEMP         │ extended │     4 │      3761.0 │
+│ TEMP         │ gigant   │     5 │     17729.5 │
+│ TEMP         │ long     │    16 │      3338.5 │
+│ TEMP         │ medium   │    93 │      1920.0 │
+│ TEMP         │ micro    │    65 │        10.5 │
+│ TEMP         │ short    │    82 │       213.0 │
+│ TEMP_ANOMALY │ extended │     4 │      3761.0 │
+│ TEMP_ANOMALY │ gigant   │     5 │     17729.5 │
+│ TEMP_ANOMALY │ long     │    16 │      3338.5 │
+│ TEMP_ANOMALY │ medium   │    93 │      1920.0 │
+│ TEMP_ANOMALY │ micro    │    65 │        10.5 │
+│ TEMP_ANOMALY │ short    │    82 │       213.0 │
+│ WAVE_ENERGY  │ extended │     4 │      4350.5 │
+│ WAVE_ENERGY  │ gigant   │     6 │    100093.0 │
+│ WAVE_ENERGY  │ long     │    27 │      5411.5 │
+│ WAVE_ENERGY  │ medium   │    85 │      2043.0 │
+│ WAVE_ENERGY  │ micro    │ 23377 │         3.0 │
+│ WAVE_ENERGY  │ short    │   173 │       295.0 │
+│ WAV_VHM0     │ extended │     4 │      4350.5 │
+│ WAV_VHM0     │ gigant   │     6 │    100093.0 │
+│ WAV_VHM0     │ long     │    27 │      5411.5 │
+│ WAV_VHM0     │ medium   │    85 │      2043.0 │
+│ WAV_VHM0     │ micro    │ 23377 │         3.0 │
+│ WAV_VHM0     │ short    │   173 │       295.0 │
+│ WAV_VMDR     │ extended │     4 │      4350.5 │
+│ WAV_VMDR     │ gigant   │     6 │    100093.0 │
+│ WAV_VMDR     │ long     │    27 │      5411.5 │
+│ WAV_VMDR     │ medium   │    85 │      2043.0 │
+│ WAV_VMDR     │ micro    │ 23377 │         3.0 │
+│ WAV_VMDR     │ short    │   173 │       295.0 │
+│ WAV_VPED     │ extended │     4 │      4350.5 │
+│ WAV_VPED     │ gigant   │     6 │    100093.0 │
+│ WAV_VPED     │ long     │    27 │      5411.5 │
+│ WAV_VPED     │ medium   │    85 │      2043.0 │
+│ WAV_VPED     │ micro    │ 23377 │         3.0 │
+│ WAV_VPED     │ short    │   173 │       295.0 │
+│ WAV_VTM02    │ extended │     4 │      4350.5 │
+│ WAV_VTM02    │ gigant   │     6 │    100093.0 │
+│ WAV_VTM02    │ long     │    27 │      5411.5 │
+│ WAV_VTM02    │ medium   │    85 │      2043.0 │
+│ WAV_VTM02    │ micro    │ 23377 │         3.0 │
+│ WAV_VTM02    │ short    │   173 │       295.0 │
+│ WAV_VTPK     │ extended │     4 │      4350.5 │
+│ WAV_VTPK     │ gigant   │     6 │    100093.0 │
+│ WAV_VTPK     │ long     │    27 │      5411.5 │
+│ WAV_VTPK     │ medium   │    85 │      2043.0 │
+│ WAV_VTPK     │ micro    │ 23377 │         3.0 │
+│ WAV_VTPK     │ short    │   173 │       295.0 │
+│ WIND_STRESS  │ extended │     3 │      3521.0 │
+│ WIND_STRESS  │ gigant   │     8 │     62121.5 │
+│ WIND_STRESS  │ long     │    22 │      5012.5 │
+│ WIND_STRESS  │ medium   │   356 │      6184.5 │
+│ WIND_STRESS  │ micro    │  6527 │       197.5 │
+│ WIND_STRESS  │ short    │   617 │      1180.0 │
+│ WIND_U       │ extended │     3 │      3521.0 │
+│ WIND_U       │ gigant   │     8 │     62121.5 │
+│ WIND_U       │ long     │    22 │      5012.5 │
+│ WIND_U       │ medium   │   356 │      6185.0 │
+│ WIND_U       │ micro    │  6531 │       198.0 │
+│ WIND_U       │ short    │   617 │      1181.0 │
+│ WIND_V       │ extended │     3 │      3521.0 │
+│ WIND_V       │ gigant   │     8 │     62121.5 │
+│ WIND_V       │ long     │    22 │      5012.5 │
+│ WIND_V       │ medium   │   356 │      6185.0 │
+│ WIND_V       │ micro    │  6531 │       198.0 │
+│ WIND_V       │ short    │   617 │      1181.0 │
+└──────────────┴──────────┴───────┴─────────────┘
+
+Step 5.5: Benchmarking Gap Filling
+
+  Benchmarking gap filling on TEMP...
+    Simulating micro gaps...
+Training VARMA(12,0) on TEMP:   0%|          | 0/50 [00:00<?, ?it/s]Training VARMA(12,0) on TEMP:   0%|          | 0/50 [00:03<?, ?it/s, loss=1.4]Training VARMA(12,0) on TEMP:   2%|▏         | 1/50 [00:03<02:44,  3.35s/it, loss=1.4]Training VARMA(12,0) on TEMP:   2%|▏         | 1/50 [00:06<02:44,  3.35s/it, loss=0.807]Training VARMA(12,0) on TEMP:   4%|▍         | 2/50 [00:06<02:23,  2.99s/it, loss=0.807]Training VARMA(12,0) on TEMP:   4%|▍         | 2/50 [00:09<02:23,  2.99s/it, loss=0.779]Training VARMA(12,0) on TEMP:   6%|▌         | 3/50 [00:09<02:19,  2.97s/it, loss=0.779]Training VARMA(12,0) on TEMP:   6%|▌         | 3/50 [00:11<02:19,  2.97s/it, loss=0.746]Training VARMA(12,0) on TEMP:   8%|▊         | 4/50 [00:11<02:14,  2.93s/it, loss=0.746]Training VARMA(12,0) on TEMP:   8%|▊         | 4/50 [00:15<02:14,  2.93s/it, loss=0.732]Training VARMA(12,0) on TEMP:  10%|█         | 5/50 [00:15<02:14,  2.99s/it, loss=0.732]Training VARMA(12,0) on TEMP:  10%|█         | 5/50 [00:17<02:14,  2.99s/it, loss=0.728]Training VARMA(12,0) on TEMP:  12%|█▏        | 6/50 [00:17<02:08,  2.92s/it, loss=0.728]Training VARMA(12,0) on TEMP:  12%|█▏        | 6/50 [00:20<02:08,  2.92s/it, loss=0.722]Training VARMA(12,0) on TEMP:  14%|█▍        | 7/50 [00:20<02:01,  2.83s/it, loss=0.722]Training VARMA(12,0) on TEMP:  14%|█▍        | 7/50 [00:23<02:01,  2.83s/it, loss=0.719]Training VARMA(12,0) on TEMP:  16%|█▌        | 8/50 [00:23<01:56,  2.78s/it, loss=0.719]Training VARMA(12,0) on TEMP:  16%|█▌        | 8/50 [00:25<01:56,  2.78s/it, loss=0.724]Training VARMA(12,0) on TEMP:  18%|█▊        | 9/50 [00:25<01:54,  2.78s/it, loss=0.724]Training VARMA(12,0) on TEMP:  18%|█▊        | 9/50 [00:28<01:54,  2.78s/it, loss=0.719]Training VARMA(12,0) on TEMP:  20%|██        | 10/50 [00:28<01:50,  2.75s/it, loss=0.719]Training VARMA(12,0) on TEMP:  20%|██        | 10/50 [00:31<01:50,  2.75s/it, loss=0.708]Training VARMA(12,0) on TEMP:  22%|██▏       | 11/50 [00:31<01:46,  2.73s/it, loss=0.708]Training VARMA(12,0) on TEMP:  22%|██▏       | 11/50 [00:34<01:46,  2.73s/it, loss=0.708]Training VARMA(12,0) on TEMP:  24%|██▍       | 12/50 [00:34<01:44,  2.74s/it, loss=0.708]Training VARMA(12,0) on TEMP:  24%|██▍       | 12/50 [00:36<01:44,  2.74s/it, loss=0.711]Training VARMA(12,0) on TEMP:  26%|██▌       | 13/50 [00:36<01:40,  2.73s/it, loss=0.711]Training VARMA(12,0) on TEMP:  26%|██▌       | 13/50 [00:39<01:40,  2.73s/it, loss=0.709]Training VARMA(12,0) on TEMP:  28%|██▊       | 14/50 [00:39<01:37,  2.71s/it, loss=0.709]Training VARMA(12,0) on TEMP:  28%|██▊       | 14/50 [00:42<01:37,  2.71s/it, loss=0.704]Training VARMA(12,0) on TEMP:  30%|███       | 15/50 [00:42<01:34,  2.70s/it, loss=0.704]Training VARMA(12,0) on TEMP:  30%|███       | 15/50 [00:44<01:34,  2.70s/it, loss=0.709]Training VARMA(12,0) on TEMP:  32%|███▏      | 16/50 [00:44<01:32,  2.71s/it, loss=0.709]Training VARMA(12,0) on TEMP:  32%|███▏      | 16/50 [00:47<01:32,  2.71s/it, loss=0.694]Training VARMA(12,0) on TEMP:  34%|███▍      | 17/50 [00:47<01:29,  2.71s/it, loss=0.694]Training VARMA(12,0) on TEMP:  34%|███▍      | 17/50 [00:50<01:29,  2.71s/it, loss=0.696]Training VARMA(12,0) on TEMP:  36%|███▌      | 18/50 [00:50<01:27,  2.73s/it, loss=0.696]Training VARMA(12,0) on TEMP:  36%|███▌      | 18/50 [00:52<01:27,  2.73s/it, loss=0.697]Training VARMA(12,0) on TEMP:  38%|███▊      | 19/50 [00:52<01:24,  2.71s/it, loss=0.697]Training VARMA(12,0) on TEMP:  38%|███▊      | 19/50 [00:55<01:24,  2.71s/it, loss=0.7]  Training VARMA(12,0) on TEMP:  40%|████      | 20/50 [00:55<01:20,  2.69s/it, loss=0.7]Training VARMA(12,0) on TEMP:  40%|████      | 20/50 [00:58<01:20,  2.69s/it, loss=0.697]Training VARMA(12,0) on TEMP:  42%|████▏     | 21/50 [00:58<01:17,  2.68s/it, loss=0.697]Training VARMA(12,0) on TEMP:  42%|████▏     | 21/50 [01:01<01:17,  2.68s/it, loss=0.691]Training VARMA(12,0) on TEMP:  44%|████▍     | 22/50 [01:01<01:16,  2.72s/it, loss=0.691]Training VARMA(12,0) on TEMP:  44%|████▍     | 22/50 [01:03<01:16,  2.72s/it, loss=0.695]Training VARMA(12,0) on TEMP:  46%|████▌     | 23/50 [01:03<01:13,  2.71s/it, loss=0.695]Training VARMA(12,0) on TEMP:  46%|████▌     | 23/50 [01:06<01:13,  2.71s/it, loss=0.697]Training VARMA(12,0) on TEMP:  48%|████▊     | 24/50 [01:06<01:10,  2.70s/it, loss=0.697]Training VARMA(12,0) on TEMP:  48%|████▊     | 24/50 [01:09<01:10,  2.70s/it, loss=0.697]Training VARMA(12,0) on TEMP:  50%|█████     | 25/50 [01:09<01:08,  2.73s/it, loss=0.697]Training VARMA(12,0) on TEMP:  50%|█████     | 25/50 [01:11<01:08,  2.73s/it, loss=0.691]Training VARMA(12,0) on TEMP:  52%|█████▏    | 26/50 [01:11<01:05,  2.72s/it, loss=0.691]Training VARMA(12,0) on TEMP:  52%|█████▏    | 26/50 [01:14<01:05,  2.72s/it, loss=0.691]Training VARMA(12,0) on TEMP:  54%|█████▍    | 27/50 [01:14<01:02,  2.70s/it, loss=0.691]Training VARMA(12,0) on TEMP:  54%|█████▍    | 27/50 [01:17<01:02,  2.70s/it, loss=0.698]Training VARMA(12,0) on TEMP:  56%|█████▌    | 28/50 [01:17<00:58,  2.68s/it, loss=0.698]Training VARMA(12,0) on TEMP:  56%|█████▌    | 28/50 [01:19<00:58,  2.68s/it, loss=0.681]Training VARMA(12,0) on TEMP:  58%|█████▊    | 29/50 [01:19<00:56,  2.70s/it, loss=0.681]Training VARMA(12,0) on TEMP:  58%|█████▊    | 29/50 [01:22<00:56,  2.70s/it, loss=0.697]Training VARMA(12,0) on TEMP:  60%|██████    | 30/50 [01:22<00:53,  2.68s/it, loss=0.697]Training VARMA(12,0) on TEMP:  60%|██████    | 30/50 [01:25<00:53,  2.68s/it, loss=0.693]Training VARMA(12,0) on TEMP:  62%|██████▏   | 31/50 [01:25<00:51,  2.71s/it, loss=0.693]Training VARMA(12,0) on TEMP:  62%|██████▏   | 31/50 [01:28<00:51,  2.71s/it, loss=0.682]Training VARMA(12,0) on TEMP:  64%|██████▍   | 32/50 [01:28<00:48,  2.70s/it, loss=0.682]Training VARMA(12,0) on TEMP:  64%|██████▍   | 32/50 [01:31<00:48,  2.70s/it, loss=0.681]Training VARMA(12,0) on TEMP:  66%|██████▌   | 33/50 [01:31<00:51,  3.04s/it, loss=0.681]Training VARMA(12,0) on TEMP:  66%|██████▌   | 33/50 [01:36<00:51,  3.04s/it, loss=0.695]Training VARMA(12,0) on TEMP:  68%|██████▊   | 34/50 [01:36<00:56,  3.50s/it, loss=0.695]

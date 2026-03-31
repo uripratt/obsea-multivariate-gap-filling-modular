@@ -1,0 +1,902 @@
+nohup: ignoring input
+======================================================================
+OBSEA MULTIVARIATE DATA ANALYSIS PIPELINE (LUP VERSION)
+Execution started at: 2026-03-13 15:24:07
+Working Directory: /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts
+Log file: /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/output_lup/pipeline_execution_20260313_152407.log
+======================================================================
+======================================================================
+🚀 CACHE HIT: LOADING PRE-PROCESSED DATASET
+======================================================================
+Loaded unified_df_filtered: (244524, 29)
+Loaded gaps_df_filtered: 4891 gaps
+STEP 5.6: SCIENTIFIC BENCHMARKING OF INTERPOLATION METHODS
+Testing: Linear, Time, Splines, Polynomial, VARMA, Bi-LSTM
+
+  [1mBenchmarking gap filling on [0m[1m{[0m[1mtest_variable[0m[1m}[0m[1;33m...[0m
+  [MICRO] Simulating 50 gaps (1-1 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Complete records: [0m[1;2;36m168[0m[2m,[0m[1;2;36m022[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=70%, Val=15%, Test=15%
+  Sequence length: 672 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Observed range for TEMP: [11.64, 27.96]
+Temporal split:
+  Train: 171,166 samples (2009-05-29 18:30:00 to 2020-09-16 06:00:00)
+  Val:   36,678 samples (2020-09-16 06:30:00 to 2022-10-31 04:30:00)
+  Test:  36,680 samples (2022-10-31 05:00:00 to 2024-12-16 13:30:00)
+  -> Extracting Climatology components for pure residual learning...
+Starting training with Attention & Scheduler...
+  Epoch [1/75] Train Loss: 0.665214, Val Loss: 0.069164 
+  Epoch [5/75] Train Loss: 0.036787, Val Loss: 0.030756 
+  Epoch [10/75] Train Loss: 0.040353, Val Loss: 0.091712 
+  Epoch [15/75] Train Loss: 0.020696, Val Loss: 0.015810 
+  Epoch [20/75] Train Loss: 0.020122, Val Loss: 0.011856 
+  Epoch [25/75] Train Loss: 0.018135, Val Loss: 0.011905 
+  Epoch [30/75] Train Loss: 0.017150, Val Loss: 0.011158 
+  Epoch [35/75] Train Loss: 0.016373, Val Loss: 0.011612 
+  Epoch [40/75] Train Loss: 0.015794, Val Loss: 0.011092 
+  Epoch [45/75] Train Loss: 0.015618, Val Loss: 0.010674 
+  Epoch [50/75] Train Loss: 0.015319, Val Loss: 0.010655 
+  Epoch [55/75] Train Loss: 0.015391, Val Loss: 0.010623 
+  Epoch [60/75] Train Loss: 0.015119, Val Loss: 0.012284 
+  Epoch [65/75] Train Loss: 0.015101, Val Loss: 0.012420 
+  Epoch [70/75] Train Loss: 0.014795, Val Loss: 0.012147 
+Early stopping triggered at epoch 74
+Restored best model from epoch 54
+Training complete!
+  Best epoch: 54
+  Best val loss: 0.010382
+  Test loss: 0.011962
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m54[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.010382[0m[2m, Test loss: [0m[1;2;36m0.011962[0m
+    [2m│ Predicting gaps[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/gap_project_antigr/src/models/multivariate_lstm_model.py:831: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: predicted_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: predicted_filled range: [11.6421, 29.5871]
+    [2m│ Filling gaps with model predictions[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m42[0m[32m,[0m[1;32m923[0m[32m gap points[0m
+    DEBUG: Final NaN count - Original: 42923, Final: 0, Filled: 42923
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m42[0m[32m,[0m[1;32m923[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+    [GPU/CPU|SAITS] Starting interpolation...
+    [ERROR|SAITS] FAILED: No module named 'pypots'
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+    [ERROR|IMPUTEFORMER] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS] Starting interpolation...
+    [ERROR|BRITS] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS_PRO] Starting interpolation...
+    [ERROR|BRITS_PRO] FAILED: No module named 'pypots'
+  [MEM] RAM before CPU jobs: 11.8% used, 476.7 GB free
+    [MICRO] Launching 2 CPU models (n_jobs=1) via Joblib...
+    [GPU/CPU|LINEAR] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 1.407055
+      VARMA Epoch [10/50] Loss: 0.761811
+      VARMA Epoch [20/50] Loss: 0.742502
+      VARMA Epoch [30/50] Loss: 0.729781
+      VARMA Epoch [40/50] Loss: 0.718882
+      VARMA Epoch [50/50] Loss: 0.710375
+    [MICRO|BILSTM] RMSE=5.7983, MAE=5.6044, R²=-1.5588
+    [MICRO|XGBOOST_PRO] RMSE=0.0212, MAE=0.0109, R²=1.0000
+    [MICRO|LINEAR] RMSE=0.0212, MAE=0.0109, R²=1.0000
+    [MICRO|VARMA] RMSE=0.3509, MAE=0.2371, R²=0.9906
+  [SHORT] Simulating 20 gaps (2-12 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Complete records: [0m[1;2;36m167[0m[2m,[0m[1;2;36m933[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=70%, Val=15%, Test=15%
+  Sequence length: 672 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Observed range for TEMP: [11.64, 27.96]
+Temporal split:
+  Train: 171,166 samples (2009-05-29 18:30:00 to 2020-09-16 06:00:00)
+  Val:   36,678 samples (2020-09-16 06:30:00 to 2022-10-31 04:30:00)
+  Test:  36,680 samples (2022-10-31 05:00:00 to 2024-12-16 13:30:00)
+  -> Extracting Climatology components for pure residual learning...
+Starting training with Attention & Scheduler...
+  Epoch [1/75] Train Loss: 1.492875, Val Loss: 1.187630 
+  Epoch [5/75] Train Loss: 0.056206, Val Loss: 0.034059 
+  Epoch [10/75] Train Loss: 0.040446, Val Loss: 0.141765 
+  Epoch [15/75] Train Loss: 0.023654, Val Loss: 0.013070 
+  Epoch [20/75] Train Loss: 0.026109, Val Loss: 0.030829 
+  Epoch [25/75] Train Loss: 0.020634, Val Loss: 0.012411 
+  Epoch [30/75] Train Loss: 0.019489, Val Loss: 0.013780 
+  Epoch [35/75] Train Loss: 0.018309, Val Loss: 0.012442 
+  Epoch [40/75] Train Loss: 0.017312, Val Loss: 0.011444 
+  Epoch [45/75] Train Loss: 0.016408, Val Loss: 0.010892 
+  Epoch [50/75] Train Loss: 0.015861, Val Loss: 0.012979 
+  Epoch [55/75] Train Loss: 0.015558, Val Loss: 0.010619 
+  Epoch [60/75] Train Loss: 0.015367, Val Loss: 0.010751 
+  Epoch [65/75] Train Loss: 0.015264, Val Loss: 0.010867 
+  Epoch [70/75] Train Loss: 0.015048, Val Loss: 0.010654 
+  Epoch [75/75] Train Loss: 0.015021, Val Loss: 0.010614 
+Restored best model from epoch 74
+Training complete!
+  Best epoch: 74
+  Best val loss: 0.010504
+  Test loss: 0.011928
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m74[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.010504[0m[2m, Test loss: [0m[1;2;36m0.011928[0m
+    [2m│ Predicting gaps[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/gap_project_antigr/src/models/multivariate_lstm_model.py:831: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: predicted_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: predicted_filled range: [11.6421, 29.5871]
+    [2m│ Filling gaps with model predictions[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m43[0m[32m,[0m[1;32m022[0m[32m gap points[0m
+    DEBUG: Final NaN count - Original: 43022, Final: 0, Filled: 43022
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m43[0m[32m,[0m[1;32m022[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+    [GPU/CPU|SAITS] Starting interpolation...
+    [ERROR|SAITS] FAILED: No module named 'pypots'
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+    [ERROR|IMPUTEFORMER] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS] Starting interpolation...
+    [ERROR|BRITS] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS_PRO] Starting interpolation...
+    [ERROR|BRITS_PRO] FAILED: No module named 'pypots'
+  [MEM] RAM before CPU jobs: 11.1% used, 480.3 GB free
+    [SHORT] Launching 2 CPU models (n_jobs=1) via Joblib...
+    [GPU/CPU|LINEAR] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 1.172375
+      VARMA Epoch [10/50] Loss: 0.742581
+      VARMA Epoch [20/50] Loss: 0.727813
+      VARMA Epoch [30/50] Loss: 0.725647
+      VARMA Epoch [40/50] Loss: 0.713659
+      VARMA Epoch [50/50] Loss: 0.707850
+    [SHORT|BILSTM] RMSE=4.8933, MAE=4.7057, R²=-0.8848
+    [SHORT|XGBOOST_PRO] RMSE=0.0583, MAE=0.0300, R²=0.9997
+    [SHORT|LINEAR] RMSE=0.0583, MAE=0.0300, R²=0.9997
+    [SHORT|VARMA] RMSE=0.2081, MAE=0.1448, R²=0.9966
+  [MEDIUM] Simulating 5 gaps (12-144 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Complete records: [0m[1;2;36m167[0m[2m,[0m[1;2;36m838[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=70%, Val=15%, Test=15%
+  Sequence length: 672 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Observed range for TEMP: [11.64, 27.96]
+Temporal split:
+  Train: 171,166 samples (2009-05-29 18:30:00 to 2020-09-16 06:00:00)
+  Val:   36,678 samples (2020-09-16 06:30:00 to 2022-10-31 04:30:00)
+  Test:  36,680 samples (2022-10-31 05:00:00 to 2024-12-16 13:30:00)
+  -> Extracting Climatology components for pure residual learning...
+Starting training with Attention & Scheduler...
+  Epoch [1/75] Train Loss: 0.672679, Val Loss: 0.136472 
+  Epoch [5/75] Train Loss: 0.042135, Val Loss: 0.034478 
+  Epoch [10/75] Train Loss: 0.036498, Val Loss: 0.097909 
+  Epoch [15/75] Train Loss: 0.019922, Val Loss: 0.012486 
+  Epoch [20/75] Train Loss: 0.020796, Val Loss: 0.014979 
+  Epoch [25/75] Train Loss: 0.017481, Val Loss: 0.012369 
+  Epoch [30/75] Train Loss: 0.016684, Val Loss: 0.012117 
+  Epoch [35/75] Train Loss: 0.015500, Val Loss: 0.011621 
+  Epoch [40/75] Train Loss: 0.015337, Val Loss: 0.010860 
+  Epoch [45/75] Train Loss: 0.015006, Val Loss: 0.010694 
+  Epoch [50/75] Train Loss: 0.014991, Val Loss: 0.011273 
+  Epoch [55/75] Train Loss: 0.014702, Val Loss: 0.010687 
+  Epoch [60/75] Train Loss: 0.014617, Val Loss: 0.010461 
+  Epoch [65/75] Train Loss: 0.014621, Val Loss: 0.010685 
+  Epoch [70/75] Train Loss: 0.014474, Val Loss: 0.010502 
+  Epoch [75/75] Train Loss: 0.014821, Val Loss: 0.010642 
+Restored best model from epoch 69
+Training complete!
+  Best epoch: 69
+  Best val loss: 0.010319
+  Test loss: 0.011818
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m69[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.010319[0m[2m, Test loss: [0m[1;2;36m0.011818[0m
+    [2m│ Predicting gaps[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/gap_project_antigr/src/models/multivariate_lstm_model.py:831: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: predicted_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: predicted_filled range: [11.6421, 29.5871]
+    [2m│ Filling gaps with model predictions[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m43[0m[32m,[0m[1;32m154[0m[32m gap points[0m
+    DEBUG: Final NaN count - Original: 43154, Final: 0, Filled: 43154
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m43[0m[32m,[0m[1;32m154[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+    [GPU/CPU|SAITS] Starting interpolation...
+    [ERROR|SAITS] FAILED: No module named 'pypots'
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+    [ERROR|IMPUTEFORMER] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS] Starting interpolation...
+    [ERROR|BRITS] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS_PRO] Starting interpolation...
+    [ERROR|BRITS_PRO] FAILED: No module named 'pypots'
+  [MEM] RAM before CPU jobs: 11.2% used, 479.6 GB free
+    [MEDIUM] Launching 2 CPU models (n_jobs=1) via Joblib...
+    [GPU/CPU|LINEAR] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 1.332817
+      VARMA Epoch [10/50] Loss: 0.753037
+      VARMA Epoch [20/50] Loss: 0.736242
+      VARMA Epoch [30/50] Loss: 0.719961
+      VARMA Epoch [40/50] Loss: 0.732647
+      VARMA Epoch [50/50] Loss: 0.724837
+    [MEDIUM|BILSTM] RMSE=5.8342, MAE=5.5671, R²=-1.4886
+    [MEDIUM|XGBOOST_PRO] RMSE=0.0790, MAE=0.0552, R²=0.9995
+    [MEDIUM|LINEAR] RMSE=0.0790, MAE=0.0552, R²=0.9995
+    [MEDIUM|VARMA] RMSE=0.3760, MAE=0.2711, R²=0.9897
+  [LONG] Simulating 2 gaps (144-1440 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Complete records: [0m[1;2;36m166[0m[2m,[0m[1;2;36m705[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=70%, Val=15%, Test=15%
+  Sequence length: 672 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Observed range for TEMP: [11.64, 27.96]
+Temporal split:
+  Train: 171,166 samples (2009-05-29 18:30:00 to 2020-09-16 06:00:00)
+  Val:   36,678 samples (2020-09-16 06:30:00 to 2022-10-31 04:30:00)
+  Test:  36,680 samples (2022-10-31 05:00:00 to 2024-12-16 13:30:00)
+  -> Extracting Climatology components for pure residual learning...
+Starting training with Attention & Scheduler...
+  Epoch [1/75] Train Loss: 0.876180, Val Loss: 0.130925 
+  Epoch [5/75] Train Loss: 0.041308, Val Loss: 0.062461 
+  Epoch [10/75] Train Loss: 0.034007, Val Loss: 0.025248 
+  Epoch [15/75] Train Loss: 0.024737, Val Loss: 0.022009 
+  Epoch [20/75] Train Loss: 0.021243, Val Loss: 0.012618 
+  Epoch [25/75] Train Loss: 0.020169, Val Loss: 0.014857 
+  Epoch [30/75] Train Loss: 0.018466, Val Loss: 0.010433 
+  Epoch [35/75] Train Loss: 0.017929, Val Loss: 0.010788 
+  Epoch [40/75] Train Loss: 0.017127, Val Loss: 0.010319 
+  Epoch [45/75] Train Loss: 0.016807, Val Loss: 0.010610 
+  Epoch [50/75] Train Loss: 0.016741, Val Loss: 0.010256 
+  Epoch [55/75] Train Loss: 0.016497, Val Loss: 0.010356 
+  Epoch [60/75] Train Loss: 0.016427, Val Loss: 0.010064 
+  Epoch [65/75] Train Loss: 0.016371, Val Loss: 0.009975 
+  Epoch [70/75] Train Loss: 0.016421, Val Loss: 0.010003 
+  Epoch [75/75] Train Loss: 0.016317, Val Loss: 0.010042 
+Restored best model from epoch 69
+Training complete!
+  Best epoch: 69
+  Best val loss: 0.009942
+  Test loss: 0.011702
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m69[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.009942[0m[2m, Test loss: [0m[1;2;36m0.011702[0m
+    [2m│ Predicting gaps[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/gap_project_antigr/src/models/multivariate_lstm_model.py:831: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: predicted_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: predicted_filled range: [11.6421, 29.5871]
+    [2m│ Filling gaps with model predictions[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m45[0m[32m,[0m[1;32m348[0m[32m gap points[0m
+    DEBUG: Final NaN count - Original: 45348, Final: 0, Filled: 45348
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m45[0m[32m,[0m[1;32m348[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+    [GPU/CPU|SAITS] Starting interpolation...
+    [ERROR|SAITS] FAILED: No module named 'pypots'
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+    [ERROR|IMPUTEFORMER] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS] Starting interpolation...
+    [ERROR|BRITS] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS_PRO] Starting interpolation...
+    [ERROR|BRITS_PRO] FAILED: No module named 'pypots'
+  [MEM] RAM before CPU jobs: 11.2% used, 479.8 GB free
+    [LONG] Launching 2 CPU models (n_jobs=1) via Joblib...
+    [GPU/CPU|LINEAR] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 1.430009
+      VARMA Epoch [10/50] Loss: 0.762160
+      VARMA Epoch [20/50] Loss: 0.748222
+      VARMA Epoch [30/50] Loss: 0.739672
+      VARMA Epoch [40/50] Loss: 0.723426
+      VARMA Epoch [50/50] Loss: 0.725111
+    [LONG|BILSTM] RMSE=3.1471, MAE=2.3844, R²=-7.6893
+    [LONG|XGBOOST_PRO] RMSE=0.9994, MAE=0.7782, R²=0.1238
+    [LONG|LINEAR] RMSE=1.0011, MAE=0.7794, R²=0.1208
+    [LONG|VARMA] RMSE=0.8150, MAE=0.6684, R²=0.4173
+  [EXTENDED] Simulating 2 gaps (1440-2880 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Complete records: [0m[1;2;36m163[0m[2m,[0m[1;2;36m100[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=70%, Val=15%, Test=15%
+  Sequence length: 672 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Observed range for TEMP: [11.64, 27.96]
+Temporal split:
+  Train: 171,166 samples (2009-05-29 18:30:00 to 2020-09-16 06:00:00)
+  Val:   36,678 samples (2020-09-16 06:30:00 to 2022-10-31 04:30:00)
+  Test:  36,680 samples (2022-10-31 05:00:00 to 2024-12-16 13:30:00)
+  -> Extracting Climatology components for pure residual learning...
+Starting training with Attention & Scheduler...
+  Epoch [1/75] Train Loss: 1.891863, Val Loss: 2.534587 
+  Epoch [5/75] Train Loss: 0.075888, Val Loss: 0.162620 
+  Epoch [10/75] Train Loss: 0.043169, Val Loss: 0.027396 
+  Epoch [15/75] Train Loss: 0.039768, Val Loss: 0.051109 
+  Epoch [20/75] Train Loss: 0.024057, Val Loss: 0.017980 
+  Epoch [25/75] Train Loss: 0.023543, Val Loss: 0.018448 
+  Epoch [30/75] Train Loss: 0.020935, Val Loss: 0.012594 
+  Epoch [35/75] Train Loss: 0.018831, Val Loss: 0.014192 
+  Epoch [40/75] Train Loss: 0.017458, Val Loss: 0.011033 
+  Epoch [45/75] Train Loss: 0.016957, Val Loss: 0.011750 
+  Epoch [50/75] Train Loss: 0.016364, Val Loss: 0.010847 
+  Epoch [55/75] Train Loss: 0.016253, Val Loss: 0.010807 
+  Epoch [60/75] Train Loss: 0.016331, Val Loss: 0.010575 
+  Epoch [65/75] Train Loss: 0.016023, Val Loss: 0.011024 
+  Epoch [70/75] Train Loss: 0.015797, Val Loss: 0.010619 
+  Epoch [75/75] Train Loss: 0.015828, Val Loss: 0.011372 
+Restored best model from epoch 71
+Training complete!
+  Best epoch: 71
+  Best val loss: 0.010568
+  Test loss: 0.012426
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m71[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.010568[0m[2m, Test loss: [0m[1;2;36m0.012426[0m
+    [2m│ Predicting gaps[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/gap_project_antigr/src/models/multivariate_lstm_model.py:831: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: predicted_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: predicted_filled range: [11.6421, 29.5871]
+    [2m│ Filling gaps with model predictions[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m47[0m[32m,[0m[1;32m847[0m[32m gap points[0m
+    DEBUG: Final NaN count - Original: 47847, Final: 0, Filled: 47847
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m47[0m[32m,[0m[1;32m847[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+    [GPU/CPU|SAITS] Starting interpolation...
+    [ERROR|SAITS] FAILED: No module named 'pypots'
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+    [ERROR|IMPUTEFORMER] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS] Starting interpolation...
+    [ERROR|BRITS] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS_PRO] Starting interpolation...
+    [ERROR|BRITS_PRO] FAILED: No module named 'pypots'
+  [MEM] RAM before CPU jobs: 11.2% used, 479.6 GB free
+    [EXTENDED] Launching 2 CPU models (n_jobs=1) via Joblib...
+    [GPU/CPU|LINEAR] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 1.229957
+      VARMA Epoch [10/50] Loss: 0.749573
+      VARMA Epoch [20/50] Loss: 0.728386
+      VARMA Epoch [30/50] Loss: 0.724929
+      VARMA Epoch [40/50] Loss: 0.714726
+      VARMA Epoch [50/50] Loss: 0.705702
+    [EXTENDED|BILSTM] RMSE=1.4278, MAE=1.1430, R²=0.7254
+    [EXTENDED|XGBOOST_PRO] RMSE=1.0721, MAE=0.8546, R²=0.8452
+    [EXTENDED|LINEAR] RMSE=1.0425, MAE=0.8331, R²=0.8536
+    [EXTENDED|VARMA] RMSE=1.9069, MAE=1.5438, R²=0.5102
+  [GIGANT] Simulating 1 gaps (2880-5000 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Complete records: [0m[1;2;36m164[0m[2m,[0m[1;2;36m406[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=70%, Val=15%, Test=15%
+  Sequence length: 672 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Observed range for TEMP: [11.64, 27.96]
+Temporal split:
+  Train: 171,166 samples (2009-05-29 18:30:00 to 2020-09-16 06:00:00)
+  Val:   36,678 samples (2020-09-16 06:30:00 to 2022-10-31 04:30:00)
+  Test:  36,680 samples (2022-10-31 05:00:00 to 2024-12-16 13:30:00)
+  -> Extracting Climatology components for pure residual learning...
+Starting training with Attention & Scheduler...
+  Epoch [1/75] Train Loss: 1.008812, Val Loss: 0.402896 
+  Epoch [5/75] Train Loss: 0.050741, Val Loss: 0.045128 
+  Epoch [10/75] Train Loss: 0.035887, Val Loss: 0.205518 
+  Epoch [15/75] Train Loss: 0.026412, Val Loss: 0.066408 
+  Epoch [20/75] Train Loss: 0.020036, Val Loss: 0.016252 
+  Epoch [25/75] Train Loss: 0.019995, Val Loss: 0.027917 
+  Epoch [30/75] Train Loss: 0.018379, Val Loss: 0.011999 
+  Epoch [35/75] Train Loss: 0.017127, Val Loss: 0.012350 
+  Epoch [40/75] Train Loss: 0.015869, Val Loss: 0.012380 
+  Epoch [45/75] Train Loss: 0.015127, Val Loss: 0.012406 
+  Epoch [50/75] Train Loss: 0.014813, Val Loss: 0.012913 
+  Epoch [55/75] Train Loss: 0.014604, Val Loss: 0.014160 
+Early stopping triggered at epoch 57
+Restored best model from epoch 37
+Training complete!
+  Best epoch: 37
+  Best val loss: 0.011400
+  Test loss: 0.012485
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m37[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.011400[0m[2m, Test loss: [0m[1;2;36m0.012485[0m
+    [2m│ Predicting gaps[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/gap_project_antigr/src/models/multivariate_lstm_model.py:831: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: predicted_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: predicted_filled range: [11.6421, 29.5871]
+    [2m│ Filling gaps with model predictions[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m47[0m[32m,[0m[1;32m466[0m[32m gap points[0m
+    DEBUG: Final NaN count - Original: 47466, Final: 0, Filled: 47466
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m47[0m[32m,[0m[1;32m466[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+    [GPU/CPU|SAITS] Starting interpolation...
+    [ERROR|SAITS] FAILED: No module named 'pypots'
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+    [ERROR|IMPUTEFORMER] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS] Starting interpolation...
+    [ERROR|BRITS] FAILED: No module named 'pypots'
+    [GPU/CPU|BRITS_PRO] Starting interpolation...
+    [ERROR|BRITS_PRO] FAILED: No module named 'pypots'
+  [MEM] RAM before CPU jobs: 12.6% used, 472.0 GB free
+    [GIGANT] Launching 2 CPU models (n_jobs=1) via Joblib...
+    [GPU/CPU|LINEAR] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 1.313750
+      VARMA Epoch [10/50] Loss: 0.753850
+      VARMA Epoch [20/50] Loss: 0.728270
+      VARMA Epoch [30/50] Loss: 0.712577
+      VARMA Epoch [40/50] Loss: 0.709919
+      VARMA Epoch [50/50] Loss: 0.702426
+    [GIGANT|BILSTM] RMSE=2.5847, MAE=2.1272, R²=-3.2270
+    [GIGANT|XGBOOST_PRO] RMSE=1.5145, MAE=1.2552, R²=-0.4513
+    [GIGANT|LINEAR] RMSE=1.5114, MAE=1.2526, R²=-0.4454
+    [GIGANT|VARMA] RMSE=4.0200, MAE=3.2553, R²=-9.2250
+======================================================================
+BENCHMARK RESULTS SUMMARY
+  micro      | bilstm     | RMSE=5.7983  | MAE=5.6044  | R²=-1.5588
+  micro      | xgboost_pro | RMSE=0.0212  | MAE=0.0109  | R²=1.0    
+  micro      | linear     | RMSE=0.0212  | MAE=0.0109  | R²=1.0    
+  micro      | varma      | RMSE=0.3509  | MAE=0.2371  | R²=0.9906 
+  short      | bilstm     | RMSE=4.8933  | MAE=4.7057  | R²=-0.8848
+  short      | xgboost_pro | RMSE=0.0583  | MAE=0.03    | R²=0.9997 
+  short      | linear     | RMSE=0.0583  | MAE=0.03    | R²=0.9997 
+  short      | varma      | RMSE=0.2081  | MAE=0.1448  | R²=0.9966 
+  medium     | bilstm     | RMSE=5.8342  | MAE=5.5671  | R²=-1.4886
+  medium     | xgboost_pro | RMSE=0.079   | MAE=0.0552  | R²=0.9995 
+  medium     | linear     | RMSE=0.079   | MAE=0.0552  | R²=0.9995 
+  medium     | varma      | RMSE=0.376   | MAE=0.2711  | R²=0.9897 
+  long       | bilstm     | RMSE=3.1471  | MAE=2.3844  | R²=-7.6893
+  long       | xgboost_pro | RMSE=0.9994  | MAE=0.7782  | R²=0.1238 
+  long       | linear     | RMSE=1.0011  | MAE=0.7794  | R²=0.1208 
+  long       | varma      | RMSE=0.815   | MAE=0.6684  | R²=0.4173 
+  extended   | bilstm     | RMSE=1.4278  | MAE=1.143   | R²=0.7254 
+  extended   | xgboost_pro | RMSE=1.0721  | MAE=0.8546  | R²=0.8452 
+  extended   | linear     | RMSE=1.0425  | MAE=0.8331  | R²=0.8536 
+  extended   | varma      | RMSE=1.9069  | MAE=1.5438  | R²=0.5102 
+  gigant     | bilstm     | RMSE=2.5847  | MAE=2.1272  | R²=-3.227 
+  gigant     | xgboost_pro | RMSE=1.5145  | MAE=1.2552  | R²=-0.4513
+  gigant     | linear     | RMSE=1.5114  | MAE=1.2526  | R²=-0.4454
+  gigant     | varma      | RMSE=4.02    | MAE=3.2553  | R²=-9.225 
+======================================================================
+SCIENTIFIC RECOMMENDATION (Best Method per Category by RMSE)
+  extended   -> linear     (RMSE: 1.0425)
+  gigant     -> linear     (RMSE: 1.5114)
+  long       -> varma      (RMSE: 0.815)
+  medium     -> xgboost_pro (RMSE: 0.079)
+  micro      -> xgboost_pro (RMSE: 0.0212)
+  short      -> xgboost_pro (RMSE: 0.0583)
+======================================================================
+  [32mSaved benchmark plot to benchmark_results.png[0m
+STEP 5.7: SELECTIVE INTERPOLATION (CONFIG-BASED)
+Applying optimized methods for production reconstruction
+
+[1mSTEP [0m[1;36m5.7[0m[1m: SELECTIVE GAP INTERPOLATION [0m[1m([0m[1mA100 OPTIMIZED[0m[1m)[0m
+[32m✓ Loaded automatic method selection from benchmarks[0m
+
+  [1mInterpolation Configuration:[0m
+    micro: ✓ enabled [1m([0mmethod: xgboost_pro[1m)[0m 
+    short: ✓ enabled [1m([0mmethod: xgboost_pro[1m)[0m 
+    medium: ✓ enabled [1m([0mmethod: xgboost_pro[1m)[0m 
+    long: ✓ enabled [1m([0mmethod: varma[1m)[0m 
+    extended: ✓ enabled [1m([0mmethod: linear[1m)[0m 
+    gigant: ✓ enabled [1m([0mmethod: linear[1m)[0m 
+
+[36mExecuting CPU models in parallel for [0m[1;36m11[0m[36m variables[0m[36m...[0m
+VARMA observed range for PSAL: [30.67, 38.44]
+      VARMA Epoch [1/50] Loss: 1.158728
+      VARMA Epoch [10/50] Loss: 0.733739
+      VARMA Epoch [20/50] Loss: 0.718316
+      VARMA Epoch [30/50] Loss: 0.699421
+      VARMA Epoch [40/50] Loss: 0.698768
+      VARMA Epoch [50/50] Loss: 0.674929
+VARMA observed range for PSAL_ANOMALY: [-6.39, 1.27]
+      VARMA Epoch [1/50] Loss: 0.709823
+      VARMA Epoch [10/50] Loss: 0.633530
+      VARMA Epoch [20/50] Loss: 0.614718
+      VARMA Epoch [30/50] Loss: 0.594945
+      VARMA Epoch [40/50] Loss: 0.587167
+      VARMA Epoch [50/50] Loss: 0.580307
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 1.168651
+      VARMA Epoch [10/50] Loss: 0.696036
+      VARMA Epoch [20/50] Loss: 0.678933
+      VARMA Epoch [30/50] Loss: 0.663144
+      VARMA Epoch [40/50] Loss: 0.662449
+      VARMA Epoch [50/50] Loss: 0.651221
+VARMA observed range for TEMP_ANOMALY: [-8.19, 5.23]
+      VARMA Epoch [1/50] Loss: 1.394420
+      VARMA Epoch [10/50] Loss: 0.784654
+      VARMA Epoch [20/50] Loss: 0.758282
+      VARMA Epoch [30/50] Loss: 0.739153
+      VARMA Epoch [40/50] Loss: 0.732565
+      VARMA Epoch [50/50] Loss: 0.721038
+VARMA observed range for CNDC: [3.34, 6.08]
+      VARMA Epoch [1/50] Loss: 1.349622
+      VARMA Epoch [10/50] Loss: 0.734995
+      VARMA Epoch [20/50] Loss: 0.709028
+      VARMA Epoch [30/50] Loss: 0.688767
+      VARMA Epoch [40/50] Loss: 0.691237
+      VARMA Epoch [50/50] Loss: 0.676512
+VARMA observed range for SVEL: [1477.31, 1543.88]
+      VARMA Epoch [1/50] Loss: 1.277069
+      VARMA Epoch [10/50] Loss: 0.681563
+      VARMA Epoch [20/50] Loss: 0.660305
+      VARMA Epoch [30/50] Loss: 0.657201
+      VARMA Epoch [40/50] Loss: 0.666141
+      VARMA Epoch [50/50] Loss: 0.651060
+VARMA observed range for LAND_RELH: [0.00, 100.00]
+      VARMA Epoch [1/50] Loss: 1.388992
+      VARMA Epoch [10/50] Loss: 0.784155
+      VARMA Epoch [20/50] Loss: 0.776399
+      VARMA Epoch [30/50] Loss: 0.757349
+      VARMA Epoch [40/50] Loss: 0.744208
+      VARMA Epoch [50/50] Loss: 0.741919
+VARMA observed range for LAND_WSPD: [0.00, 34.20]
+      VARMA Epoch [1/50] Loss: 0.704856
+      VARMA Epoch [10/50] Loss: 0.638877
+      VARMA Epoch [20/50] Loss: 0.632693
+      VARMA Epoch [30/50] Loss: 0.629230
+      VARMA Epoch [40/50] Loss: 0.623558
+      VARMA Epoch [50/50] Loss: 0.620602
+VARMA observed range for LAND_WDIR: [0.00, 360.00]
+      VARMA Epoch [1/50] Loss: 0.709607
+      VARMA Epoch [10/50] Loss: 0.637707
+      VARMA Epoch [20/50] Loss: 0.631243
+      VARMA Epoch [30/50] Loss: 0.626223
+      VARMA Epoch [40/50] Loss: 0.620659
+      VARMA Epoch [50/50] Loss: 0.615265
+VARMA observed range for LAND_CAPH: [979.20, 1041.10]
+      VARMA Epoch [1/50] Loss: 0.711653
+      VARMA Epoch [10/50] Loss: 0.642732
+      VARMA Epoch [20/50] Loss: 0.630612
+      VARMA Epoch [30/50] Loss: 0.622533
+      VARMA Epoch [40/50] Loss: 0.612335
+      VARMA Epoch [50/50] Loss: 0.602537
+VARMA observed range for LAND_AIRT: [-9.60, 34.60]
+      VARMA Epoch [1/50] Loss: 1.254761
+      VARMA Epoch [10/50] Loss: 0.696299
+      VARMA Epoch [20/50] Loss: 0.678198
+      VARMA Epoch [30/50] Loss: 0.665092
+      VARMA Epoch [40/50] Loss: 0.658989
+      VARMA Epoch [50/50] Loss: 0.658213
+  [33mVARMA failed for LAND_AIRT: shape [0m[33m'[0m[33m[[0m[33m1, 12, -1[0m[33m][0m[33m'[0m[33m is invalid for input of size [0m[1;33m6[0m[33m, using time interpolation[0m
+
+[35mExecuting Heavy GPU models sequentially for [0m[1;35m{[0m[1;35mlen[0m[1;35m([0m[35mgpu_variables[0m[1;35m)[0m[1;35m}[0m[35m variables to prevent VRAM overflow[0m[35m...[0m
+Observed range for PSAL: [30.67, 38.44]
+Training Forward Model for PSAL...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for PSAL...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for PSAL_ANOMALY: [-6.62, 1.27]
+Training Forward Model for PSAL_ANOMALY...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for PSAL_ANOMALY...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+    [33mGenerating multi-method comparison for TEMP[0m[33m...[0m
+      ✓ Added comparison column: TEMP_LINEAR
+VARMA observed range for TEMP: [11.64, 27.96]
+      VARMA Epoch [1/50] Loss: 0.717194
+      VARMA Epoch [10/50] Loss: 0.669624
+      VARMA Epoch [20/50] Loss: 0.659390
+      VARMA Epoch [30/50] Loss: 0.652121
+      VARMA Epoch [40/50] Loss: 0.644609
+      VARMA Epoch [50/50] Loss: 0.644217
+      ✓ Added comparison column: TEMP_VARMA
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Auto-selecting predictors by correlation[0m[2;33m...[0m
+    Auto-selected predictors: ['TEMP', 'TEMP_LINEAR', 'TEMP_VARMA', 'CNDC', 'SVEL']
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m5[0m[1;2m)[0m[2m: TEMP, TEMP_LINEAR, TEMP_VARMA[0m[2;33m...[0m
+    [2m│ Complete records: [0m[1;2;36m242[0m[2m,[0m[1;2;36m637[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m272[0m[2m,[0m[1;2;36m631[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'TEMP_LINEAR', 'TEMP_VARMA', 'CNDC', 'SVEL']
+  Split: Train=70%, Val=15%, Test=15%
+  Sequence length: 672 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Observed range for TEMP: [11.64, 27.96]
+Temporal split:
+  Train: 190,841 samples (2009-05-29 18:30:00 to 2020-04-17 14:30:00)
+  Val:   40,894 samples (2020-04-17 15:00:00 to 2022-08-17 13:30:00)
+  Test:  40,896 samples (2022-08-17 14:00:00 to 2024-12-16 13:30:00)
+  -> Extracting Climatology components for pure residual learning...
+Starting training with Attention & Scheduler...
+  Epoch [1/75] Train Loss: 0.928180, Val Loss: 0.811990 
+  Epoch [5/75] Train Loss: 0.058506, Val Loss: 0.430997 
+  Epoch [10/75] Train Loss: 0.025595, Val Loss: 0.017740 
+  Epoch [15/75] Train Loss: 0.016790, Val Loss: 0.031621 
+  Epoch [20/75] Train Loss: 0.016138, Val Loss: 0.007660 
+  Epoch [25/75] Train Loss: 0.015923, Val Loss: 0.015499 
+  Epoch [30/75] Train Loss: 0.014207, Val Loss: 0.012872 
+  Epoch [35/75] Train Loss: 0.014964, Val Loss: 0.007414 
+  Epoch [40/75] Train Loss: 0.012221, Val Loss: 0.007064 
+  Epoch [45/75] Train Loss: 0.011789, Val Loss: 0.006827 
+  Epoch [50/75] Train Loss: 0.011996, Val Loss: 0.006497 
+  Epoch [55/75] Train Loss: 0.011459, Val Loss: 0.006555 
+  Epoch [60/75] Train Loss: 0.010952, Val Loss: 0.008350 
+  Epoch [65/75] Train Loss: 0.010569, Val Loss: 0.006512 
+  Epoch [70/75] Train Loss: 0.010623, Val Loss: 0.007148 
+  Epoch [75/75] Train Loss: 0.010535, Val Loss: 0.006420 
+Restored best model from epoch 72
+Training complete!
+  Best epoch: 72
+  Best val loss: 0.006358
+  Test loss: 0.009390
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m72[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.006358[0m[2m, Test loss: [0m[1;2;36m0.009390[0m
+    [2m│ Predicting gaps[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/gap_project_antigr/src/models/multivariate_lstm_model.py:831: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: predicted_filled - Total: 272631, NaN: 0, Valid: 272631
+    DEBUG: predicted_filled range: [11.6421, 29.5871]
+    [2m│ Filling gaps with model predictions[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m25[0m[32m,[0m[1;32m448[0m[32m gap points[0m
+    DEBUG: Final NaN count - Original: 25448, Final: 0, Filled: 25448
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m25[0m[32m,[0m[1;32m448[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+      ✓ Added comparison column: TEMP_BILSTM
+Observed range for TEMP: [11.64, 27.96]
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+      ✓ Added comparison column: TEMP_XGBOOST_PRO
+      [31m✗ Method saits failed: No module named [0m[31m'pypots'[0m
+      [31m✗ Method imputeformer failed: No module named [0m[31m'pypots'[0m
+      [31m✗ Method brits failed: No module named [0m[31m'pypots'[0m
+      [31m✗ Method brits_pro failed: No module named [0m[31m'pypots'[0m
+Observed range for TEMP_ANOMALY: [-8.19, 5.23]
+Training Forward Model for TEMP_ANOMALY...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP_ANOMALY...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for CNDC: [3.26, 6.08]
+Training Forward Model for CNDC...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for CNDC...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for SVEL: [1477.31, 1543.88]
+Training Forward Model for SVEL...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for SVEL...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for LAND_RELH: [0.00, 103.93]
+Training Forward Model for LAND_RELH...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for LAND_RELH...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for LAND_WSPD: [-2.02, 34.20]
+Training Forward Model for LAND_WSPD...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for LAND_WSPD...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for LAND_WDIR: [-36.00, 384.58]
+Training Forward Model for LAND_WDIR...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for LAND_WDIR...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for LAND_CAPH: [979.20, 1041.10]
+Training Forward Model for LAND_CAPH...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for LAND_CAPH...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+Observed range for LAND_AIRT: [-9.60, 34.60]
+Training Forward Model for LAND_AIRT...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for LAND_AIRT...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+XGBoost Pro failed: cannot access local variable 'base_vals' where it is not associated with a value
+GPU Processing... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 3:37:49
+
+  [1mInterpolation Summary:[0m
+    PSAL: [1;36m34[0m,[1;36m325[0m points -> interpolated_linear
+    PSAL: [1;36m17[0m,[1;36m283[0m points -> missing
+    PSAL: [1;36m6[0m,[1;36m807[0m points -> interpolated_varma
+    PSAL: [1;36m4[0m,[1;36m494[0m points -> interpolated_xgboost_pro
+    PSAL_ANOMALY: [1;36m34[0m,[1;36m325[0m points -> interpolated_linear
+    PSAL_ANOMALY: [1;36m17[0m,[1;36m283[0m points -> missing
+    PSAL_ANOMALY: [1;36m6[0m,[1;36m807[0m points -> interpolated_varma
+    PSAL_ANOMALY: [1;36m4[0m,[1;36m494[0m points -> interpolated_xgboost_pro
+    TEMP: [1;36m42[0m,[1;36m990[0m points -> interpolated_linear
+    TEMP: [1;36m16[0m,[1;36m770[0m points -> missing
+    TEMP: [1;36m6[0m,[1;36m693[0m points -> interpolated_varma
+    TEMP: [1;36m4[0m,[1;36m527[0m points -> interpolated_xgboost_pro
+    TEMP_ANOMALY: [1;36m42[0m,[1;36m990[0m points -> interpolated_linear
+    TEMP_ANOMALY: [1;36m16[0m,[1;36m770[0m points -> missing
+    TEMP_ANOMALY: [1;36m6[0m,[1;36m693[0m points -> interpolated_varma
+    TEMP_ANOMALY: [1;36m4[0m,[1;36m527[0m points -> interpolated_xgboost_pro
+    CNDC: [1;36m43[0m,[1;36m003[0m points -> interpolated_linear
+    CNDC: [1;36m16[0m,[1;36m770[0m points -> missing
+    CNDC: [1;36m6[0m,[1;36m693[0m points -> interpolated_varma
+    CNDC: [1;36m4[0m,[1;36m543[0m points -> interpolated_xgboost_pro
+    SVEL: [1;36m42[0m,[1;36m990[0m points -> interpolated_linear
+    SVEL: [1;36m16[0m,[1;36m770[0m points -> missing
+    SVEL: [1;36m6[0m,[1;36m693[0m points -> interpolated_varma
+    SVEL: [1;36m4[0m,[1;36m542[0m points -> interpolated_xgboost_pro
+    LAND_RELH: [1;36m37[0m,[1;36m338[0m points -> interpolated_linear
+    LAND_RELH: [1;36m19[0m,[1;36m422[0m points -> missing
+    LAND_RELH: [1;36m8[0m,[1;36m564[0m points -> interpolated_varma
+    LAND_RELH: [1;36m6[0m,[1;36m730[0m points -> interpolated_xgboost_pro
+    LAND_WSPD: [1;36m37[0m,[1;36m338[0m points -> interpolated_linear
+    LAND_WSPD: [1;36m19[0m,[1;36m423[0m points -> missing
+    LAND_WSPD: [1;36m8[0m,[1;36m561[0m points -> interpolated_varma
+    LAND_WSPD: [1;36m5[0m,[1;36m642[0m points -> interpolated_xgboost_pro
+    LAND_WDIR: [1;36m37[0m,[1;36m338[0m points -> interpolated_linear
+    LAND_WDIR: [1;36m19[0m,[1;36m534[0m points -> missing
+    LAND_WDIR: [1;36m8[0m,[1;36m449[0m points -> interpolated_varma
+    LAND_WDIR: [1;36m5[0m,[1;36m641[0m points -> interpolated_xgboost_pro
+    LAND_CAPH: [1;36m37[0m,[1;36m338[0m points -> interpolated_linear
+    LAND_CAPH: [1;36m19[0m,[1;36m419[0m points -> missing
+    LAND_CAPH: [1;36m7[0m,[1;36m459[0m points -> interpolated_varma
+    LAND_CAPH: [1;36m5[0m,[1;36m435[0m points -> interpolated_xgboost_pro
+    LAND_AIRT: [1;36m38[0m,[1;36m086[0m points -> interpolated_linear
+    LAND_AIRT: [1;36m19[0m,[1;36m420[0m points -> missing
+    LAND_AIRT: [1;36m8[0m,[1;36m563[0m points -> interpolated_varma
+    LAND_AIRT: [1;36m5[0m,[1;36m181[0m points -> interpolated_xgboost_pro
+STEP 5.8: GENERATING PER-MODEL VISUALIZATIONS
+Created model output directories in /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/output_lup/models
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Failed to plot feature importance: 'NoneType' object has no attribute 'models'
+Saved full series reconstruction to /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/output_lup/models/gap_analysis/production_reconstruction_TEMP.png
+Saved full series reconstruction to /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/output_lup/models/VARMA/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/output_lup/models/BiLSTM/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/output_lup/models/XGBoostPro/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/output_lup/models/gap_analysis/production_reconstruction_PSAL.png
+STEP 6: SAVING FINAL OUTPUTS AND FIGURES
+Traceback (most recent call last):
+  File "/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/lup_data_obsea_analysis_jupyterhub.py", line 3774, in <module>
+    main()
+  File "/home/jovyan/Imputation-Methods---OBSEA-Multivariate-Dataset/scripts/lup_data_obsea_analysis_jupyterhub.py", line 3743, in main
+    save_outputs(unified_df_interp, stats_df, corr_matrix, gaps_summary, gaps_df_filtered, output_dir)
+                                    ^^^^^^^^
+UnboundLocalError: cannot access local variable 'stats_df' where it is not associated with a value

@@ -1,0 +1,845 @@
+nohup: ignoring input
+======================================================================
+OBSEA MULTIVARIATE DATA ANALYSIS PIPELINE (LUP VERSION)
+Execution started at: 2026-02-28 23:24:27
+Working Directory: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts
+Log file: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/pipeline_execution_20260228_232427.log
+======================================================================
+STEP 1: LOADING DATA
+Loading multiple observational sources (CTD, AWAC, Met)...
+[?25l[2K[32m⠋[0m Loading data...[2K[32m⠙[0m Loading ctd...[2K[32m⠹[0m Loading ctd...[2K[32m⠸[0m Loading ctd...[2K  ✓ ctd: [1;36m239[0m,[1;36m341[0m records, [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠸[0m Loading ctd...[2K  ✓ currents: [1;36m52[0m,[1;36m041[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:30:00[0m to [1;36m2023[0m-[1;36m12[0m-[1;36m22[0m [1;92m03:30:00[0m
+[32m⠸[0m Loading ctd...[2K  ✓ waves: [1;36m23[0m,[1;36m821[0m records, [1;36m2018[0m-[1;36m04[0m-[1;36m05[0m [1;92m10:14:01[0m to [1;36m2024[0m-[1;36m10[0m-[1;36m08[0m [1;92m19:47:05[0m
+[32m⠸[0m Loading ctd...[2K[32m⠴[0m Loading airmar...[2K  ✓ airmar: [1;36m110[0m,[1;36m517[0m records, [1;36m2011[0m-[1;36m10[0m-[1;36m06[0m [1;92m11:00:00[0m to [1;36m2024[0m-[1;36m08[0m-[1;36m29[0m [1;92m11:00:00[0m
+[32m⠴[0m Loading airmar...[2K[32m⠦[0m Loading ctvg...[2K[32m⠧[0m Loading ctvg...[2K  ✓ ctvg: [1;36m203[0m,[1;36m269[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:00:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠧[0m Loading ctvg...[2K  Loading ctvg...
+[?25hSTEP 2: APPLYING INSTRUMENTAL QC
+  - ctd       : 84,410 values flagged as suspect/fail
+  - currents  : 129 values flagged as suspect/fail
+  - waves     : 1,332 values flagged as suspect/fail
+  - airmar    : 17,191 values flagged as suspect/fail
+  - ctvg      : 59,719 values flagged as suspect/fail
+STEP 3: CREATING UNIFIED MULTIVARIATE DATASET
+
+[1;34mCreating unified dataset[0m[1;34m...[0m
+  Time range: [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+  ✓ ctd: [1;36m209[0m,[1;36m861[0m timestamps with data
+  ✓ currents: [1;36m52[0m,[1;36m041[0m timestamps with data
+  ✓ waves: [1;36m23[0m,[1;36m787[0m timestamps with data
+  ✓ airmar: [1;36m110[0m,[1;36m444[0m timestamps with data
+  ✓ ctvg: [1;36m203[0m,[1;36m125[0m timestamps with data
+
+[32mUnified dataset: [0m[1;32m244[0m[32m,[0m[1;32m524[0m[32m records, [0m[1;32m91[0m[32m variables[0m
+STEP 3.5: OCEANOGRAPHIC FEATURE EXTRACTION AND ADVANCED PREPROCESSING
+
+[1;36mAdding Phase [0m[1;36m3[0m[1;36m derived features[0m[1;36m...[0m
+  Computing σ_θ [1m([0mpotential density[1m)[0m[33m...[0m
+  Computing N² [1m([0mstratification[1m)[0m[33m...[0m
+  Computing wind U/V components[33m...[0m
+  Computing wind stress[33m...[0m
+  Computing wave energy flux[33m...[0m
+  Computing RMS currents[33m...[0m
+  Computing climatological anomalies[33m...[0m
+  Computing STL decomposition and Long-Term Trends[33m...[0m
+    [2mLong-term TEMP Trend: +[0m[1;2;36m0.1842[0m[2m units/year [0m[1;2m([0m[2;33mp[0m[2m=[0m[1;2;36m0[0m[1;2;36m.0000[0m[1;2m)[0m
+    [2mLong-term PSAL Trend: +[0m[1;2;36m0.0233[0m[2m units/year [0m[1;2m([0m[2;33mp[0m[2m=[0m[1;2;36m0[0m[1;2;36m.0000[0m[1;2m)[0m
+  Performing stationarity tests [1m([0mADF[1m)[0m[33m...[0m
+    [32mTEMP: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+    [32mPSAL: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+    [32mSIGMA0: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+  [32m✓ Phase [0m[1;32m3[0m[32m Complete: Added [0m[1;32m15[0m[32m derived features[0m
+STEP 4: STATISTICAL ANALYSIS AND CORRELATIONS
+  - Computed descriptive statistics for 39 variables
+  - Computed correlation matrix for primary predictors
+STEP 5: GAP ANALYSIS AND CLASSIFICATION
+  - Identified 201,887 gaps across all variables
+STEP 5.5: VARIABLE QUALITY FILTERING
+  Filtering to 11 high-quality variables (≤25% gaps)
+  ✓ Filtered: 106 → 29 columns
+  Variables retained: PSAL, PSAL_ANOMALY, TEMP, TEMP_ANOMALY, CNDC, SVEL, LAND_RELH, LAND_WSPD, LAND_WDIR, LAND_CAPH, LAND_AIRT
+  Working with 11 high-quality variables for interpolation
+STEP 5.6: SCIENTIFIC BENCHMARKING OF INTERPOLATION METHODS
+Testing: Linear, Time, Splines, Polynomial, VARMA, Bi-LSTM
+
+  [1mBenchmarking gap filling on [0m[1m{[0m[1mtest_variable[0m[1m}[0m[1;33m...[0m
+  [MICRO] Simulating 50 gaps (1-1 pts)
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Training Backward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-01 00:16:16 [INFO]: Using the given device: cuda
+2026-03-01 00:16:16 [INFO]: Model files will be saved to imputeformer_models/20260301_T001616
+2026-03-01 00:16:16 [INFO]: Tensorboard file will be saved to imputeformer_models/20260301_T001616/tensorboard
+2026-03-01 00:16:16 [INFO]: Using customized MAE as the training loss function.
+2026-03-01 00:16:16 [INFO]: Using customized MSE as the validation metric function.
+2026-03-01 00:16:17 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+2026-03-01 00:16:46 [INFO]: Epoch 001 - training loss (MAE): 735.4564
+2026-03-01 00:17:14 [INFO]: Epoch 002 - training loss (MAE): 845.8940
+2026-03-01 00:17:43 [INFO]: Epoch 003 - training loss (MAE): 847.1712
+2026-03-01 00:18:12 [INFO]: Epoch 004 - training loss (MAE): 845.7727
+2026-03-01 00:18:42 [INFO]: Epoch 005 - training loss (MAE): 846.4819
+2026-03-01 00:19:11 [INFO]: Epoch 006 - training loss (MAE): 846.9733
+2026-03-01 00:19:40 [INFO]: Epoch 007 - training loss (MAE): 847.2609
+2026-03-01 00:20:10 [INFO]: Epoch 008 - training loss (MAE): 846.6391
+2026-03-01 00:20:39 [INFO]: Epoch 009 - training loss (MAE): 845.5720
+2026-03-01 00:21:09 [INFO]: Epoch 010 - training loss (MAE): 845.1452
+2026-03-01 00:21:39 [INFO]: Epoch 011 - training loss (MAE): 845.4083
+2026-03-01 00:22:08 [INFO]: Epoch 012 - training loss (MAE): 846.3078
+2026-03-01 00:22:38 [INFO]: Epoch 013 - training loss (MAE): 846.3240
+2026-03-01 00:23:08 [INFO]: Epoch 014 - training loss (MAE): 845.9634
+2026-03-01 00:23:38 [INFO]: Epoch 015 - training loss (MAE): 845.1717
+2026-03-01 00:24:08 [INFO]: Epoch 016 - training loss (MAE): 846.7125
+2026-03-01 00:24:38 [INFO]: Epoch 017 - training loss (MAE): 846.1604
+2026-03-01 00:25:07 [INFO]: Epoch 018 - training loss (MAE): 845.5878
+2026-03-01 00:25:37 [INFO]: Epoch 019 - training loss (MAE): 846.4588
+2026-03-01 00:26:07 [INFO]: Epoch 020 - training loss (MAE): 846.2036
+2026-03-01 00:26:07 [INFO]: Finished training. The best model is from epoch#1.
+2026-03-01 00:26:07 [INFO]: Saved the model to imputeformer_models/20260301_T001616/ImputeFormer.pypots
+[34m
+████████╗██╗███╗   ███╗███████╗    ███████╗███████╗██████╗ ██╗███████╗███████╗    █████╗ ██╗
+╚══██╔══╝██║████╗ ████║██╔════╝    ██╔════╝██╔════╝██╔══██╗██║██╔════╝██╔════╝   ██╔══██╗██║
+   ██║   ██║██╔████╔██║█████╗█████╗███████╗█████╗  ██████╔╝██║█████╗  ███████╗   ███████║██║
+   ██║   ██║██║╚██╔╝██║██╔══╝╚════╝╚════██║██╔══╝  ██╔══██╗██║██╔══╝  ╚════██║   ██╔══██║██║
+   ██║   ██║██║ ╚═╝ ██║███████╗    ███████║███████╗██║  ██║██║███████╗███████║██╗██║  ██║██║
+   ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═╝╚═╝
+ai4ts v0.0.3 - building AI for unified time-series analysis, https://time-series.ai [0m
+
+  [MEM] psutil not available - memory cannot be monitored. Consider: pip install psutil
+    [MICRO] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.311414
+      VARMA Epoch [10/50] Loss: 0.762078
+      VARMA Epoch [20/50] Loss: 0.739126
+      VARMA Epoch [30/50] Loss: 0.731007
+      VARMA Epoch [40/50] Loss: 0.727656
+      VARMA Epoch [50/50] Loss: 0.717912
+    [MICRO|XGBOOST] RMSE=2.3619, MAE=1.7159, R²=0.6899
+    [MICRO|XGBOOST_PRO] RMSE=0.0338, MAE=0.0217, R²=0.9999
+    [MICRO|IMPUTEFORMER] RMSE=4.8050, MAE=4.0195, R²=-0.2834
+    [MICRO|TIME] RMSE=0.0328, MAE=0.0165, R²=0.9999
+    [MICRO|SPLINES] RMSE=0.9831, MAE=0.7059, R²=0.9463
+    [MICRO|VARMA] RMSE=0.0388, MAE=0.0187, R²=0.9999
+  [SHORT] Simulating 20 gaps (2-12 pts)
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Training Backward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/venv_obseactd/lib/python3.10/site-packages/xgboost/training.py:199: UserWarning: [00:34:08] WARNING: /workspace/src/common/error_msg.cc:56: Empty dataset at worker: 0
+  bst.update(dtrain, iteration=i, fobj=obj)
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-01 00:40:24 [INFO]: Using the given device: cuda
+2026-03-01 00:40:24 [INFO]: Model files will be saved to imputeformer_models/20260301_T004024
+2026-03-01 00:40:24 [INFO]: Tensorboard file will be saved to imputeformer_models/20260301_T004024/tensorboard
+2026-03-01 00:40:24 [INFO]: Using customized MAE as the training loss function.
+2026-03-01 00:40:24 [INFO]: Using customized MSE as the validation metric function.
+2026-03-01 00:40:24 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+2026-03-01 00:40:52 [INFO]: Epoch 001 - training loss (MAE): 302.3109
+2026-03-01 00:41:21 [INFO]: Epoch 002 - training loss (MAE): 178.0252
+2026-03-01 00:41:50 [INFO]: Epoch 003 - training loss (MAE): 177.9862
+2026-03-01 00:42:19 [INFO]: Epoch 004 - training loss (MAE): 34.1756
+2026-03-01 00:42:49 [INFO]: Epoch 005 - training loss (MAE): 10.9851
+2026-03-01 00:43:18 [INFO]: Epoch 006 - training loss (MAE): 809.8319
+2026-03-01 00:43:47 [INFO]: Epoch 007 - training loss (MAE): 846.6039
+2026-03-01 00:44:17 [INFO]: Epoch 008 - training loss (MAE): 846.0660
+2026-03-01 00:44:47 [INFO]: Epoch 009 - training loss (MAE): 845.5528
+2026-03-01 00:45:16 [INFO]: Epoch 010 - training loss (MAE): 845.7560
+2026-03-01 00:45:46 [INFO]: Epoch 011 - training loss (MAE): 846.0787
+2026-03-01 00:46:16 [INFO]: Epoch 012 - training loss (MAE): 846.2478
+2026-03-01 00:46:46 [INFO]: Epoch 013 - training loss (MAE): 846.4803
+2026-03-01 00:47:16 [INFO]: Epoch 014 - training loss (MAE): 846.6529
+2026-03-01 00:47:45 [INFO]: Epoch 015 - training loss (MAE): 845.6705
+2026-03-01 00:48:15 [INFO]: Epoch 016 - training loss (MAE): 844.8943
+2026-03-01 00:48:45 [INFO]: Epoch 017 - training loss (MAE): 846.6078
+2026-03-01 00:49:15 [INFO]: Epoch 018 - training loss (MAE): 846.7777
+2026-03-01 00:49:45 [INFO]: Epoch 019 - training loss (MAE): 846.7417
+2026-03-01 00:50:15 [INFO]: Epoch 020 - training loss (MAE): 846.7052
+2026-03-01 00:50:15 [INFO]: Finished training. The best model is from epoch#5.
+2026-03-01 00:50:15 [INFO]: Saved the model to imputeformer_models/20260301_T004024/ImputeFormer.pypots
+  [MEM] psutil not available - memory cannot be monitored. Consider: pip install psutil
+    [SHORT] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.426704
+      VARMA Epoch [10/50] Loss: 0.764469
+      VARMA Epoch [20/50] Loss: 0.737250
+      VARMA Epoch [30/50] Loss: 0.731551
+      VARMA Epoch [40/50] Loss: 0.723164
+      VARMA Epoch [50/50] Loss: 0.712715
+    [SHORT|XGBOOST] RMSE=2.6742, MAE=2.2709, R²=-0.9960
+    [SHORT|XGBOOST_PRO] RMSE=0.0494, MAE=0.0279, R²=0.9993
+    [SHORT|IMPUTEFORMER] RMSE=643.6915, MAE=496.8076, R²=-115647.6220
+    [SHORT|TIME] RMSE=0.0504, MAE=0.0242, R²=0.9993
+    [SHORT|SPLINES] RMSE=0.7879, MAE=0.5660, R²=0.8267
+    [SHORT|VARMA] RMSE=0.0377, MAE=0.0211, R²=0.9996
+  [MEDIUM] Simulating 5 gaps (12-144 pts)
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Training Backward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-01 01:04:36 [INFO]: Using the given device: cuda
+2026-03-01 01:04:36 [INFO]: Model files will be saved to imputeformer_models/20260301_T010436
+2026-03-01 01:04:36 [INFO]: Tensorboard file will be saved to imputeformer_models/20260301_T010436/tensorboard
+2026-03-01 01:04:36 [INFO]: Using customized MAE as the training loss function.
+2026-03-01 01:04:36 [INFO]: Using customized MSE as the validation metric function.
+2026-03-01 01:04:36 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+2026-03-01 01:05:05 [INFO]: Epoch 001 - training loss (MAE): 388.0720
+2026-03-01 01:05:33 [INFO]: Epoch 002 - training loss (MAE): 316.2992
+2026-03-01 01:06:02 [INFO]: Epoch 003 - training loss (MAE): 177.9143
+2026-03-01 01:06:31 [INFO]: Epoch 004 - training loss (MAE): 76.0297
+2026-03-01 01:07:00 [INFO]: Epoch 005 - training loss (MAE): 10.5273
+2026-03-01 01:07:30 [INFO]: Epoch 006 - training loss (MAE): 301.8621
+2026-03-01 01:07:59 [INFO]: Epoch 007 - training loss (MAE): 846.7477
+2026-03-01 01:08:28 [INFO]: Epoch 008 - training loss (MAE): 846.5611
+2026-03-01 01:08:58 [INFO]: Epoch 009 - training loss (MAE): 846.6391
+2026-03-01 01:09:27 [INFO]: Epoch 010 - training loss (MAE): 846.2514
+2026-03-01 01:09:56 [INFO]: Epoch 011 - training loss (MAE): 847.1697
+2026-03-01 01:10:26 [INFO]: Epoch 012 - training loss (MAE): 846.5789
+2026-03-01 01:10:55 [INFO]: Epoch 013 - training loss (MAE): 845.8998
+2026-03-01 01:11:25 [INFO]: Epoch 014 - training loss (MAE): 848.3841
+2026-03-01 01:11:55 [INFO]: Epoch 015 - training loss (MAE): 846.6903
+2026-03-01 01:12:24 [INFO]: Epoch 016 - training loss (MAE): 847.0636
+2026-03-01 01:12:54 [INFO]: Epoch 017 - training loss (MAE): 846.6352
+2026-03-01 01:13:23 [INFO]: Epoch 018 - training loss (MAE): 846.5156
+2026-03-01 01:13:53 [INFO]: Epoch 019 - training loss (MAE): 848.4311
+2026-03-01 01:14:23 [INFO]: Epoch 020 - training loss (MAE): 847.0535
+2026-03-01 01:14:23 [INFO]: Finished training. The best model is from epoch#5.
+2026-03-01 01:14:23 [INFO]: Saved the model to imputeformer_models/20260301_T010436/ImputeFormer.pypots
+  [MEM] psutil not available - memory cannot be monitored. Consider: pip install psutil
+    [MEDIUM] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.223870
+      VARMA Epoch [10/50] Loss: 0.747229
+      VARMA Epoch [20/50] Loss: 0.725960
+      VARMA Epoch [30/50] Loss: 0.722562
+      VARMA Epoch [40/50] Loss: 0.712992
+      VARMA Epoch [50/50] Loss: 0.706931
+    [MEDIUM|XGBOOST] RMSE=2.8843, MAE=2.3892, R²=0.5078
+    [MEDIUM|XGBOOST_PRO] RMSE=0.3308, MAE=0.2175, R²=0.9935
+    [MEDIUM|IMPUTEFORMER] RMSE=1156.0501, MAE=987.0662, R²=-79063.5378
+    [MEDIUM|TIME] RMSE=0.3367, MAE=0.2237, R²=0.9933
+    [MEDIUM|SPLINES] RMSE=0.6691, MAE=0.5136, R²=0.9735
+    [MEDIUM|VARMA] RMSE=0.3094, MAE=0.2152, R²=0.9943
+  [LONG] Simulating 2 gaps (144-1440 pts)
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Training Backward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-01 01:29:18 [INFO]: Using the given device: cuda
+2026-03-01 01:29:18 [INFO]: Model files will be saved to imputeformer_models/20260301_T012918
+2026-03-01 01:29:18 [INFO]: Tensorboard file will be saved to imputeformer_models/20260301_T012918/tensorboard
+2026-03-01 01:29:18 [INFO]: Using customized MAE as the training loss function.
+2026-03-01 01:29:18 [INFO]: Using customized MSE as the validation metric function.
+2026-03-01 01:29:18 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+2026-03-01 01:29:47 [INFO]: Epoch 001 - training loss (MAE): 201.6611
+2026-03-01 01:30:16 [INFO]: Epoch 002 - training loss (MAE): 8.1232
+2026-03-01 01:30:45 [INFO]: Epoch 003 - training loss (MAE): 7.2058
+2026-03-01 01:31:14 [INFO]: Epoch 004 - training loss (MAE): 6.7752
+2026-03-01 01:31:43 [INFO]: Epoch 005 - training loss (MAE): 5.9560
+2026-03-01 01:32:13 [INFO]: Epoch 006 - training loss (MAE): 5.8385
+2026-03-01 01:32:42 [INFO]: Epoch 007 - training loss (MAE): 472.2305
+2026-03-01 01:33:12 [INFO]: Epoch 008 - training loss (MAE): 847.5537
+2026-03-01 01:33:42 [INFO]: Epoch 009 - training loss (MAE): 848.6220
+2026-03-01 01:34:11 [INFO]: Epoch 010 - training loss (MAE): 652.2497
+2026-03-01 01:34:41 [INFO]: Epoch 011 - training loss (MAE): 132.5856
+2026-03-01 01:35:11 [INFO]: Epoch 012 - training loss (MAE): 17.6092
+2026-03-01 01:35:41 [INFO]: Epoch 013 - training loss (MAE): 14.3773
+2026-03-01 01:36:11 [INFO]: Epoch 014 - training loss (MAE): 10.2067
+2026-03-01 01:36:41 [INFO]: Epoch 015 - training loss (MAE): 10.0179
+2026-03-01 01:37:11 [INFO]: Epoch 016 - training loss (MAE): 10.3906
+2026-03-01 01:37:41 [INFO]: Epoch 017 - training loss (MAE): 9.5213
+2026-03-01 01:38:11 [INFO]: Epoch 018 - training loss (MAE): 9.4247
+2026-03-01 01:38:41 [INFO]: Epoch 019 - training loss (MAE): 9.4616
+2026-03-01 01:39:10 [INFO]: Epoch 020 - training loss (MAE): 9.7132
+2026-03-01 01:39:10 [INFO]: Finished training. The best model is from epoch#6.
+2026-03-01 01:39:10 [INFO]: Saved the model to imputeformer_models/20260301_T012918/ImputeFormer.pypots
+  [MEM] psutil not available - memory cannot be monitored. Consider: pip install psutil
+    [LONG] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.512544
+      VARMA Epoch [10/50] Loss: 0.751888
+      VARMA Epoch [20/50] Loss: 0.739095
+      VARMA Epoch [30/50] Loss: 0.730585
+      VARMA Epoch [40/50] Loss: 0.712581
+      VARMA Epoch [50/50] Loss: 0.708620
+    [LONG|XGBOOST] RMSE=0.5843, MAE=0.2908, R²=0.9195
+    [LONG|XGBOOST_PRO] RMSE=1.2058, MAE=0.9966, R²=0.6569
+    [LONG|IMPUTEFORMER] RMSE=6.5561, MAE=5.0085, R²=-9.1408
+    [LONG|TIME] RMSE=1.0757, MAE=0.8647, R²=0.7270
+    [LONG|SPLINES] RMSE=1.1001, MAE=0.8907, R²=0.7145
+    [LONG|VARMA] RMSE=0.6345, MAE=0.4846, R²=0.9050
+  [EXTENDED] Simulating 2 gaps (1440-2880 pts)
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Training Backward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-01 01:54:56 [INFO]: Using the given device: cuda
+2026-03-01 01:54:56 [INFO]: Model files will be saved to imputeformer_models/20260301_T015456
+2026-03-01 01:54:56 [INFO]: Tensorboard file will be saved to imputeformer_models/20260301_T015456/tensorboard
+2026-03-01 01:54:56 [INFO]: Using customized MAE as the training loss function.
+2026-03-01 01:54:56 [INFO]: Using customized MSE as the validation metric function.
+2026-03-01 01:54:56 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+2026-03-01 01:55:25 [INFO]: Epoch 001 - training loss (MAE): 258.0115
+2026-03-01 01:55:54 [INFO]: Epoch 002 - training loss (MAE): 112.9030
+2026-03-01 01:56:23 [INFO]: Epoch 003 - training loss (MAE): 849.6377
+2026-03-01 01:56:52 [INFO]: Epoch 004 - training loss (MAE): 850.5705
+2026-03-01 01:57:21 [INFO]: Epoch 005 - training loss (MAE): 849.3396
+2026-03-01 01:57:51 [INFO]: Epoch 006 - training loss (MAE): 849.5779
+2026-03-01 01:58:20 [INFO]: Epoch 007 - training loss (MAE): 849.7357
+2026-03-01 01:58:50 [INFO]: Epoch 008 - training loss (MAE): 850.6919
+2026-03-01 01:59:19 [INFO]: Epoch 009 - training loss (MAE): 849.4846
+2026-03-01 01:59:49 [INFO]: Epoch 010 - training loss (MAE): 850.1806
+2026-03-01 02:00:19 [INFO]: Epoch 011 - training loss (MAE): 851.1463
+2026-03-01 02:00:49 [INFO]: Epoch 012 - training loss (MAE): 850.1867
+2026-03-01 02:01:19 [INFO]: Epoch 013 - training loss (MAE): 850.6989
+2026-03-01 02:01:48 [INFO]: Epoch 014 - training loss (MAE): 849.7855
+2026-03-01 02:02:18 [INFO]: Epoch 015 - training loss (MAE): 850.2317
+2026-03-01 02:02:48 [INFO]: Epoch 016 - training loss (MAE): 849.8924
+2026-03-01 02:03:18 [INFO]: Epoch 017 - training loss (MAE): 849.5594
+2026-03-01 02:03:48 [INFO]: Epoch 018 - training loss (MAE): 850.1102
+2026-03-01 02:04:18 [INFO]: Epoch 019 - training loss (MAE): 850.2313
+2026-03-01 02:04:48 [INFO]: Epoch 020 - training loss (MAE): 851.0279
+2026-03-01 02:04:48 [INFO]: Finished training. The best model is from epoch#2.
+2026-03-01 02:04:48 [INFO]: Saved the model to imputeformer_models/20260301_T015456/ImputeFormer.pypots
+  [MEM] psutil not available - memory cannot be monitored. Consider: pip install psutil
+    [EXTENDED] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.306836
+      VARMA Epoch [10/50] Loss: 0.743093
+      VARMA Epoch [20/50] Loss: 0.717733
+      VARMA Epoch [30/50] Loss: 0.704819
+      VARMA Epoch [40/50] Loss: 0.704832
+      VARMA Epoch [50/50] Loss: 0.689563
+    [EXTENDED|XGBOOST] RMSE=2.2218, MAE=1.7431, R²=0.7190
+    [EXTENDED|XGBOOST_PRO] RMSE=0.9796, MAE=0.7217, R²=0.9454
+    [EXTENDED|IMPUTEFORMER] RMSE=4.4268, MAE=4.0777, R²=-0.1157
+    [EXTENDED|TIME] RMSE=0.9610, MAE=0.7096, R²=0.9474
+    [EXTENDED|SPLINES] RMSE=1.5923, MAE=1.2114, R²=0.8557
+    [EXTENDED|VARMA] RMSE=1.0189, MAE=0.8286, R²=0.9409
+  [GIGANT] Simulating 1 gaps (2880-5000 pts)
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Training Backward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-01 02:20:00 [INFO]: Using the given device: cuda
+2026-03-01 02:20:00 [INFO]: Model files will be saved to imputeformer_models/20260301_T022000
+2026-03-01 02:20:00 [INFO]: Tensorboard file will be saved to imputeformer_models/20260301_T022000/tensorboard
+2026-03-01 02:20:00 [INFO]: Using customized MAE as the training loss function.
+2026-03-01 02:20:00 [INFO]: Using customized MSE as the validation metric function.
+2026-03-01 02:20:00 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+2026-03-01 02:20:29 [INFO]: Epoch 001 - training loss (MAE): 792.7191
+2026-03-01 02:20:57 [INFO]: Epoch 002 - training loss (MAE): 846.8222
+2026-03-01 02:21:26 [INFO]: Epoch 003 - training loss (MAE): 847.1821
+2026-03-01 02:21:56 [INFO]: Epoch 004 - training loss (MAE): 849.0411
+2026-03-01 02:22:25 [INFO]: Epoch 005 - training loss (MAE): 848.8657
+2026-03-01 02:22:54 [INFO]: Epoch 006 - training loss (MAE): 849.2546
+2026-03-01 02:23:24 [INFO]: Epoch 007 - training loss (MAE): 849.3466
+2026-03-01 02:23:54 [INFO]: Epoch 008 - training loss (MAE): 848.4677
+2026-03-01 02:24:23 [INFO]: Epoch 009 - training loss (MAE): 848.2064
+2026-03-01 02:24:53 [INFO]: Epoch 010 - training loss (MAE): 849.2731
+2026-03-01 02:25:23 [INFO]: Epoch 011 - training loss (MAE): 848.3685
+2026-03-01 02:25:53 [INFO]: Epoch 012 - training loss (MAE): 849.1802
+2026-03-01 02:26:22 [INFO]: Epoch 013 - training loss (MAE): 848.3932
+2026-03-01 02:26:52 [INFO]: Epoch 014 - training loss (MAE): 849.4453
+2026-03-01 02:27:22 [INFO]: Epoch 015 - training loss (MAE): 848.2060
+2026-03-01 02:27:52 [INFO]: Epoch 016 - training loss (MAE): 848.7289
+2026-03-01 02:28:22 [INFO]: Epoch 017 - training loss (MAE): 847.7623
+2026-03-01 02:28:52 [INFO]: Epoch 018 - training loss (MAE): 849.5567
+2026-03-01 02:29:22 [INFO]: Epoch 019 - training loss (MAE): 848.8120
+2026-03-01 02:29:52 [INFO]: Epoch 020 - training loss (MAE): 848.0980
+2026-03-01 02:29:52 [INFO]: Finished training. The best model is from epoch#1.
+2026-03-01 02:29:52 [INFO]: Saved the model to imputeformer_models/20260301_T022000/ImputeFormer.pypots
+  [MEM] psutil not available - memory cannot be monitored. Consider: pip install psutil
+    [GIGANT] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.213348
+      VARMA Epoch [10/50] Loss: 0.774789
+      VARMA Epoch [20/50] Loss: 0.749584
+      VARMA Epoch [30/50] Loss: 0.742085
+      VARMA Epoch [40/50] Loss: 0.731563
+      VARMA Epoch [50/50] Loss: 0.726621
+    [GIGANT|XGBOOST] RMSE=0.8596, MAE=0.6737, R²=0.8988
+    [GIGANT|XGBOOST_PRO] RMSE=0.7698, MAE=0.5997, R²=0.9188
+    [GIGANT|IMPUTEFORMER] RMSE=4.6484, MAE=3.7899, R²=-1.9607
+    [GIGANT|TIME] RMSE=0.7872, MAE=0.6121, R²=0.9151
+    [GIGANT|SPLINES] RMSE=1.0133, MAE=0.8327, R²=0.8593
+    [GIGANT|VARMA] RMSE=0.6277, MAE=0.5169, R²=0.9460
+======================================================================
+BENCHMARK RESULTS SUMMARY
+  micro      | xgboost    | RMSE=2.3619  | MAE=1.7159  | R²=0.6899 
+  micro      | xgboost_pro | RMSE=0.0338  | MAE=0.0217  | R²=0.9999 
+  micro      | imputeformer | RMSE=4.805   | MAE=4.0195  | R²=-0.2834
+  micro      | time       | RMSE=0.0328  | MAE=0.0165  | R²=0.9999 
+  micro      | splines    | RMSE=0.9831  | MAE=0.7059  | R²=0.9463 
+  micro      | varma      | RMSE=0.0388  | MAE=0.0187  | R²=0.9999 
+  short      | xgboost    | RMSE=2.6742  | MAE=2.2709  | R²=-0.996 
+  short      | xgboost_pro | RMSE=0.0494  | MAE=0.0279  | R²=0.9993 
+  short      | imputeformer | RMSE=643.6915 | MAE=496.8076 | R²=-115647.622
+  short      | time       | RMSE=0.0504  | MAE=0.0242  | R²=0.9993 
+  short      | splines    | RMSE=0.7879  | MAE=0.566   | R²=0.8267 
+  short      | varma      | RMSE=0.0377  | MAE=0.0211  | R²=0.9996 
+  medium     | xgboost    | RMSE=2.8843  | MAE=2.3892  | R²=0.5078 
+  medium     | xgboost_pro | RMSE=0.3308  | MAE=0.2175  | R²=0.9935 
+  medium     | imputeformer | RMSE=1156.0501 | MAE=987.0662 | R²=-79063.5378
+  medium     | time       | RMSE=0.3367  | MAE=0.2237  | R²=0.9933 
+  medium     | splines    | RMSE=0.6691  | MAE=0.5136  | R²=0.9735 
+  medium     | varma      | RMSE=0.3094  | MAE=0.2152  | R²=0.9943 
+  long       | xgboost    | RMSE=0.5843  | MAE=0.2908  | R²=0.9195 
+  long       | xgboost_pro | RMSE=1.2058  | MAE=0.9966  | R²=0.6569 
+  long       | imputeformer | RMSE=6.5561  | MAE=5.0085  | R²=-9.1408
+  long       | time       | RMSE=1.0757  | MAE=0.8647  | R²=0.727  
+  long       | splines    | RMSE=1.1001  | MAE=0.8907  | R²=0.7145 
+  long       | varma      | RMSE=0.6345  | MAE=0.4846  | R²=0.905  
+  extended   | xgboost    | RMSE=2.2218  | MAE=1.7431  | R²=0.719  
+  extended   | xgboost_pro | RMSE=0.9796  | MAE=0.7217  | R²=0.9454 
+  extended   | imputeformer | RMSE=4.4268  | MAE=4.0777  | R²=-0.1157
+  extended   | time       | RMSE=0.961   | MAE=0.7096  | R²=0.9474 
+  extended   | splines    | RMSE=1.5923  | MAE=1.2114  | R²=0.8557 
+  extended   | varma      | RMSE=1.0189  | MAE=0.8286  | R²=0.9409 
+  gigant     | xgboost    | RMSE=0.8596  | MAE=0.6737  | R²=0.8988 
+  gigant     | xgboost_pro | RMSE=0.7698  | MAE=0.5997  | R²=0.9188 
+  gigant     | imputeformer | RMSE=4.6484  | MAE=3.7899  | R²=-1.9607
+  gigant     | time       | RMSE=0.7872  | MAE=0.6121  | R²=0.9151 
+  gigant     | splines    | RMSE=1.0133  | MAE=0.8327  | R²=0.8593 
+  gigant     | varma      | RMSE=0.6277  | MAE=0.5169  | R²=0.946  
+======================================================================
+SCIENTIFIC RECOMMENDATION (Best Method per Category by RMSE)
+  extended   -> time       (RMSE: 0.961)
+  gigant     -> varma      (RMSE: 0.6277)
+  long       -> xgboost    (RMSE: 0.5843)
+  medium     -> varma      (RMSE: 0.3094)
+  micro      -> time       (RMSE: 0.0328)
+  short      -> varma      (RMSE: 0.0377)
+======================================================================
+  [32mSaved benchmark plot to benchmark_results.png[0m
+STEP 5.7: SELECTIVE INTERPOLATION (CONFIG-BASED)
+Applying optimized methods for production reconstruction
+
+[1mSTEP [0m[1;36m5.7[0m[1m: SELECTIVE GAP INTERPOLATION [0m[1m([0m[1mA100 OPTIMIZED[0m[1m)[0m
+[32m✓ Loaded automatic method selection from benchmarks[0m
+
+  [1mInterpolation Configuration:[0m
+    micro: ✓ enabled [1m([0mmethod: time[1m)[0m 
+    short: ✓ enabled [1m([0mmethod: bilstm[1m)[0m 
+    medium: ✓ enabled [1m([0mmethod: bilstm[1m)[0m 
+    long: ✓ enabled [1m([0mmethod: varma[1m)[0m 
+    extended: ✓ enabled [1m([0mmethod: varma[1m)[0m 
+    gigant: ✓ enabled [1m([0mmethod: xgboost[1m)[0m 
+
+[36mExecuting CPU models in parallel for [0m[1;36m11[0m[36m variables[0m[36m...[0m
+      VARMA Epoch [1/50] Loss: 1.303856
+      VARMA Epoch [1/50] Loss: 1.286810
+      VARMA Epoch [1/50] Loss: 1.397333
+      VARMA Epoch [1/50] Loss: 0.703710
+      VARMA Epoch [10/50] Loss: 0.758826
+      VARMA Epoch [10/50] Loss: 0.683371
+      VARMA Epoch [10/50] Loss: 0.759381
+      VARMA Epoch [10/50] Loss: 0.635952
+      VARMA Epoch [20/50] Loss: 0.751498
+      VARMA Epoch [20/50] Loss: 0.664741
+      VARMA Epoch [20/50] Loss: 0.732709
+      VARMA Epoch [20/50] Loss: 0.616896
+      VARMA Epoch [30/50] Loss: 0.730287
+      VARMA Epoch [30/50] Loss: 0.653013
+      VARMA Epoch [30/50] Loss: 0.703290
+      VARMA Epoch [30/50] Loss: 0.598346
+      VARMA Epoch [40/50] Loss: 0.720546
+      VARMA Epoch [40/50] Loss: 0.647411
+      VARMA Epoch [40/50] Loss: 0.693463
+      VARMA Epoch [40/50] Loss: 0.590402
+      VARMA Epoch [50/50] Loss: 0.720931
+      VARMA Epoch [50/50] Loss: 0.641050
+      VARMA Epoch [50/50] Loss: 0.674367
+      VARMA Epoch [50/50] Loss: 0.580086
+      VARMA Epoch [1/50] Loss: 1.376676
+      VARMA Epoch [1/50] Loss: 1.264896
+      VARMA Epoch [1/50] Loss: 1.242404
+      VARMA Epoch [1/50] Loss: 0.708364
+      VARMA Epoch [10/50] Loss: 0.778369
+      VARMA Epoch [10/50] Loss: 0.688227
+      VARMA Epoch [10/50] Loss: 0.770374
+      VARMA Epoch [10/50] Loss: 0.634443
+      VARMA Epoch [20/50] Loss: 0.746207
+      VARMA Epoch [20/50] Loss: 0.659274
+      VARMA Epoch [20/50] Loss: 0.732294
+      VARMA Epoch [30/50] Loss: 0.739122
+      VARMA Epoch [20/50] Loss: 0.611018
+      VARMA Epoch [30/50] Loss: 0.650394
+      VARMA Epoch [30/50] Loss: 0.724642
+      VARMA Epoch [40/50] Loss: 0.723536
+      VARMA Epoch [30/50] Loss: 0.595675
+      VARMA Epoch [40/50] Loss: 0.648040
+      VARMA Epoch [40/50] Loss: 0.707442
+      VARMA Epoch [50/50] Loss: 0.723235
+      VARMA Epoch [40/50] Loss: 0.584356
+      VARMA Epoch [50/50] Loss: 0.643810
+      VARMA Epoch [50/50] Loss: 0.700022
+      VARMA Epoch [50/50] Loss: 0.573739
+      VARMA Epoch [1/50] Loss: 1.427608
+      VARMA Epoch [1/50] Loss: 1.177467
+      VARMA Epoch [1/50] Loss: 1.201497
+      VARMA Epoch [10/50] Loss: 0.742290
+      VARMA Epoch [1/50] Loss: 0.707068
+      VARMA Epoch [10/50] Loss: 0.667230
+      VARMA Epoch [10/50] Loss: 0.779597
+      VARMA Epoch [20/50] Loss: 0.704897
+      VARMA Epoch [10/50] Loss: 0.640156
+      VARMA Epoch [20/50] Loss: 0.656551
+      VARMA Epoch [20/50] Loss: 0.764639
+      VARMA Epoch [30/50] Loss: 0.702026
+      VARMA Epoch [20/50] Loss: 0.633463
+      VARMA Epoch [30/50] Loss: 0.649118
+      VARMA Epoch [40/50] Loss: 0.686764
+      VARMA Epoch [30/50] Loss: 0.758315
+      VARMA Epoch [40/50] Loss: 0.639549
+      VARMA Epoch [30/50] Loss: 0.628155
+      VARMA Epoch [50/50] Loss: 0.674249
+      VARMA Epoch [40/50] Loss: 0.753791
+      VARMA Epoch [50/50] Loss: 0.635741
+      VARMA Epoch [40/50] Loss: 0.622869
+      VARMA Epoch [50/50] Loss: 0.751945
+      VARMA Epoch [1/50] Loss: 1.222871
+      VARMA Epoch [50/50] Loss: 0.618010
+      VARMA Epoch [1/50] Loss: 1.284178
+      VARMA Epoch [10/50] Loss: 0.730673
+      VARMA Epoch [1/50] Loss: 1.433924
+      VARMA Epoch [10/50] Loss: 0.670285
+      VARMA Epoch [20/50] Loss: 0.697774
+      VARMA Epoch [1/50] Loss: 0.709562
+      VARMA Epoch [10/50] Loss: 0.796642
+      VARMA Epoch [20/50] Loss: 0.653074
+      VARMA Epoch [30/50] Loss: 0.681931
+      VARMA Epoch [10/50] Loss: 0.639903
+      VARMA Epoch [20/50] Loss: 0.772132
+      VARMA Epoch [30/50] Loss: 0.642602
+      VARMA Epoch [40/50] Loss: 0.675092
+      VARMA Epoch [20/50] Loss: 0.632750
+      VARMA Epoch [30/50] Loss: 0.762475
+      VARMA Epoch [40/50] Loss: 0.635495
+      VARMA Epoch [50/50] Loss: 0.663683
+      VARMA Epoch [30/50] Loss: 0.628976
+      VARMA Epoch [40/50] Loss: 0.755534
+      VARMA Epoch [50/50] Loss: 0.631279
+      VARMA Epoch [40/50] Loss: 0.623702
+      VARMA Epoch [50/50] Loss: 0.748268
+      VARMA Epoch [1/50] Loss: 0.707271
+      VARMA Epoch [50/50] Loss: 0.619295
+      VARMA Epoch [10/50] Loss: 0.639212
+      VARMA Epoch [1/50] Loss: 0.707351
+      VARMA Epoch [1/50] Loss: 1.335118
+      VARMA Epoch [20/50] Loss: 0.632112
+      VARMA Epoch [10/50] Loss: 0.644293
+      VARMA Epoch [10/50] Loss: 0.700193
+      VARMA Epoch [30/50] Loss: 0.626795
+      VARMA Epoch [20/50] Loss: 0.635842
+      VARMA Epoch [20/50] Loss: 0.681149
+      VARMA Epoch [40/50] Loss: 0.619915
+      VARMA Epoch [30/50] Loss: 0.622746
+      VARMA Epoch [30/50] Loss: 0.669891
+      VARMA Epoch [50/50] Loss: 0.615813
+      VARMA Epoch [40/50] Loss: 0.611128
+      VARMA Epoch [40/50] Loss: 0.656839
+      VARMA Epoch [50/50] Loss: 0.593210
+      VARMA Epoch [50/50] Loss: 0.661171
+      VARMA Epoch [1/50] Loss: 0.707692
+  [33mVARMA failed for LAND_AIRT: shape [0m[33m'[0m[33m[[0m[33m1, 12, -1[0m[33m][0m[33m'[0m[33m is invalid for input of size [0m[1;33m6[0m[33m, using time interpolation[0m
+      VARMA Epoch [10/50] Loss: 0.639524
+      VARMA Epoch [1/50] Loss: 1.421618
+      VARMA Epoch [1/50] Loss: 0.711645
+      VARMA Epoch [10/50] Loss: 0.704955
+      VARMA Epoch [20/50] Loss: 0.633529
+      VARMA Epoch [10/50] Loss: 0.642758
+      VARMA Epoch [30/50] Loss: 0.627774
+      VARMA Epoch [20/50] Loss: 0.685066
+      VARMA Epoch [20/50] Loss: 0.629129
+      VARMA Epoch [40/50] Loss: 0.624135
+      VARMA Epoch [30/50] Loss: 0.672853
+      VARMA Epoch [30/50] Loss: 0.616181
+      VARMA Epoch [50/50] Loss: 0.616197
+      VARMA Epoch [40/50] Loss: 0.667140
+      VARMA Epoch [40/50] Loss: 0.610480
+      VARMA Epoch [50/50] Loss: 0.660759
+      VARMA Epoch [50/50] Loss: 0.600419
+  [33mVARMA failed for LAND_AIRT: shape [0m[33m'[0m[33m[[0m[33m1, 12, -1[0m[33m][0m[33m'[0m[33m is invalid for input of size [0m[1;33m6[0m[33m, using time interpolation[0m
+
+[35mExecuting Heavy GPU models sequentially for [0m[1;35m{[0m[1;35mlen[0m[1;35m([0m[35mgpu_variables[0m[1;35m)[0m[1;35m}[0m[35m variables to prevent VRAM overflow[0m[35m...[0m
+Training Forward Model for PSAL...
+Training Backward Model for PSAL...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for PSAL_ANOMALY...
+Training Backward Model for PSAL_ANOMALY...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+    [33mGenerating multi-method comparison for TEMP[0m[33m...[0m
+      ✓ Added comparison column: TEMP_TIME
+      ✓ Added comparison column: TEMP_SPLINES
+      VARMA Epoch [1/50] Loss: 1.416421
+      VARMA Epoch [10/50] Loss: 0.822526
+      VARMA Epoch [20/50] Loss: 0.797320
+      VARMA Epoch [30/50] Loss: 0.790324
+      VARMA Epoch [40/50] Loss: 0.778892
+      VARMA Epoch [50/50] Loss: 0.769188
+      ✓ Added comparison column: TEMP_VARMA
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+      ✓ Added comparison column: TEMP_XGBOOST
+Training Forward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Training Backward Model for TEMP...
+Using Auto-Supervised Residual Learning approach.
+Predicting Forward...
+Predicting Backward...
+      ✓ Added comparison column: TEMP_XGBOOST_PRO
+2026-03-01 04:19:21 [INFO]: Using the given device: cuda
+2026-03-01 04:19:21 [INFO]: Model files will be saved to imputeformer_models/20260301_T041921
+2026-03-01 04:19:21 [INFO]: Tensorboard file will be saved to imputeformer_models/20260301_T041921/tensorboard
+2026-03-01 04:19:21 [INFO]: Using customized MAE as the training loss function.
+2026-03-01 04:19:21 [INFO]: Using customized MSE as the validation metric function.
+2026-03-01 04:19:21 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,093,569
+2026-03-01 04:19:34 [INFO]: Epoch 001 - training loss (MAE): 7.2246
+2026-03-01 04:19:48 [INFO]: Epoch 002 - training loss (MAE): 6.5184
+2026-03-01 04:20:01 [INFO]: Epoch 003 - training loss (MAE): 6.4936
+2026-03-01 04:20:15 [INFO]: Epoch 004 - training loss (MAE): 6.5087
+2026-03-01 04:20:29 [INFO]: Epoch 005 - training loss (MAE): 6.4141
+2026-03-01 04:20:43 [INFO]: Epoch 006 - training loss (MAE): 6.4358
+2026-03-01 04:20:56 [INFO]: Epoch 007 - training loss (MAE): 6.3317
+2026-03-01 04:21:10 [INFO]: Epoch 008 - training loss (MAE): 6.4562
+2026-03-01 04:21:24 [INFO]: Epoch 009 - training loss (MAE): 6.3029
+2026-03-01 04:21:37 [INFO]: Epoch 010 - training loss (MAE): 6.4149
+2026-03-01 04:21:51 [INFO]: Epoch 011 - training loss (MAE): 6.3874
+2026-03-01 04:22:05 [INFO]: Epoch 012 - training loss (MAE): 6.3336
+2026-03-01 04:22:19 [INFO]: Epoch 013 - training loss (MAE): 6.3928
+2026-03-01 04:22:32 [INFO]: Epoch 014 - training loss (MAE): 6.4304
+2026-03-01 04:22:46 [INFO]: Epoch 015 - training loss (MAE): 6.3075
+2026-03-01 04:23:00 [INFO]: Epoch 016 - training loss (MAE): 6.3251
+2026-03-01 04:23:14 [INFO]: Epoch 017 - training loss (MAE): 6.3289
+2026-03-01 04:23:28 [INFO]: Epoch 018 - training loss (MAE): 6.3783
+2026-03-01 04:23:41 [INFO]: Epoch 019 - training loss (MAE): 6.3595
+2026-03-01 04:23:55 [INFO]: Epoch 020 - training loss (MAE): 6.3101
+2026-03-01 04:23:55 [INFO]: Finished training. The best model is from epoch#9.
+2026-03-01 04:23:55 [INFO]: Saved the model to imputeformer_models/20260301_T041921/ImputeFormer.pypots
+      ✓ Added comparison column: TEMP_IMPUTEFORMER
+Training Forward Model for TEMP_ANOMALY...
+Training Backward Model for TEMP_ANOMALY...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for CNDC...
+Training Backward Model for CNDC...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for SVEL...
+Training Backward Model for SVEL...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for LAND_RELH...
+Training Backward Model for LAND_RELH...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for LAND_WSPD...
+Training Backward Model for LAND_WSPD...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for LAND_WDIR...
+Training Backward Model for LAND_WDIR...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for LAND_CAPH...
+Training Backward Model for LAND_CAPH...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for LAND_AIRT...
+Training Backward Model for LAND_AIRT...
+Predicting Forward...
+Predicting Backward...
+Predicting Forward...
+Predicting Backward...
+GPU Processing... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 2:38:33
+
+  [1mInterpolation Summary:[0m
+    PSAL: [1;36m26[0m,[1;36m786[0m points -> interpolated_xgboost
+    PSAL: [1;36m17[0m,[1;36m283[0m points -> missing
+    PSAL: [1;36m14[0m,[1;36m346[0m points -> interpolated_varma
+    PSAL: [1;36m4[0m,[1;36m494[0m points -> interpolated_time
+    PSAL_ANOMALY: [1;36m26[0m,[1;36m786[0m points -> interpolated_xgboost
+    PSAL_ANOMALY: [1;36m17[0m,[1;36m283[0m points -> missing
+    PSAL_ANOMALY: [1;36m14[0m,[1;36m346[0m points -> interpolated_varma
+    PSAL_ANOMALY: [1;36m4[0m,[1;36m494[0m points -> interpolated_time
+    TEMP: [1;36m35[0m,[1;36m464[0m points -> interpolated_xgboost
+    TEMP: [1;36m16[0m,[1;36m770[0m points -> missing
+    TEMP: [1;36m14[0m,[1;36m219[0m points -> interpolated_varma
+    TEMP: [1;36m4[0m,[1;36m527[0m points -> interpolated_time
+    TEMP_ANOMALY: [1;36m35[0m,[1;36m464[0m points -> interpolated_xgboost
+    TEMP_ANOMALY: [1;36m16[0m,[1;36m770[0m points -> missing
+    TEMP_ANOMALY: [1;36m14[0m,[1;36m219[0m points -> interpolated_varma
+    TEMP_ANOMALY: [1;36m4[0m,[1;36m527[0m points -> interpolated_time
+    CNDC: [1;36m35[0m,[1;36m464[0m points -> interpolated_xgboost
+    CNDC: [1;36m16[0m,[1;36m770[0m points -> missing
+    CNDC: [1;36m14[0m,[1;36m232[0m points -> interpolated_varma
+    CNDC: [1;36m4[0m,[1;36m543[0m points -> interpolated_time
+    SVEL: [1;36m35[0m,[1;36m464[0m points -> interpolated_xgboost
+    SVEL: [1;36m16[0m,[1;36m770[0m points -> missing
+    SVEL: [1;36m14[0m,[1;36m219[0m points -> interpolated_varma
+    SVEL: [1;36m4[0m,[1;36m542[0m points -> interpolated_time
+    LAND_RELH: [1;36m34[0m,[1;36m258[0m points -> interpolated_xgboost
+    LAND_RELH: [1;36m19[0m,[1;36m422[0m points -> missing
+    LAND_RELH: [1;36m11[0m,[1;36m644[0m points -> interpolated_varma
+    LAND_RELH: [1;36m6[0m,[1;36m730[0m points -> interpolated_time
+    LAND_WSPD: [1;36m34[0m,[1;36m258[0m points -> interpolated_xgboost
+    LAND_WSPD: [1;36m19[0m,[1;36m423[0m points -> missing
+    LAND_WSPD: [1;36m11[0m,[1;36m641[0m points -> interpolated_varma
+    LAND_WSPD: [1;36m5[0m,[1;36m642[0m points -> interpolated_time
+    LAND_WDIR: [1;36m34[0m,[1;36m258[0m points -> interpolated_xgboost
+    LAND_WDIR: [1;36m19[0m,[1;36m534[0m points -> missing
+    LAND_WDIR: [1;36m11[0m,[1;36m529[0m points -> interpolated_varma
+    LAND_WDIR: [1;36m5[0m,[1;36m641[0m points -> interpolated_time
+    LAND_CAPH: [1;36m34[0m,[1;36m258[0m points -> interpolated_xgboost
+    LAND_CAPH: [1;36m19[0m,[1;36m419[0m points -> missing
+    LAND_CAPH: [1;36m10[0m,[1;36m539[0m points -> interpolated_varma
+    LAND_CAPH: [1;36m5[0m,[1;36m435[0m points -> interpolated_time
+    LAND_AIRT: [1;36m34[0m,[1;36m258[0m points -> interpolated_xgboost
+    LAND_AIRT: [1;36m19[0m,[1;36m420[0m points -> missing
+    LAND_AIRT: [1;36m12[0m,[1;36m391[0m points -> interpolated_varma
+    LAND_AIRT: [1;36m5[0m,[1;36m181[0m points -> interpolated_time
+STEP 5.8: GENERATING PER-MODEL VISUALIZATIONS
+Created model output directories in /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_PSAL.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_PSAL_ANOMALY.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_TEMP.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_TEMP_ANOMALY.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_CNDC.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_SVEL.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_LAND_RELH.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_LAND_WSPD.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_LAND_WDIR.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_LAND_CAPH.png
+Saved XGBoost feature importance to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/feature_importance_LAND_AIRT.png
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/gap_analysis/production_reconstruction_TEMP.png
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/VARMA/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoost/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/XGBoostPro/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/ImputeFormer/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/gap_analysis/production_reconstruction_PSAL.png
+STEP 6: SAVING FINAL OUTPUTS AND FIGURES
+
+[1;34mSaving outputs[0m[1;34m...[0m
+  ✓ Data: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/data/[0m[95mOBSEA_multivariate_30min.csv[0m
+  ✓ Tables: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/[0m[95mtables[0m
+  Generating figures[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mgaps_heatmap.png[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mcorrelation_matrix.png[0m
+  Generating per-instrument time series[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctd.png[0m
+  [33mNo variables found for currents[0m
+  [33mNo variables found for waves[0m
+  [33mNo variables found for airmar[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctvg.png[0m
+  Generating time series with gap classification[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctd_gaps.png[0m
+  [33mNo variables found for currents[0m
+  [33mNo variables found for waves[0m
+  [33mNo variables found for airmar[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctvg_gaps.png[0m
+  Generating gap duration histogram[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mgap_duration_histogram.png[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mts_diagram.png[0m
+  ✓ Figures: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/[0m[95mfigures[0m
+  - Saved interpolation benchmark: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/tables/interpolation_comparison.csv
+  - Saved interpolation tracking metadata: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/tables/interpolation_tracking.csv
+  - Saved full interpolated dataset: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/data/OBSEA_multivariate_30min_interpolated.csv
+======================================================================
+PIPELINE COMPLETED SUCCESSFULLY
+  Final shape: (272631, 35)
+  Time range:  2009-05-29 18:30:00 to 2024-12-16 13:30:00
+  Results in: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup
+  Model outputs in: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models
+======================================================================

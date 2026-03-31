@@ -1,0 +1,860 @@
+nohup: ignoring input
+======================================================================
+OBSEA MULTIVARIATE DATA ANALYSIS PIPELINE (LUP VERSION)
+Execution started at: 2026-03-03 23:37:59
+Working Directory: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts
+Log file: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/pipeline_execution_20260303_233759.log
+======================================================================
+======================================================================
+⚙️ RUNNING FULL DATA PROCESSING PIPELINE
+======================================================================
+STEP 1: LOADING DATA
+Loading multiple observational sources (CTD, AWAC, Met)...
+[?25l[2K[32m⠋[0m Loading data...[2K[32m⠙[0m Loading ctd...[2K[32m⠹[0m Loading ctd...[2K[32m⠸[0m Loading ctd...[2K  ✓ ctd: [1;36m239[0m,[1;36m341[0m records, [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠸[0m Loading ctd...[2K[32m⠴[0m Loading currents...[2K  ✓ currents: [1;36m52[0m,[1;36m041[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:30:00[0m to [1;36m2023[0m-[1;36m12[0m-[1;36m22[0m [1;92m03:30:00[0m
+[32m⠴[0m Loading currents...[2K[32m⠦[0m Loading waves...[2K  ✓ waves: [1;36m23[0m,[1;36m821[0m records, [1;36m2018[0m-[1;36m04[0m-[1;36m05[0m [1;92m10:14:01[0m to [1;36m2024[0m-[1;36m10[0m-[1;36m08[0m [1;92m19:47:05[0m
+[32m⠦[0m Loading waves...[2K[32m⠧[0m Loading airmar...[2K  ✓ airmar: [1;36m110[0m,[1;36m517[0m records, [1;36m2011[0m-[1;36m10[0m-[1;36m06[0m [1;92m11:00:00[0m to [1;36m2024[0m-[1;36m08[0m-[1;36m29[0m [1;92m11:00:00[0m
+[32m⠧[0m Loading airmar...[2K[32m⠇[0m Loading ctvg...[2K[32m⠋[0m Loading ctvg...[2K[32m⠙[0m Loading ctvg...[2K  ✓ ctvg: [1;36m203[0m,[1;36m269[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:00:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠙[0m Loading ctvg...[2K  Loading ctvg...
+[?25hSTEP 2: APPLYING INSTRUMENTAL QC
+  - ctd       : 84,410 values flagged as suspect/fail
+  - currents  : 129 values flagged as suspect/fail
+  - waves     : 1,332 values flagged as suspect/fail
+  - airmar    : 17,191 values flagged as suspect/fail
+  - ctvg      : 59,719 values flagged as suspect/fail
+STEP 3: CREATING UNIFIED MULTIVARIATE DATASET
+
+[1;34mCreating unified dataset[0m[1;34m...[0m
+  Time range: [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+  ✓ ctd: [1;36m209[0m,[1;36m861[0m timestamps with data
+  ✓ currents: [1;36m52[0m,[1;36m041[0m timestamps with data
+  ✓ waves: [1;36m23[0m,[1;36m787[0m timestamps with data
+  ✓ airmar: [1;36m110[0m,[1;36m444[0m timestamps with data
+  ✓ ctvg: [1;36m203[0m,[1;36m125[0m timestamps with data
+
+[32mUnified dataset: [0m[1;32m244[0m[32m,[0m[1;32m524[0m[32m records, [0m[1;32m91[0m[32m variables[0m
+STEP 3.5: OCEANOGRAPHIC FEATURE EXTRACTION AND ADVANCED PREPROCESSING
+
+[1;36mAdding Phase [0m[1;36m3[0m[1;36m derived features[0m[1;36m...[0m
+  Computing σ_θ [1m([0mpotential density[1m)[0m[33m...[0m
+  Computing N² [1m([0mstratification[1m)[0m[33m...[0m
+  Computing wind U/V components[33m...[0m
+  Computing wind stress[33m...[0m
+  Computing wave energy flux[33m...[0m
+  Computing RMS currents[33m...[0m
+  Computing climatological anomalies[33m...[0m
+  Computing STL decomposition and Long-Term Trends[33m...[0m
+    [2mLong-term TEMP Trend: +[0m[1;2;36m0.1842[0m[2m units/year [0m[1;2m([0m[2;33mp[0m[2m=[0m[1;2;36m0[0m[1;2;36m.0000[0m[1;2m)[0m
+    [2mLong-term PSAL Trend: +[0m[1;2;36m0.0233[0m[2m units/year [0m[1;2m([0m[2;33mp[0m[2m=[0m[1;2;36m0[0m[1;2;36m.0000[0m[1;2m)[0m
+  Performing stationarity tests [1m([0mADF[1m)[0m[33m...[0m
+    [32mTEMP: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+    [32mPSAL: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+    [32mSIGMA0: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+  [32m✓ Phase [0m[1;32m3[0m[32m Complete: Added [0m[1;32m15[0m[32m derived features[0m
+STEP 4: STATISTICAL ANALYSIS AND CORRELATIONS
+  - Computed descriptive statistics for 39 variables
+  - Computed correlation matrix for primary predictors
+STEP 5: GAP ANALYSIS AND CLASSIFICATION
+  - Identified 201,887 gaps across all variables
+STEP 5.5: VARIABLE QUALITY FILTERING
+  Filtering to 11 high-quality variables (≤25% gaps)
+  ✓ Filtered: 106 → 29 columns
+  Variables retained: PSAL, PSAL_ANOMALY, TEMP, TEMP_ANOMALY, CNDC, SVEL, LAND_RELH, LAND_WSPD, LAND_WDIR, LAND_CAPH, LAND_AIRT
+  Working with 11 high-quality variables for interpolation
+💾 SAVING PRE-PROCESSED DATASET TO CACHE
+  Saved to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/cache
+STEP 5.6: SCIENTIFIC BENCHMARKING OF INTERPOLATION METHODS
+Testing: Linear, Time, Splines, Polynomial, VARMA, Bi-LSTM
+
+  [1mBenchmarking gap filling on [0m[1m{[0m[1mtest_variable[0m[1m}[0m[1;33m...[0m
+  [MICRO] Simulating 50 gaps (1-1 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Computing climatological anomaly for TEMP[0m[2;33m...[0m
+    [2m│ ✓ Anomaly computed[0m
+    [2m│ Complete records: [0m[1;2;36m168[0m[2m,[0m[1;2;36m017[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=60%, Val=20%, Test=20%
+  Sequence length: 720 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+  -> Extracting STL components for pure residual learning...
+Temporal split:
+  Train: 146,714 samples (2009-05-29 18:30:00 to 2019-04-11 11:30:00)
+  Val:   48,904 samples (2019-04-11 12:00:00 to 2022-02-18 03:00:00)
+  Test:  48,906 samples (2022-02-18 03:30:00 to 2024-12-16 13:30:00)
+Starting training with Attention & Scheduler...
+  Epoch [1/50] Train Loss: 1.776810, Val Loss: 2.329986 
+  Epoch [5/50] Train Loss: 1.767550, Val Loss: 2.322261 
+  Epoch [10/50] Train Loss: 0.280222, Val Loss: 0.351476 
+  Epoch [15/50] Train Loss: 0.244148, Val Loss: 0.340186 
+  Epoch [20/50] Train Loss: 0.217662, Val Loss: 0.384591 
+  Epoch [25/50] Train Loss: 0.223722, Val Loss: 0.294408 
+  Epoch [30/50] Train Loss: 0.200595, Val Loss: 0.267378 
+  Epoch [35/50] Train Loss: 0.181399, Val Loss: 0.264781 
+  Epoch [40/50] Train Loss: 0.185293, Val Loss: 0.259939 
+  Epoch [45/50] Train Loss: 0.176873, Val Loss: 0.261088 
+  Epoch [50/50] Train Loss: 0.162588, Val Loss: 0.269943 
+Restored best model from epoch 40
+Training complete!
+  Best epoch: 40
+  Best val loss: 0.259939
+  Test loss: 0.152017
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m40[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.259939[0m[2m, Test loss: [0m[1;2;36m0.152017[0m
+    [2m│ Predicting gaps in anomaly space[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/gap_project_antigr/src/models/multivariate_lstm_model.py:754: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: anomaly_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: anomaly_filled range: [-8.4112, 5.8087]
+    DEBUG: NaN count - Original anomaly: 42923, Predicted: 0
+    [2m│ Reconstructing full signal [0m[1;2m([0m[2mtargeted gap filling[0m[1;2m)[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m42[0m[32m,[0m[1;32m923[0m[32m gap points [0m[1;32m([0m[32mwith Blending[0m[1;32m)[0m
+    DEBUG: Final NaN count - Original: 42923, Final: 0, Filled: 42923
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m42[0m[32m,[0m[1;32m923[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-04 01:21:58 [INFO]: Using the given device: cuda
+2026-03-04 01:21:58 [INFO]: Model files will be saved to imputeformer_models/20260304_T012158
+2026-03-04 01:21:58 [INFO]: Tensorboard file will be saved to imputeformer_models/20260304_T012158/tensorboard
+2026-03-04 01:21:58 [INFO]: Using customized MAE as the training loss function.
+2026-03-04 01:21:58 [INFO]: Using customized MSE as the validation metric function.
+2026-03-04 01:21:58 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+[34m
+████████╗██╗███╗   ███╗███████╗    ███████╗███████╗██████╗ ██╗███████╗███████╗    █████╗ ██╗
+╚══██╔══╝██║████╗ ████║██╔════╝    ██╔════╝██╔════╝██╔══██╗██║██╔════╝██╔════╝   ██╔══██╗██║
+   ██║   ██║██╔████╔██║█████╗█████╗███████╗█████╗  ██████╔╝██║█████╗  ███████╗   ███████║██║
+   ██║   ██║██║╚██╔╝██║██╔══╝╚════╝╚════██║██╔══╝  ██╔══██╗██║██╔══╝  ╚════██║   ██╔══██║██║
+   ██║   ██║██║ ╚═╝ ██║███████╗    ███████║███████╗██║  ██║██║███████╗███████║██╗██║  ██║██║
+   ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═╝╚═╝
+ai4ts v0.0.3 - building AI for unified time-series analysis, https://time-series.ai [0m
+
+  [ImputeFormerImputer] Extracting STL components for pure residual learning...
+  [ImputeFormerImputer] Target converted to anomaly.
+2026-03-04 01:23:03 [INFO]: Epoch 001 - training loss (MAE): 0.4178
+2026-03-04 01:23:32 [INFO]: Epoch 002 - training loss (MAE): 0.2937
+2026-03-04 01:24:01 [INFO]: Epoch 003 - training loss (MAE): 0.2376
+2026-03-04 01:24:29 [INFO]: Epoch 004 - training loss (MAE): 0.1978
+2026-03-04 01:24:58 [INFO]: Epoch 005 - training loss (MAE): 0.1838
+2026-03-04 01:25:27 [INFO]: Epoch 006 - training loss (MAE): 0.1676
+2026-03-04 01:25:56 [INFO]: Epoch 007 - training loss (MAE): 0.1603
+2026-03-04 01:26:25 [INFO]: Epoch 008 - training loss (MAE): 0.1480
+2026-03-04 01:26:54 [INFO]: Epoch 009 - training loss (MAE): 0.1447
+2026-03-04 01:27:23 [INFO]: Epoch 010 - training loss (MAE): 0.1509
+2026-03-04 01:27:52 [INFO]: Epoch 011 - training loss (MAE): 0.1419
+2026-03-04 01:28:21 [INFO]: Epoch 012 - training loss (MAE): 0.1305
+2026-03-04 01:28:50 [INFO]: Epoch 013 - training loss (MAE): 0.1284
+2026-03-04 01:29:19 [INFO]: Epoch 014 - training loss (MAE): 0.1216
+2026-03-04 01:29:48 [INFO]: Epoch 015 - training loss (MAE): 0.1222
+2026-03-04 01:30:17 [INFO]: Epoch 016 - training loss (MAE): 0.1187
+2026-03-04 01:30:46 [INFO]: Epoch 017 - training loss (MAE): 0.1116
+2026-03-04 01:31:15 [INFO]: Epoch 018 - training loss (MAE): 0.1132
+2026-03-04 01:31:44 [INFO]: Epoch 019 - training loss (MAE): 0.1094
+2026-03-04 01:32:13 [INFO]: Epoch 020 - training loss (MAE): 0.1045
+2026-03-04 01:32:42 [INFO]: Epoch 021 - training loss (MAE): 0.1060
+2026-03-04 01:33:11 [INFO]: Epoch 022 - training loss (MAE): 0.1062
+2026-03-04 01:33:40 [INFO]: Epoch 023 - training loss (MAE): 0.1059
+2026-03-04 01:34:09 [INFO]: Epoch 024 - training loss (MAE): 0.1018
+2026-03-04 01:34:38 [INFO]: Epoch 025 - training loss (MAE): 0.0956
+2026-03-04 01:35:07 [INFO]: Epoch 026 - training loss (MAE): 0.0998
+2026-03-04 01:35:36 [INFO]: Epoch 027 - training loss (MAE): 0.0931
+2026-03-04 01:36:05 [INFO]: Epoch 028 - training loss (MAE): 0.0915
+2026-03-04 01:36:34 [INFO]: Epoch 029 - training loss (MAE): 0.0911
+2026-03-04 01:37:03 [INFO]: Epoch 030 - training loss (MAE): 0.0856
+2026-03-04 01:37:31 [INFO]: Epoch 031 - training loss (MAE): 0.0879
+2026-03-04 01:38:00 [INFO]: Epoch 032 - training loss (MAE): 0.0823
+2026-03-04 01:38:29 [INFO]: Epoch 033 - training loss (MAE): 0.0833
+2026-03-04 01:38:58 [INFO]: Epoch 034 - training loss (MAE): 0.0840
+2026-03-04 01:39:27 [INFO]: Epoch 035 - training loss (MAE): 0.0823
+2026-03-04 01:39:56 [INFO]: Epoch 036 - training loss (MAE): 0.0828
+2026-03-04 01:40:25 [INFO]: Epoch 037 - training loss (MAE): 0.0823
+2026-03-04 01:40:54 [INFO]: Epoch 038 - training loss (MAE): 0.0778
+2026-03-04 01:41:23 [INFO]: Epoch 039 - training loss (MAE): 0.0773
+2026-03-04 01:41:52 [INFO]: Epoch 040 - training loss (MAE): 0.0770
+2026-03-04 01:42:20 [INFO]: Epoch 041 - training loss (MAE): 0.0740
+2026-03-04 01:42:49 [INFO]: Epoch 042 - training loss (MAE): 0.0725
+2026-03-04 01:43:18 [INFO]: Epoch 043 - training loss (MAE): 0.0750
+2026-03-04 01:43:47 [INFO]: Epoch 044 - training loss (MAE): 0.0752
+2026-03-04 01:44:16 [INFO]: Epoch 045 - training loss (MAE): 0.0702
+2026-03-04 01:44:45 [INFO]: Epoch 046 - training loss (MAE): 0.0755
+2026-03-04 01:45:14 [INFO]: Epoch 047 - training loss (MAE): 0.0780
+2026-03-04 01:45:43 [INFO]: Epoch 048 - training loss (MAE): 0.0706
+2026-03-04 01:46:12 [INFO]: Epoch 049 - training loss (MAE): 0.0726
+2026-03-04 01:46:41 [INFO]: Epoch 050 - training loss (MAE): 0.0686
+2026-03-04 01:46:41 [INFO]: Finished training. The best model is from epoch#50.
+2026-03-04 01:46:41 [INFO]: Saved the model to imputeformer_models/20260304_T012158/ImputeFormer.pypots
+  [MEM] RAM before CPU jobs: 30.8% used, 11.1 GB free
+    [MICRO] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.223906
+      VARMA Epoch [10/50] Loss: 0.755474
+      VARMA Epoch [20/50] Loss: 0.740082
+      VARMA Epoch [30/50] Loss: 0.729203
+      VARMA Epoch [40/50] Loss: 0.722132
+      VARMA Epoch [50/50] Loss: 0.719552
+    [MICRO|BILSTM] RMSE=0.0803, MAE=0.0337, R²=0.9995
+    [MICRO|XGBOOST] RMSE=2.5301, MAE=1.9678, R²=0.5198
+    [MICRO|XGBOOST_PRO] RMSE=3.4974, MAE=2.8686, R²=0.0825
+    [MICRO|IMPUTEFORMER] RMSE=3.8560, MAE=3.8110, R²=-0.1153
+    [MICRO|TIME] RMSE=0.0589, MAE=0.0191, R²=0.9997
+    [MICRO|SPLINES] RMSE=0.7220, MAE=0.5316, R²=0.9609
+    [MICRO|VARMA] RMSE=0.0515, MAE=0.0183, R²=0.9998
+  [SHORT] Simulating 20 gaps (2-12 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Computing climatological anomaly for TEMP[0m[2;33m...[0m
+    [2m│ ✓ Anomaly computed[0m
+    [2m│ Complete records: [0m[1;2;36m167[0m[2m,[0m[1;2;36m959[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=60%, Val=20%, Test=20%
+  Sequence length: 720 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+  -> Extracting STL components for pure residual learning...
+Temporal split:
+  Train: 146,714 samples (2009-05-29 18:30:00 to 2019-04-11 11:30:00)
+  Val:   48,904 samples (2019-04-11 12:00:00 to 2022-02-18 03:00:00)
+  Test:  48,906 samples (2022-02-18 03:30:00 to 2024-12-16 13:30:00)
+Starting training with Attention & Scheduler...
+  Epoch [1/50] Train Loss: 1.656391, Val Loss: 1.837670 
+  Epoch [5/50] Train Loss: 1.650951, Val Loss: 1.835754 
+  Epoch [10/50] Train Loss: 1.646786, Val Loss: 1.840344 
+  Epoch [15/50] Train Loss: 1.645652, Val Loss: 1.843096 
+  Epoch [20/50] Train Loss: 1.642115, Val Loss: 1.840226 
+  Epoch [25/50] Train Loss: 0.356776, Val Loss: 0.269958 
+  Epoch [30/50] Train Loss: 0.255932, Val Loss: 0.220600 
+  Epoch [35/50] Train Loss: 0.223941, Val Loss: 0.225640 
+  Epoch [40/50] Train Loss: 0.213753, Val Loss: 0.211014 
+  Epoch [45/50] Train Loss: 0.204069, Val Loss: 0.215861 
+  Epoch [50/50] Train Loss: 0.192020, Val Loss: 0.211296 
+Restored best model from epoch 47
+Training complete!
+  Best epoch: 47
+  Best val loss: 0.206285
+  Test loss: 0.172668
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m47[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.206285[0m[2m, Test loss: [0m[1;2;36m0.172668[0m
+    [2m│ Predicting gaps in anomaly space[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/gap_project_antigr/src/models/multivariate_lstm_model.py:754: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: anomaly_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: anomaly_filled range: [-7.5286, 5.8740]
+    DEBUG: NaN count - Original anomaly: 43003, Predicted: 0
+    [2m│ Reconstructing full signal [0m[1;2m([0m[2mtargeted gap filling[0m[1;2m)[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m43[0m[32m,[0m[1;32m003[0m[32m gap points [0m[1;32m([0m[32mwith Blending[0m[1;32m)[0m
+    DEBUG: Final NaN count - Original: 43003, Final: 0, Filled: 43003
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m43[0m[32m,[0m[1;32m003[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-04 02:56:18 [INFO]: Using the given device: cuda
+2026-03-04 02:56:18 [INFO]: Model files will be saved to imputeformer_models/20260304_T025618
+2026-03-04 02:56:18 [INFO]: Tensorboard file will be saved to imputeformer_models/20260304_T025618/tensorboard
+2026-03-04 02:56:18 [INFO]: Using customized MAE as the training loss function.
+2026-03-04 02:56:18 [INFO]: Using customized MSE as the validation metric function.
+2026-03-04 02:56:18 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+  [ImputeFormerImputer] Extracting STL components for pure residual learning...
+  [ImputeFormerImputer] Target converted to anomaly.
+2026-03-04 02:57:24 [INFO]: Epoch 001 - training loss (MAE): 0.4192
+2026-03-04 02:57:52 [INFO]: Epoch 002 - training loss (MAE): 0.2858
+2026-03-04 02:58:21 [INFO]: Epoch 003 - training loss (MAE): 0.2382
+2026-03-04 02:58:50 [INFO]: Epoch 004 - training loss (MAE): 0.2014
+2026-03-04 02:59:19 [INFO]: Epoch 005 - training loss (MAE): 0.1766
+2026-03-04 02:59:48 [INFO]: Epoch 006 - training loss (MAE): 0.1673
+2026-03-04 03:00:16 [INFO]: Epoch 007 - training loss (MAE): 0.1630
+2026-03-04 03:00:45 [INFO]: Epoch 008 - training loss (MAE): 0.1469
+2026-03-04 03:01:14 [INFO]: Epoch 009 - training loss (MAE): 0.1470
+2026-03-04 03:01:43 [INFO]: Epoch 010 - training loss (MAE): 0.1322
+2026-03-04 03:02:12 [INFO]: Epoch 011 - training loss (MAE): 0.1303
+2026-03-04 03:02:41 [INFO]: Epoch 012 - training loss (MAE): 0.1257
+2026-03-04 03:03:10 [INFO]: Epoch 013 - training loss (MAE): 0.1268
+2026-03-04 03:03:39 [INFO]: Epoch 014 - training loss (MAE): 0.1205
+2026-03-04 03:04:08 [INFO]: Epoch 015 - training loss (MAE): 0.1219
+2026-03-04 03:04:37 [INFO]: Epoch 016 - training loss (MAE): 0.1143
+2026-03-04 03:05:06 [INFO]: Epoch 017 - training loss (MAE): 0.1123
+2026-03-04 03:05:35 [INFO]: Epoch 018 - training loss (MAE): 0.1116
+2026-03-04 03:06:04 [INFO]: Epoch 019 - training loss (MAE): 0.1109
+2026-03-04 03:06:33 [INFO]: Epoch 020 - training loss (MAE): 0.1057
+2026-03-04 03:07:02 [INFO]: Epoch 021 - training loss (MAE): 0.1053
+2026-03-04 03:07:31 [INFO]: Epoch 022 - training loss (MAE): 0.1077
+2026-03-04 03:08:00 [INFO]: Epoch 023 - training loss (MAE): 0.0993
+2026-03-04 03:08:29 [INFO]: Epoch 024 - training loss (MAE): 0.0960
+2026-03-04 03:08:57 [INFO]: Epoch 025 - training loss (MAE): 0.0973
+2026-03-04 03:09:26 [INFO]: Epoch 026 - training loss (MAE): 0.0939
+2026-03-04 03:09:55 [INFO]: Epoch 027 - training loss (MAE): 0.0934
+2026-03-04 03:10:24 [INFO]: Epoch 028 - training loss (MAE): 0.0904
+2026-03-04 03:10:53 [INFO]: Epoch 029 - training loss (MAE): 0.0912
+2026-03-04 03:11:23 [INFO]: Epoch 030 - training loss (MAE): 0.0890
+2026-03-04 03:11:52 [INFO]: Epoch 031 - training loss (MAE): 0.0861
+2026-03-04 03:12:21 [INFO]: Epoch 032 - training loss (MAE): 0.0829
+2026-03-04 03:12:49 [INFO]: Epoch 033 - training loss (MAE): 0.0814
+2026-03-04 03:13:18 [INFO]: Epoch 034 - training loss (MAE): 0.0801
+2026-03-04 03:13:47 [INFO]: Epoch 035 - training loss (MAE): 0.0787
+2026-03-04 03:14:16 [INFO]: Epoch 036 - training loss (MAE): 0.0759
+2026-03-04 03:14:45 [INFO]: Epoch 037 - training loss (MAE): 0.0743
+2026-03-04 03:15:13 [INFO]: Epoch 038 - training loss (MAE): 0.0768
+2026-03-04 03:15:42 [INFO]: Epoch 039 - training loss (MAE): 0.0748
+2026-03-04 03:16:11 [INFO]: Epoch 040 - training loss (MAE): 0.0753
+2026-03-04 03:16:40 [INFO]: Epoch 041 - training loss (MAE): 0.0749
+2026-03-04 03:17:09 [INFO]: Epoch 042 - training loss (MAE): 0.0727
+2026-03-04 03:17:38 [INFO]: Epoch 043 - training loss (MAE): 0.0745
+2026-03-04 03:18:07 [INFO]: Epoch 044 - training loss (MAE): 0.0705
+2026-03-04 03:18:36 [INFO]: Epoch 045 - training loss (MAE): 0.0659
+2026-03-04 03:19:05 [INFO]: Epoch 046 - training loss (MAE): 0.0666
+2026-03-04 03:19:34 [INFO]: Epoch 047 - training loss (MAE): 0.0692
+2026-03-04 03:20:03 [INFO]: Epoch 048 - training loss (MAE): 0.0679
+2026-03-04 03:20:31 [INFO]: Epoch 049 - training loss (MAE): 0.0682
+2026-03-04 03:21:00 [INFO]: Epoch 050 - training loss (MAE): 0.0674
+2026-03-04 03:21:00 [INFO]: Finished training. The best model is from epoch#45.
+2026-03-04 03:21:00 [INFO]: Saved the model to imputeformer_models/20260304_T025618/ImputeFormer.pypots
+  [MEM] RAM before CPU jobs: 30.7% used, 11.1 GB free
+    [SHORT] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.269677
+      VARMA Epoch [10/50] Loss: 0.792588
+      VARMA Epoch [20/50] Loss: 0.746527
+      VARMA Epoch [30/50] Loss: 0.736838
+      VARMA Epoch [40/50] Loss: 0.748284
+      VARMA Epoch [50/50] Loss: 0.726358
+    [SHORT|BILSTM] RMSE=0.6024, MAE=0.3313, R²=0.9719
+    [SHORT|XGBOOST] RMSE=2.0340, MAE=1.4613, R²=0.6796
+    [SHORT|XGBOOST_PRO] RMSE=3.1045, MAE=2.6058, R²=0.2537
+    [SHORT|IMPUTEFORMER] RMSE=3.1837, MAE=3.0893, R²=0.2152
+    [SHORT|TIME] RMSE=0.1088, MAE=0.0746, R²=0.9991
+    [SHORT|SPLINES] RMSE=0.8000, MAE=0.5810, R²=0.9504
+    [SHORT|VARMA] RMSE=0.0862, MAE=0.0555, R²=0.9994
+  [MEDIUM] Simulating 5 gaps (12-144 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Computing climatological anomaly for TEMP[0m[2;33m...[0m
+    [2m│ ✓ Anomaly computed[0m
+    [2m│ Complete records: [0m[1;2;36m167[0m[2m,[0m[1;2;36m630[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=60%, Val=20%, Test=20%
+  Sequence length: 720 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+  -> Extracting STL components for pure residual learning...
+Temporal split:
+  Train: 146,714 samples (2009-05-29 18:30:00 to 2019-04-11 11:30:00)
+  Val:   48,904 samples (2019-04-11 12:00:00 to 2022-02-18 03:00:00)
+  Test:  48,906 samples (2022-02-18 03:30:00 to 2024-12-16 13:30:00)
+Starting training with Attention & Scheduler...
+  Epoch [1/50] Train Loss: 1.731203, Val Loss: 2.092685 
+  Epoch [5/50] Train Loss: 1.725479, Val Loss: 2.094807 
+  Epoch [10/50] Train Loss: 1.722106, Val Loss: 2.096068 
+  Epoch [15/50] Train Loss: 1.721884, Val Loss: 2.092568 
+  Epoch [20/50] Train Loss: 1.717986, Val Loss: 2.088855 
+  Epoch [25/50] Train Loss: 0.469088, Val Loss: 0.527995 
+  Epoch [30/50] Train Loss: 0.259096, Val Loss: 0.278916 
+  Epoch [35/50] Train Loss: 0.212763, Val Loss: 0.259638 
+  Epoch [40/50] Train Loss: 0.203654, Val Loss: 0.267670 
+  Epoch [45/50] Train Loss: 0.194057, Val Loss: 0.259406 
+  Epoch [50/50] Train Loss: 0.184794, Val Loss: 0.240961 
+Restored best model from epoch 49
+Training complete!
+  Best epoch: 49
+  Best val loss: 0.240840
+  Test loss: 0.127285
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m49[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m0.240840[0m[2m, Test loss: [0m[1;2;36m0.127285[0m
+    [2m│ Predicting gaps in anomaly space[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/gap_project_antigr/src/models/multivariate_lstm_model.py:754: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: anomaly_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: anomaly_filled range: [-8.3159, 6.5646]
+    DEBUG: NaN count - Original anomaly: 43342, Predicted: 0
+    [2m│ Reconstructing full signal [0m[1;2m([0m[2mtargeted gap filling[0m[1;2m)[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m43[0m[32m,[0m[1;32m342[0m[32m gap points [0m[1;32m([0m[32mwith Blending[0m[1;32m)[0m
+    DEBUG: Final NaN count - Original: 43342, Final: 0, Filled: 43342
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m43[0m[32m,[0m[1;32m342[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-04 04:35:02 [INFO]: Using the given device: cuda
+2026-03-04 04:35:02 [INFO]: Model files will be saved to imputeformer_models/20260304_T043502
+2026-03-04 04:35:02 [INFO]: Tensorboard file will be saved to imputeformer_models/20260304_T043502/tensorboard
+2026-03-04 04:35:02 [INFO]: Using customized MAE as the training loss function.
+2026-03-04 04:35:02 [INFO]: Using customized MSE as the validation metric function.
+2026-03-04 04:35:02 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+  [ImputeFormerImputer] Extracting STL components for pure residual learning...
+  [ImputeFormerImputer] Target converted to anomaly.
+2026-03-04 04:36:08 [INFO]: Epoch 001 - training loss (MAE): 0.4412
+2026-03-04 04:36:36 [INFO]: Epoch 002 - training loss (MAE): 0.3045
+2026-03-04 04:37:05 [INFO]: Epoch 003 - training loss (MAE): 0.2428
+2026-03-04 04:37:34 [INFO]: Epoch 004 - training loss (MAE): 0.2103
+2026-03-04 04:38:02 [INFO]: Epoch 005 - training loss (MAE): 0.1833
+2026-03-04 04:38:31 [INFO]: Epoch 006 - training loss (MAE): 0.1668
+2026-03-04 04:39:00 [INFO]: Epoch 007 - training loss (MAE): 0.1585
+2026-03-04 04:39:29 [INFO]: Epoch 008 - training loss (MAE): 0.1526
+2026-03-04 04:39:58 [INFO]: Epoch 009 - training loss (MAE): 0.1491
+2026-03-04 04:40:27 [INFO]: Epoch 010 - training loss (MAE): 0.1358
+2026-03-04 04:40:56 [INFO]: Epoch 011 - training loss (MAE): 0.1389
+2026-03-04 04:41:25 [INFO]: Epoch 012 - training loss (MAE): 0.1315
+2026-03-04 04:41:54 [INFO]: Epoch 013 - training loss (MAE): 0.1309
+2026-03-04 04:42:23 [INFO]: Epoch 014 - training loss (MAE): 0.1285
+2026-03-04 04:42:52 [INFO]: Epoch 015 - training loss (MAE): 0.1186
+2026-03-04 04:43:21 [INFO]: Epoch 016 - training loss (MAE): 0.1164
+2026-03-04 04:43:49 [INFO]: Epoch 017 - training loss (MAE): 0.1178
+2026-03-04 04:44:18 [INFO]: Epoch 018 - training loss (MAE): 0.1155
+2026-03-04 04:44:48 [INFO]: Epoch 019 - training loss (MAE): 0.1077
+2026-03-04 04:45:17 [INFO]: Epoch 020 - training loss (MAE): 0.1105
+2026-03-04 04:45:46 [INFO]: Epoch 021 - training loss (MAE): 0.1069
+2026-03-04 04:46:15 [INFO]: Epoch 022 - training loss (MAE): 0.1017
+2026-03-04 04:46:44 [INFO]: Epoch 023 - training loss (MAE): 0.1010
+2026-03-04 04:47:12 [INFO]: Epoch 024 - training loss (MAE): 0.0966
+2026-03-04 04:47:41 [INFO]: Epoch 025 - training loss (MAE): 0.0935
+2026-03-04 04:48:10 [INFO]: Epoch 026 - training loss (MAE): 0.0878
+2026-03-04 04:48:39 [INFO]: Epoch 027 - training loss (MAE): 0.0864
+2026-03-04 04:49:08 [INFO]: Epoch 028 - training loss (MAE): 0.0898
+2026-03-04 04:49:37 [INFO]: Epoch 029 - training loss (MAE): 0.0864
+2026-03-04 04:50:06 [INFO]: Epoch 030 - training loss (MAE): 0.0812
+2026-03-04 04:50:35 [INFO]: Epoch 031 - training loss (MAE): 0.0804
+2026-03-04 04:51:03 [INFO]: Epoch 032 - training loss (MAE): 0.0790
+2026-03-04 04:51:32 [INFO]: Epoch 033 - training loss (MAE): 0.0812
+2026-03-04 04:52:01 [INFO]: Epoch 034 - training loss (MAE): 0.0752
+2026-03-04 04:52:30 [INFO]: Epoch 035 - training loss (MAE): 0.0725
+2026-03-04 04:52:59 [INFO]: Epoch 036 - training loss (MAE): 0.0766
+2026-03-04 04:53:28 [INFO]: Epoch 037 - training loss (MAE): 1.4104
+2026-03-04 04:53:57 [INFO]: Epoch 038 - training loss (MAE): 1.5004
+2026-03-04 04:54:26 [INFO]: Epoch 039 - training loss (MAE): 1.5011
+2026-03-04 04:54:55 [INFO]: Epoch 040 - training loss (MAE): 1.5007
+2026-03-04 04:55:23 [INFO]: Epoch 041 - training loss (MAE): 1.5008
+2026-03-04 04:55:52 [INFO]: Epoch 042 - training loss (MAE): 1.5011
+2026-03-04 04:56:21 [INFO]: Epoch 043 - training loss (MAE): 1.4988
+2026-03-04 04:56:50 [INFO]: Epoch 044 - training loss (MAE): 1.5003
+2026-03-04 04:57:19 [INFO]: Epoch 045 - training loss (MAE): 1.5017
+2026-03-04 04:57:48 [INFO]: Epoch 046 - training loss (MAE): 1.5003
+2026-03-04 04:58:17 [INFO]: Epoch 047 - training loss (MAE): 1.5006
+2026-03-04 04:58:45 [INFO]: Epoch 048 - training loss (MAE): 1.4998
+2026-03-04 04:59:14 [INFO]: Epoch 049 - training loss (MAE): 1.5001
+2026-03-04 04:59:43 [INFO]: Epoch 050 - training loss (MAE): 1.5004
+2026-03-04 04:59:43 [INFO]: Finished training. The best model is from epoch#35.
+2026-03-04 04:59:43 [INFO]: Saved the model to imputeformer_models/20260304_T043502/ImputeFormer.pypots
+  [MEM] RAM before CPU jobs: 31.2% used, 11.1 GB free
+    [MEDIUM] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.331556
+      VARMA Epoch [10/50] Loss: 0.761087
+      VARMA Epoch [20/50] Loss: 0.740973
+      VARMA Epoch [30/50] Loss: 0.734910
+      VARMA Epoch [40/50] Loss: 0.720538
+      VARMA Epoch [50/50] Loss: 0.715077
+    [MEDIUM|BILSTM] RMSE=1.2181, MAE=1.0178, R²=0.9023
+    [MEDIUM|XGBOOST] RMSE=2.1834, MAE=1.5570, R²=0.6862
+    [MEDIUM|XGBOOST_PRO] RMSE=4.6593, MAE=3.2920, R²=-0.4288
+    [MEDIUM|IMPUTEFORMER] RMSE=1.3076, MAE=1.0950, R²=0.8875
+    [MEDIUM|TIME] RMSE=0.5140, MAE=0.3047, R²=0.9826
+    [MEDIUM|SPLINES] RMSE=0.6088, MAE=0.3756, R²=0.9756
+    [MEDIUM|VARMA] RMSE=0.3126, MAE=0.1907, R²=0.9936
+  [LONG] Simulating 2 gaps (144-1440 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Computing climatological anomaly for TEMP[0m[2;33m...[0m
+    [2m│ ✓ Anomaly computed[0m
+    [2m│ Complete records: [0m[1;2;36m167[0m[2m,[0m[1;2;36m353[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=60%, Val=20%, Test=20%
+  Sequence length: 720 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+  -> Extracting STL components for pure residual learning...
+Temporal split:
+  Train: 146,714 samples (2009-05-29 18:30:00 to 2019-04-11 11:30:00)
+  Val:   48,904 samples (2019-04-11 12:00:00 to 2022-02-18 03:00:00)
+  Test:  48,906 samples (2022-02-18 03:30:00 to 2024-12-16 13:30:00)
+Starting training with Attention & Scheduler...
+  Epoch [1/50] Train Loss: 1.765644, Val Loss: 2.210048 
+  Epoch [5/50] Train Loss: 1.762286, Val Loss: 2.210726 
+  Epoch [10/50] Train Loss: 1.760419, Val Loss: 2.207852 
+  Epoch [15/50] Train Loss: 1.758823, Val Loss: 2.211183 
+  Epoch [20/50] Train Loss: 1.757579, Val Loss: 2.210941 
+  Epoch [25/50] Train Loss: 1.756064, Val Loss: 2.210388 
+  Epoch [30/50] Train Loss: 1.755075, Val Loss: 2.207959 
+Early stopping triggered at epoch 30
+Restored best model from epoch 10
+Training complete!
+  Best epoch: 10
+  Best val loss: 2.207852
+  Test loss: 0.927254
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m10[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m2.207852[0m[2m, Test loss: [0m[1;2;36m0.927254[0m
+    [2m│ Predicting gaps in anomaly space[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/gap_project_antigr/src/models/multivariate_lstm_model.py:754: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: anomaly_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: anomaly_filled range: [-6.6284, 6.3125]
+    DEBUG: NaN count - Original anomaly: 44421, Predicted: 0
+    [2m│ Reconstructing full signal [0m[1;2m([0m[2mtargeted gap filling[0m[1;2m)[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m44[0m[32m,[0m[1;32m421[0m[32m gap points [0m[1;32m([0m[32mwith Blending[0m[1;32m)[0m
+    DEBUG: Final NaN count - Original: 44421, Final: 0, Filled: 44421
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m44[0m[32m,[0m[1;32m421[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-04 05:52:35 [INFO]: Using the given device: cuda
+2026-03-04 05:52:35 [INFO]: Model files will be saved to imputeformer_models/20260304_T055235
+2026-03-04 05:52:35 [INFO]: Tensorboard file will be saved to imputeformer_models/20260304_T055235/tensorboard
+2026-03-04 05:52:35 [INFO]: Using customized MAE as the training loss function.
+2026-03-04 05:52:35 [INFO]: Using customized MSE as the validation metric function.
+2026-03-04 05:52:35 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+  [ImputeFormerImputer] Extracting STL components for pure residual learning...
+  [ImputeFormerImputer] Target converted to anomaly.
+2026-03-04 05:53:40 [INFO]: Epoch 001 - training loss (MAE): 0.4253
+2026-03-04 05:54:09 [INFO]: Epoch 002 - training loss (MAE): 0.3009
+2026-03-04 05:54:38 [INFO]: Epoch 003 - training loss (MAE): 0.2579
+2026-03-04 05:55:06 [INFO]: Epoch 004 - training loss (MAE): 0.2129
+2026-03-04 05:55:35 [INFO]: Epoch 005 - training loss (MAE): 0.1815
+2026-03-04 05:56:04 [INFO]: Epoch 006 - training loss (MAE): 0.1659
+2026-03-04 05:56:33 [INFO]: Epoch 007 - training loss (MAE): 0.1566
+2026-03-04 05:57:02 [INFO]: Epoch 008 - training loss (MAE): 0.1444
+2026-03-04 05:57:31 [INFO]: Epoch 009 - training loss (MAE): 0.1469
+2026-03-04 05:58:00 [INFO]: Epoch 010 - training loss (MAE): 0.1357
+2026-03-04 05:58:29 [INFO]: Epoch 011 - training loss (MAE): 0.1321
+2026-03-04 05:58:58 [INFO]: Epoch 012 - training loss (MAE): 0.1226
+2026-03-04 05:59:27 [INFO]: Epoch 013 - training loss (MAE): 0.1224
+2026-03-04 05:59:56 [INFO]: Epoch 014 - training loss (MAE): 0.1177
+2026-03-04 06:00:25 [INFO]: Epoch 015 - training loss (MAE): 0.1209
+2026-03-04 06:00:54 [INFO]: Epoch 016 - training loss (MAE): 0.1128
+2026-03-04 06:01:23 [INFO]: Epoch 017 - training loss (MAE): 0.1115
+2026-03-04 06:01:52 [INFO]: Epoch 018 - training loss (MAE): 0.1125
+2026-03-04 06:02:21 [INFO]: Epoch 019 - training loss (MAE): 0.1095
+2026-03-04 06:02:50 [INFO]: Epoch 020 - training loss (MAE): 0.1026
+2026-03-04 06:03:19 [INFO]: Epoch 021 - training loss (MAE): 0.1060
+2026-03-04 06:03:48 [INFO]: Epoch 022 - training loss (MAE): 0.0969
+2026-03-04 06:04:16 [INFO]: Epoch 023 - training loss (MAE): 0.0927
+2026-03-04 06:04:45 [INFO]: Epoch 024 - training loss (MAE): 0.0944
+2026-03-04 06:05:14 [INFO]: Epoch 025 - training loss (MAE): 0.0896
+2026-03-04 06:05:42 [INFO]: Epoch 026 - training loss (MAE): 0.0860
+2026-03-04 06:06:11 [INFO]: Epoch 027 - training loss (MAE): 0.0845
+2026-03-04 06:06:40 [INFO]: Epoch 028 - training loss (MAE): 0.0824
+2026-03-04 06:07:09 [INFO]: Epoch 029 - training loss (MAE): 0.0832
+2026-03-04 06:07:38 [INFO]: Epoch 030 - training loss (MAE): 0.0834
+2026-03-04 06:08:08 [INFO]: Epoch 031 - training loss (MAE): 0.0839
+2026-03-04 06:08:37 [INFO]: Epoch 032 - training loss (MAE): 0.0731
+2026-03-04 06:09:06 [INFO]: Epoch 033 - training loss (MAE): 0.0775
+2026-03-04 06:09:35 [INFO]: Epoch 034 - training loss (MAE): 0.0812
+2026-03-04 06:10:03 [INFO]: Epoch 035 - training loss (MAE): 0.0755
+2026-03-04 06:10:32 [INFO]: Epoch 036 - training loss (MAE): 0.0739
+2026-03-04 06:11:01 [INFO]: Epoch 037 - training loss (MAE): 0.0720
+2026-03-04 06:11:30 [INFO]: Epoch 038 - training loss (MAE): 0.0720
+2026-03-04 06:11:59 [INFO]: Epoch 039 - training loss (MAE): 0.0734
+2026-03-04 06:12:28 [INFO]: Epoch 040 - training loss (MAE): 0.0730
+2026-03-04 06:12:57 [INFO]: Epoch 041 - training loss (MAE): 0.0686
+2026-03-04 06:13:26 [INFO]: Epoch 042 - training loss (MAE): 0.0686
+2026-03-04 06:13:55 [INFO]: Epoch 043 - training loss (MAE): 0.0668
+2026-03-04 06:14:24 [INFO]: Epoch 044 - training loss (MAE): 0.0662
+2026-03-04 06:14:53 [INFO]: Epoch 045 - training loss (MAE): 0.0669
+2026-03-04 06:15:21 [INFO]: Epoch 046 - training loss (MAE): 0.0697
+2026-03-04 06:15:50 [INFO]: Epoch 047 - training loss (MAE): 0.0675
+2026-03-04 06:16:19 [INFO]: Epoch 048 - training loss (MAE): 0.0683
+2026-03-04 06:16:48 [INFO]: Epoch 049 - training loss (MAE): 0.0673
+2026-03-04 06:17:17 [INFO]: Epoch 050 - training loss (MAE): 0.0646
+2026-03-04 06:17:17 [INFO]: Finished training. The best model is from epoch#50.
+2026-03-04 06:17:17 [INFO]: Saved the model to imputeformer_models/20260304_T055235/ImputeFormer.pypots
+  [MEM] RAM before CPU jobs: 31.8% used, 11.0 GB free
+    [LONG] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.220992
+      VARMA Epoch [10/50] Loss: 0.741289
+      VARMA Epoch [20/50] Loss: 0.722365
+      VARMA Epoch [30/50] Loss: 0.724755
+      VARMA Epoch [40/50] Loss: 0.701463
+      VARMA Epoch [50/50] Loss: 0.694071
+    [LONG|BILSTM] RMSE=1.8671, MAE=1.0430, R²=0.8667
+    [LONG|XGBOOST] RMSE=2.9058, MAE=2.5006, R²=0.6771
+    [LONG|XGBOOST_PRO] RMSE=6.8829, MAE=5.2949, R²=-0.8118
+    [LONG|IMPUTEFORMER] RMSE=2.3072, MAE=1.6279, R²=0.7964
+    [LONG|TIME] RMSE=2.0034, MAE=1.0850, R²=0.8465
+    [LONG|SPLINES] RMSE=1.7439, MAE=1.2904, R²=0.8837
+    [LONG|VARMA] RMSE=1.6860, MAE=0.9106, R²=0.8913
+  [EXTENDED] Simulating 2 gaps (1440-2880 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Computing climatological anomaly for TEMP[0m[2;33m...[0m
+    [2m│ ✓ Anomaly computed[0m
+    [2m│ Complete records: [0m[1;2;36m165[0m[2m,[0m[1;2;36m528[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=60%, Val=20%, Test=20%
+  Sequence length: 720 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+  -> Extracting STL components for pure residual learning...
+Temporal split:
+  Train: 146,714 samples (2009-05-29 18:30:00 to 2019-04-11 11:30:00)
+  Val:   48,904 samples (2019-04-11 12:00:00 to 2022-02-18 03:00:00)
+  Test:  48,906 samples (2022-02-18 03:30:00 to 2024-12-16 13:30:00)
+Starting training with Attention & Scheduler...
+  Epoch [1/50] Train Loss: 1.705508, Val Loss: 2.122826 
+  Epoch [5/50] Train Loss: 1.701485, Val Loss: 2.123895 
+  Epoch [10/50] Train Loss: 1.698438, Val Loss: 2.125706 
+  Epoch [15/50] Train Loss: 1.696914, Val Loss: 2.124151 
+  Epoch [20/50] Train Loss: 1.695589, Val Loss: 2.124770 
+Early stopping triggered at epoch 24
+Restored best model from epoch 4
+Training complete!
+  Best epoch: 4
+  Best val loss: 2.122204
+  Test loss: 0.930649
+    [2m│ ✓ Training complete [0m[1;2m([0m[2mstopped at epoch [0m[1;2;36m4[0m[1;2m)[0m
+    [2m│   Val loss: [0m[1;2;36m2.122204[0m[2m, Test loss: [0m[1;2;36m0.930649[0m
+    [2m│ Predicting gaps in anomaly space[0m[2;33m...[0m
+Predicting Multivariate LSTM using recursive step-by-step inference...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/gap_project_antigr/src/models/multivariate_lstm_model.py:754: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  result = result.interpolate(method='time', limit_direction='both').fillna(method='bfill')
+    DEBUG: anomaly_filled - Total: 244524, NaN: 0, Valid: 244524
+    DEBUG: anomaly_filled range: [-7.2311, 5.6940]
+    DEBUG: NaN count - Original anomaly: 46230, Predicted: 0
+    [2m│ Reconstructing full signal [0m[1;2m([0m[2mtargeted gap filling[0m[1;2m)[0m[2;33m...[0m
+    [32m│ ✓ Filled [0m[1;32m46[0m[32m,[0m[1;32m230[0m[32m gap points [0m[1;32m([0m[32mwith Blending[0m[1;32m)[0m
+    DEBUG: Final NaN count - Original: 46230, Final: 0, Filled: 46230
+    [32m│ ✓ Multivariate residual learning complete [0m[1;32m([0m[1;32m46[0m[32m,[0m[1;32m230[0m[32m gaps filled[0m[1;32m)[0m
+    [36m╚════════════════════════════════════════════════╝[0m
+    [GPU/CPU|XGBOOST] Starting interpolation...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|XGBOOST_PRO] Starting interpolation...
+Training Forward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Training Backward Model for TEMP...
+  -> Successfully extracted STL components for pure residual learning.
+Predicting Forward...
+Predicting Backward...
+    [GPU/CPU|IMPUTEFORMER] Starting interpolation...
+2026-03-04 07:04:38 [INFO]: Using the given device: cuda
+2026-03-04 07:04:38 [INFO]: Model files will be saved to imputeformer_models/20260304_T070438
+2026-03-04 07:04:38 [INFO]: Tensorboard file will be saved to imputeformer_models/20260304_T070438/tensorboard
+2026-03-04 07:04:38 [INFO]: Using customized MAE as the training loss function.
+2026-03-04 07:04:38 [INFO]: Using customized MSE as the validation metric function.
+2026-03-04 07:04:38 [INFO]: ImputeFormer initialized with the given hyperparameters, the number of trainable parameters: 2,339,329
+  [ImputeFormerImputer] Extracting STL components for pure residual learning...
+  [ImputeFormerImputer] Target converted to anomaly.
+2026-03-04 07:05:44 [INFO]: Epoch 001 - training loss (MAE): 0.4438
+2026-03-04 07:06:13 [INFO]: Epoch 002 - training loss (MAE): 0.2984
+2026-03-04 07:06:41 [INFO]: Epoch 003 - training loss (MAE): 0.2712
+2026-03-04 07:07:10 [INFO]: Epoch 004 - training loss (MAE): 0.2172
+2026-03-04 07:07:38 [INFO]: Epoch 005 - training loss (MAE): 0.1900
+2026-03-04 07:08:07 [INFO]: Epoch 006 - training loss (MAE): 0.1684
+2026-03-04 07:08:36 [INFO]: Epoch 007 - training loss (MAE): 0.1609
+2026-03-04 07:09:05 [INFO]: Epoch 008 - training loss (MAE): 0.1515
+2026-03-04 07:09:34 [INFO]: Epoch 009 - training loss (MAE): 0.1479
+2026-03-04 07:10:03 [INFO]: Epoch 010 - training loss (MAE): 0.1442
+2026-03-04 07:10:32 [INFO]: Epoch 011 - training loss (MAE): 0.1341
+2026-03-04 07:11:01 [INFO]: Epoch 012 - training loss (MAE): 0.1353
+2026-03-04 07:11:30 [INFO]: Epoch 013 - training loss (MAE): 0.1268
+2026-03-04 07:11:59 [INFO]: Epoch 014 - training loss (MAE): 0.1265
+2026-03-04 07:12:28 [INFO]: Epoch 015 - training loss (MAE): 0.1248
+2026-03-04 07:12:57 [INFO]: Epoch 016 - training loss (MAE): 0.1188
+2026-03-04 07:13:26 [INFO]: Epoch 017 - training loss (MAE): 0.1199
+2026-03-04 07:13:55 [INFO]: Epoch 018 - training loss (MAE): 0.1136
+2026-03-04 07:14:24 [INFO]: Epoch 019 - training loss (MAE): 0.1092
+2026-03-04 07:14:53 [INFO]: Epoch 020 - training loss (MAE): 0.1030
+2026-03-04 07:15:22 [INFO]: Epoch 021 - training loss (MAE): 0.1072
+2026-03-04 07:15:51 [INFO]: Epoch 022 - training loss (MAE): 0.0986
+2026-03-04 07:16:20 [INFO]: Epoch 023 - training loss (MAE): 0.0996
+2026-03-04 07:16:49 [INFO]: Epoch 024 - training loss (MAE): 0.0976
+2026-03-04 07:17:18 [INFO]: Epoch 025 - training loss (MAE): 0.0963
+2026-03-04 07:17:47 [INFO]: Epoch 026 - training loss (MAE): 0.0967
+2026-03-04 07:18:16 [INFO]: Epoch 027 - training loss (MAE): 0.0939
+2026-03-04 07:18:44 [INFO]: Epoch 028 - training loss (MAE): 0.0881
+2026-03-04 07:19:13 [INFO]: Epoch 029 - training loss (MAE): 0.0893
+2026-03-04 07:19:42 [INFO]: Epoch 030 - training loss (MAE): 0.0899
+2026-03-04 07:20:11 [INFO]: Epoch 031 - training loss (MAE): 0.0877
+2026-03-04 07:20:40 [INFO]: Epoch 032 - training loss (MAE): 0.0837
+2026-03-04 07:21:09 [INFO]: Epoch 033 - training loss (MAE): 0.0866
+2026-03-04 07:21:38 [INFO]: Epoch 034 - training loss (MAE): 0.0822
+2026-03-04 07:22:07 [INFO]: Epoch 035 - training loss (MAE): 0.0818
+2026-03-04 07:22:36 [INFO]: Epoch 036 - training loss (MAE): 0.0809
+2026-03-04 07:23:05 [INFO]: Epoch 037 - training loss (MAE): 0.0807
+2026-03-04 07:23:34 [INFO]: Epoch 038 - training loss (MAE): 0.0812
+2026-03-04 07:24:04 [INFO]: Epoch 039 - training loss (MAE): 0.0775
+2026-03-04 07:24:32 [INFO]: Epoch 040 - training loss (MAE): 0.0804
+2026-03-04 07:25:01 [INFO]: Epoch 041 - training loss (MAE): 0.0788
+2026-03-04 07:25:30 [INFO]: Epoch 042 - training loss (MAE): 0.0746
+2026-03-04 07:25:59 [INFO]: Epoch 043 - training loss (MAE): 0.0745
+2026-03-04 07:26:28 [INFO]: Epoch 044 - training loss (MAE): 0.0727
+2026-03-04 07:26:57 [INFO]: Epoch 045 - training loss (MAE): 0.0766
+2026-03-04 07:27:26 [INFO]: Epoch 046 - training loss (MAE): 0.0743
+2026-03-04 07:27:55 [INFO]: Epoch 047 - training loss (MAE): 0.0728
+2026-03-04 07:28:24 [INFO]: Epoch 048 - training loss (MAE): 0.0719
+2026-03-04 07:28:53 [INFO]: Epoch 049 - training loss (MAE): 0.0731
+2026-03-04 07:29:22 [INFO]: Epoch 050 - training loss (MAE): 0.0715
+2026-03-04 07:29:22 [INFO]: Finished training. The best model is from epoch#50.
+2026-03-04 07:29:22 [INFO]: Saved the model to imputeformer_models/20260304_T070438/ImputeFormer.pypots
+  [MEM] RAM before CPU jobs: 32.3% used, 10.9 GB free
+    [EXTENDED] Launching 3 CPU models (n_jobs=4) via Joblib...
+    [GPU/CPU|TIME] Starting interpolation...
+    [GPU/CPU|SPLINES] Starting interpolation...
+    [GPU/CPU|VARMA] Starting interpolation...
+      VARMA Epoch [1/50] Loss: 1.305603
+      VARMA Epoch [10/50] Loss: 0.749865
+      VARMA Epoch [20/50] Loss: 0.726605
+      VARMA Epoch [30/50] Loss: 0.723622
+      VARMA Epoch [40/50] Loss: 0.714911
+      VARMA Epoch [50/50] Loss: 0.718490
+    [EXTENDED|BILSTM] RMSE=1.3205, MAE=1.0254, R²=0.6586
+    [EXTENDED|XGBOOST] RMSE=2.8576, MAE=2.3760, R²=-0.5989
+    [EXTENDED|XGBOOST_PRO] RMSE=4.0472, MAE=3.6555, R²=-2.2072
+    [EXTENDED|IMPUTEFORMER] RMSE=1.2018, MAE=0.8952, R²=0.7172
+    [EXTENDED|TIME] RMSE=1.2542, MAE=0.9598, R²=0.6920
+    [EXTENDED|SPLINES] RMSE=1.1894, MAE=0.9283, R²=0.7230
+    [EXTENDED|VARMA] RMSE=1.2884, MAE=0.8359, R²=0.6750
+  [GIGANT] Simulating 1 gaps (2880-5000 pts)
+    [GPU/CPU|BILSTM] Starting interpolation...
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cuda[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m6[0m[1;2m)[0m[2m: TEMP, SVEL, CNDC[0m[2;33m...[0m
+    [2m│ Computing climatological anomaly for TEMP[0m[2;33m...[0m
+    [2m│ ✓ Anomaly computed[0m
+    [2m│ Complete records: [0m[1;2;36m164[0m[2m,[0m[1;2;36m591[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m244[0m[2m,[0m[1;2;36m524[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'SVEL', 'CNDC', 'LAND_AIRT', 'TEMP_ANOMALY', 'LAND_CAPH']
+  Split: Train=60%, Val=20%, Test=20%
+  Sequence length: 720 (temporal context)
+  Device: cuda
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+  -> Extracting STL components for pure residual learning...
+Temporal split:
+  Train: 146,714 samples (2009-05-29 18:30:00 to 2019-04-11 11:30:00)
+  Val:   48,904 samples (2019-04-11 12:00:00 to 2022-02-18 03:00:00)
+  Test:  48,906 samples (2022-02-18 03:30:00 to 2024-12-16 13:30:00)
+Starting training with Attention & Scheduler...
+  Epoch [1/50] Train Loss: 1.714991, Val Loss: 2.051116 
+  Epoch [5/50] Train Loss: 1.708265, Val Loss: 2.049023 
+  Epoch [10/50] Train Loss: 1.705677, Val Loss: 2.048857 
+    [31m│ ✗ Multivariate Bi-LSTM failed: CUDA error: unspecified launch failure[0m
+[31mSearch for `cudaErrorLaunchFailure' in [0m[4;31mhttps://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html[0m[31m for more information.[0m
+[31mCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.[0m
+[31mFor debugging consider passing [0m[31mCUDA_LAUNCH_BLOCKING[0m[31m=[0m[1;31m1[0m
+[31mCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.[0m
+
+    [36m╚════════════════════════════════════════════════╝[0m
+LSTM error: CUDA error: unspecified launch failure
+Search for `cudaErrorLaunchFailure' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+Traceback (most recent call last):
+  File "/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis_jupyterhub.py", line 1711, in interpolate_bilstm
+    metrics = imputer.fit(df_multi, verbose=False)
+  File "/home/uripratt/Documents/PhD/OBSEA_data/CTD/gap_project_antigr/src/models/multivariate_lstm_model.py", line 532, in fit
+    x_batch = x_batch[valid_mask].to(self.device)
+torch.AcceleratorError: CUDA error: unspecified launch failure
+Search for `cudaErrorLaunchFailure' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Traceback (most recent call last):
+  File "/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis_jupyterhub.py", line 3874, in <module>
+    main()
+  File "/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis_jupyterhub.py", line 3776, in main
+    comparison_df = benchmark_gap_filling(
+  File "/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis_jupyterhub.py", line 2590, in benchmark_gap_filling
+    torch.cuda.empty_cache()
+  File "/home/uripratt/Documents/PhD/OBSEA_data/CTD/venv_obseactd/lib/python3.10/site-packages/torch/cuda/memory.py", line 224, in empty_cache
+    torch._C._cuda_emptyCache()
+torch.AcceleratorError: CUDA error: unspecified launch failure
+Search for `cudaErrorLaunchFailure' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+

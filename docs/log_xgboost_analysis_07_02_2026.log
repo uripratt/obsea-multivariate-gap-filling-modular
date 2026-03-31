@@ -1,0 +1,384 @@
+nohup: ignoring input
+/home/uripratt/.local/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+  warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+======================================================================
+OBSEA MULTIVARIATE DATA ANALYSIS PIPELINE (LUP VERSION)
+Execution started at: 2026-02-07 01:17:53
+Working Directory: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts
+Log file: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/pipeline_execution_20260207_011753.log
+======================================================================
+STEP 1: LOADING DATA
+Loading multiple observational sources (CTD, AWAC, Met)...
+[?25l[2K[32m⠋[0m Loading data...[2K[32m⠙[0m Loading ctd...[2K[32m⠹[0m Loading ctd...[2K[32m⠸[0m Loading ctd...[2K  ✓ ctd: [1;36m239[0m,[1;36m341[0m records, [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠸[0m Loading ctd...[2K[32m⠴[0m Loading currents...[2K  ✓ currents: [1;36m52[0m,[1;36m041[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:30:00[0m to [1;36m2023[0m-[1;36m12[0m-[1;36m22[0m [1;92m03:30:00[0m
+[32m⠴[0m Loading currents...[2K  ✓ waves: [1;36m23[0m,[1;36m821[0m records, [1;36m2018[0m-[1;36m04[0m-[1;36m05[0m [1;92m10:14:01[0m to [1;36m2024[0m-[1;36m10[0m-[1;36m08[0m [1;92m19:47:05[0m
+[32m⠴[0m Loading currents...[2K[32m⠦[0m Loading airmar...[2K  ✓ airmar: [1;36m110[0m,[1;36m517[0m records, [1;36m2011[0m-[1;36m10[0m-[1;36m06[0m [1;92m11:00:00[0m to [1;36m2024[0m-[1;36m08[0m-[1;36m29[0m [1;92m11:00:00[0m
+[32m⠦[0m Loading airmar...[2K[32m⠧[0m Loading ctvg...[2K[32m⠏[0m Loading ctvg...[2K[32m⠋[0m Loading ctvg...[2K  ✓ ctvg: [1;36m203[0m,[1;36m269[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:00:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠋[0m Loading ctvg...[2K  Loading ctvg...
+[?25hSTEP 2: APPLYING INSTRUMENTAL QC
+  - ctd       : 84,410 values flagged as suspect/fail
+  - currents  : 129 values flagged as suspect/fail
+  - waves     : 1,332 values flagged as suspect/fail
+  - airmar    : 17,191 values flagged as suspect/fail
+  - ctvg      : 59,719 values flagged as suspect/fail
+STEP 3: CREATING UNIFIED MULTIVARIATE DATASET
+
+[1;34mCreating unified dataset[0m[1;34m...[0m
+  Time range: [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+  ✓ ctd: [1;36m209[0m,[1;36m861[0m timestamps with data
+  ✓ currents: [1;36m52[0m,[1;36m041[0m timestamps with data
+  ✓ waves: [1;36m23[0m,[1;36m787[0m timestamps with data
+  ✓ airmar: [1;36m110[0m,[1;36m444[0m timestamps with data
+  ✓ ctvg: [1;36m203[0m,[1;36m125[0m timestamps with data
+
+[32mUnified dataset: [0m[1;32m244[0m[32m,[0m[1;32m524[0m[32m records, [0m[1;32m91[0m[32m variables[0m
+STEP 3.5: OCEANOGRAPHIC FEATURE EXTRACTION AND ADVANCED PREPROCESSING
+
+[1;36mAdding Phase [0m[1;36m3[0m[1;36m derived features[0m[1;36m...[0m
+  Computing σ_θ [1m([0mpotential density[1m)[0m[33m...[0m
+  Computing N² [1m([0mstratification[1m)[0m[33m...[0m
+  Computing wind U/V components[33m...[0m
+  Computing wind stress[33m...[0m
+  Computing wave energy flux[33m...[0m
+  Computing RMS currents[33m...[0m
+  Computing climatological anomalies[33m...[0m
+  Computing STL decomposition and Long-Term Trends[33m...[0m
+    [2mLong-term TEMP Trend: +[0m[1;2;36m0.1858[0m[2m units/year [0m[1;2m([0m[2;33mp[0m[2m=[0m[1;2;36m0[0m[1;2;36m.0000[0m[1;2m)[0m
+    [2mLong-term PSAL Trend: +[0m[1;2;36m0.0209[0m[2m units/year [0m[1;2m([0m[2;33mp[0m[2m=[0m[1;2;36m0[0m[1;2;36m.0000[0m[1;2m)[0m
+  Performing stationarity tests [1m([0mADF[1m)[0m[33m...[0m
+    [32mTEMP: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+    [32mPSAL: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+    [32mSIGMA0: Stationary [0m[1;32m([0m[32mp < [0m[1;32m0.05[0m[1;32m)[0m[32m [0m[1;32m([0m[32mp[0m[32m=[0m[1;32m0[0m[1;32m.0000[0m[1;32m)[0m
+  [32m✓ Phase [0m[1;32m3[0m[32m Complete: Added [0m[1;32m15[0m[32m derived features[0m
+STEP 4: STATISTICAL ANALYSIS AND CORRELATIONS
+  - Computed descriptive statistics for 39 variables
+  - Computed correlation matrix for primary predictors
+STEP 5: GAP ANALYSIS AND CLASSIFICATION
+  - Identified 201,887 gaps across all variables
+STEP 5.5: VARIABLE QUALITY FILTERING
+  Filtering to 11 high-quality variables (≤25% gaps)
+  ✓ Filtered: 106 → 29 columns
+  Variables retained: PSAL, PSAL_ANOMALY, TEMP, TEMP_ANOMALY, CNDC, SVEL, LAND_RELH, LAND_WSPD, LAND_WDIR, LAND_CAPH, LAND_AIRT
+  Working with 11 high-quality variables for interpolation
+STEP 5.6: SCIENTIFIC BENCHMARKING OF INTERPOLATION METHODS
+Testing: Linear, Time, Splines, Polynomial, VARMA, Bi-LSTM
+
+  [1mBenchmarking gap filling on TEMP[0m[1;33m...[0m
+  [MICRO] Simulating 50 gaps (1-1 pts)
+  [MICRO] Created 50 gap points for testing
+    [MICRO|LINEAR] Starting interpolation...
+    [MICRO|LINEAR] RMSE=0.0106, MAE=0.0068, R²=1.0000
+    [MICRO|TIME] Starting interpolation...
+    [MICRO|TIME] RMSE=0.0106, MAE=0.0068, R²=1.0000
+    [MICRO|SPLINES] Starting interpolation...
+    [MICRO|SPLINES] RMSE=0.7781, MAE=0.5665, R²=0.9639
+    [MICRO|POLYNOMIAL] Starting interpolation...
+    [MICRO|POLYNOMIAL] RMSE=0.0079, MAE=0.0051, R²=1.0000
+    [MICRO|XGBOOST] Starting interpolation...
+    [MICRO|XGBOOST] Training XGBoost model...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+/home/uripratt/.local/lib/python3.10/site-packages/xgboost/core.py:774: UserWarning: [01:59:29] WARNING: /workspace/src/common/error_msg.cc:62: Falling back to prediction using DMatrix due to mismatched devices. This might lead to higher memory usage and slower performance. XGBoost is running on: cuda:0, while the input data is on: cpu.
+Potential solutions:
+- Use a data structure that matches the device ordinal in the booster.
+- Set the device for booster before call to inplace_predict.
+
+This warning will only be shown once.
+
+  return func(**kwargs)
+Predicting Backward...
+    [MICRO|XGBOOST] RMSE=3.0572, MAE=2.5807, R²=0.4435
+  [SHORT] Simulating 20 gaps (2-12 pts)
+  [SHORT] Created 136 gap points for testing
+    [SHORT|LINEAR] Starting interpolation...
+    [SHORT|LINEAR] RMSE=0.1390, MAE=0.0540, R²=0.9986
+    [SHORT|TIME] Starting interpolation...
+    [SHORT|TIME] RMSE=0.1390, MAE=0.0540, R²=0.9986
+    [SHORT|SPLINES] Starting interpolation...
+    [SHORT|SPLINES] RMSE=1.3271, MAE=0.9568, R²=0.8746
+    [SHORT|POLYNOMIAL] Starting interpolation...
+    [SHORT|POLYNOMIAL] RMSE=0.1107, MAE=0.0463, R²=0.9991
+    [SHORT|XGBOOST] Starting interpolation...
+    [SHORT|XGBOOST] Training XGBoost model...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [SHORT|XGBOOST] RMSE=2.2138, MAE=1.5757, R²=0.6511
+  [MEDIUM] Simulating 5 gaps (12-144 pts)
+  [MEDIUM] Created 432 gap points for testing
+    [MEDIUM|LINEAR] Starting interpolation...
+    [MEDIUM|LINEAR] RMSE=0.3234, MAE=0.1890, R²=0.9898
+    [MEDIUM|TIME] Starting interpolation...
+    [MEDIUM|TIME] RMSE=0.3234, MAE=0.1890, R²=0.9898
+    [MEDIUM|SPLINES] Starting interpolation...
+    [MEDIUM|SPLINES] RMSE=1.1405, MAE=0.8106, R²=0.8736
+    [MEDIUM|POLYNOMIAL] Starting interpolation...
+    [MEDIUM|POLYNOMIAL] RMSE=1.7552, MAE=1.1312, R²=0.7007
+    [MEDIUM|XGBOOST] Starting interpolation...
+    [MEDIUM|XGBOOST] Training XGBoost model...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [MEDIUM|XGBOOST] RMSE=3.2585, MAE=2.5507, R²=-0.0315
+  [LONG] Simulating 2 gaps (144-1440 pts)
+  [LONG] Created 963 gap points for testing
+    [LONG|LINEAR] Starting interpolation...
+    [LONG|LINEAR] RMSE=0.4994, MAE=0.3382, R²=0.9761
+    [LONG|TIME] Starting interpolation...
+    [LONG|TIME] RMSE=0.5003, MAE=0.3387, R²=0.9760
+    [LONG|SPLINES] Starting interpolation...
+    [LONG|SPLINES] RMSE=1.0981, MAE=0.8105, R²=0.8842
+    [LONG|POLYNOMIAL] Starting interpolation...
+    [LONG|POLYNOMIAL] RMSE=1.0814, MAE=0.7272, R²=0.8877
+    [LONG|XGBOOST] Starting interpolation...
+    [LONG|XGBOOST] Training XGBoost model...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [LONG|XGBOOST] RMSE=2.6773, MAE=1.8663, R²=0.3118
+  [EXTENDED] Simulating 2 gaps (1440-2880 pts)
+  [EXTENDED] Created 4232 gap points for testing
+    [EXTENDED|LINEAR] Starting interpolation...
+    [EXTENDED|LINEAR] Prediction coverage: 3881/4232 (91.7%)
+    [EXTENDED|LINEAR] RMSE=1.6484, MAE=1.0730, R²=0.5994
+    [EXTENDED|TIME] Starting interpolation...
+    [EXTENDED|TIME] Prediction coverage: 3881/4232 (91.7%)
+    [EXTENDED|TIME] RMSE=1.6460, MAE=1.0663, R²=0.6006
+    [EXTENDED|SPLINES] Starting interpolation...
+    [EXTENDED|SPLINES] Prediction coverage: 3881/4232 (91.7%)
+    [EXTENDED|SPLINES] RMSE=1.3632, MAE=1.0138, R²=0.7260
+    [EXTENDED|POLYNOMIAL] Starting interpolation...
+    [EXTENDED|POLYNOMIAL] Prediction coverage: 3881/4232 (91.7%)
+    [EXTENDED|POLYNOMIAL] RMSE=33.2235, MAE=21.8836, R²=-161.7429
+    [EXTENDED|XGBOOST] Starting interpolation...
+    [EXTENDED|XGBOOST] Training XGBoost model...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [EXTENDED|XGBOOST] Prediction coverage: 3881/4232 (91.7%)
+    [EXTENDED|XGBOOST] RMSE=1.0284, MAE=0.6902, R²=0.8441
+  [GIGANT] Simulating 1 gaps (2880-5000 pts)
+  [GIGANT] Created 3764 gap points for testing
+    [GIGANT|LINEAR] Starting interpolation...
+    [GIGANT|LINEAR] Prediction coverage: 3716/3764 (98.7%)
+    [GIGANT|LINEAR] RMSE=0.7637, MAE=0.6845, R²=0.6777
+    [GIGANT|TIME] Starting interpolation...
+    [GIGANT|TIME] Prediction coverage: 3716/3764 (98.7%)
+    [GIGANT|TIME] RMSE=0.7878, MAE=0.7062, R²=0.6570
+    [GIGANT|SPLINES] Starting interpolation...
+    [GIGANT|SPLINES] Prediction coverage: 3716/3764 (98.7%)
+    [GIGANT|SPLINES] RMSE=2.9164, MAE=2.7418, R²=-3.7005
+    [GIGANT|POLYNOMIAL] Starting interpolation...
+    [GIGANT|POLYNOMIAL] Prediction coverage: 3716/3764 (98.7%)
+    [GIGANT|POLYNOMIAL] RMSE=13.5855, MAE=11.1410, R²=-101.0022
+    [GIGANT|XGBOOST] Starting interpolation...
+    [GIGANT|XGBOOST] Training XGBoost model...
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+    [GIGANT|XGBOOST] Prediction coverage: 3716/3764 (98.7%)
+    [GIGANT|XGBOOST] RMSE=4.0635, MAE=3.8457, R²=-8.1257
+======================================================================
+BENCHMARK RESULTS SUMMARY
+  micro      | linear     | RMSE=0.0106  | MAE=0.0068  | R²=1.0    
+  micro      | time       | RMSE=0.0106  | MAE=0.0068  | R²=1.0    
+  micro      | splines    | RMSE=0.7781  | MAE=0.5665  | R²=0.9639 
+  micro      | polynomial | RMSE=0.0079  | MAE=0.0051  | R²=1.0    
+  micro      | xgboost    | RMSE=3.0572  | MAE=2.5807  | R²=0.4435 
+  short      | linear     | RMSE=0.139   | MAE=0.054   | R²=0.9986 
+  short      | time       | RMSE=0.139   | MAE=0.054   | R²=0.9986 
+  short      | splines    | RMSE=1.3271  | MAE=0.9568  | R²=0.8746 
+  short      | polynomial | RMSE=0.1107  | MAE=0.0463  | R²=0.9991 
+  short      | xgboost    | RMSE=2.2138  | MAE=1.5757  | R²=0.6511 
+  medium     | linear     | RMSE=0.3234  | MAE=0.189   | R²=0.9898 
+  medium     | time       | RMSE=0.3234  | MAE=0.189   | R²=0.9898 
+  medium     | splines    | RMSE=1.1405  | MAE=0.8106  | R²=0.8736 
+  medium     | polynomial | RMSE=1.7552  | MAE=1.1312  | R²=0.7007 
+  medium     | xgboost    | RMSE=3.2585  | MAE=2.5507  | R²=-0.0315
+  long       | linear     | RMSE=0.4994  | MAE=0.3382  | R²=0.9761 
+  long       | time       | RMSE=0.5003  | MAE=0.3387  | R²=0.976  
+  long       | splines    | RMSE=1.0981  | MAE=0.8105  | R²=0.8842 
+  long       | polynomial | RMSE=1.0814  | MAE=0.7272  | R²=0.8877 
+  long       | xgboost    | RMSE=2.6773  | MAE=1.8663  | R²=0.3118 
+  extended   | linear     | RMSE=1.6484  | MAE=1.073   | R²=0.5994 
+  extended   | time       | RMSE=1.646   | MAE=1.0663  | R²=0.6006 
+  extended   | splines    | RMSE=1.3632  | MAE=1.0138  | R²=0.726  
+  extended   | polynomial | RMSE=33.2235 | MAE=21.8836 | R²=-161.7429
+  extended   | xgboost    | RMSE=1.0284  | MAE=0.6902  | R²=0.8441 
+  gigant     | linear     | RMSE=0.7637  | MAE=0.6845  | R²=0.6777 
+  gigant     | time       | RMSE=0.7878  | MAE=0.7062  | R²=0.657  
+  gigant     | splines    | RMSE=2.9164  | MAE=2.7418  | R²=-3.7005
+  gigant     | polynomial | RMSE=13.5855 | MAE=11.141  | R²=-101.0022
+  gigant     | xgboost    | RMSE=4.0635  | MAE=3.8457  | R²=-8.1257
+======================================================================
+SCIENTIFIC RECOMMENDATION (Best Method per Category by RMSE)
+  extended   -> xgboost    (RMSE: 1.0284)
+  gigant     -> linear     (RMSE: 0.7637)
+  long       -> linear     (RMSE: 0.4994)
+  medium     -> linear     (RMSE: 0.3234)
+  micro      -> polynomial (RMSE: 0.0079)
+  short      -> polynomial (RMSE: 0.1107)
+======================================================================
+  [32mSaved benchmark plot to benchmark_results.png[0m
+STEP 5.7: SELECTIVE INTERPOLATION (CONFIG-BASED)
+Applying optimized methods for production reconstruction
+
+[1;36m🔬 AUTOMATIC METHOD SELECTION MODE[0m
+  Reading benchmark results to select optimal methods per gap category[33m...[0m
+Using AUTOMATIC method selection based on benchmark results
+  micro: Best method = varma (RMSE=0.0868)
+  short: Best method = polynomial (RMSE=0.0704)
+  medium: Best method = bilstm (RMSE=0.2541)
+  long: Best method = bilstm (RMSE=0.4512)
+  extended: Best method = bilstm (RMSE=1.8210)
+  gigant: Best method = bilstm (RMSE=0.7012)
+
+[1;32m✓ Automatic Method Selection [0m[1;32m([0m[1;32mfrom benchmark results[0m[1;32m)[0m[1;32m:[0m
+  micro: [36mvarma[0m
+  short: [36mpolynomial[0m
+  medium: [36mbilstm[0m
+  long: [36mbilstm[0m
+  extended: [36mbilstm[0m
+  gigant: [36mbilstm[0m
+
+  [1mInterpolation Configuration:[0m
+    micro: ✓ enabled [1m([0mmethod: varma[1m)[0m 
+    short: ✓ enabled [1m([0mmethod: polynomial[1m)[0m 
+    medium: ✓ enabled [1m([0mmethod: bilstm[1m)[0m 
+    long: ✓ enabled [1m([0mmethod: bilstm[1m)[0m 
+    extended: ✓ enabled [1m([0mmethod: bilstm[1m)[0m 
+    gigant: ✗ disabled [1m([0mmethod: bilstm[1m)[0m 
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [33mGenerating multi-method comparison for TEMP[0m[33m...[0m
+      ✓ Added comparison column: TEMP_LINEAR
+      ✓ Added comparison column: TEMP_TIME
+      ✓ Added comparison column: TEMP_SPLINES
+      ✓ Added comparison column: TEMP_POLYNOMIAL
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+      [31m✗ Method xgboost failed for comparison: Length of values [0m[1;31m([0m[1;31m2[0m[1;31m)[0m[31m does not match length of index [0m[1;31m([0m[1;31m272631[0m[1;31m)[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'micro'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'medium'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'long'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+    [2m⚠ Method [0m[2;32m'bilstm'[0m[2m for [0m[2;32m'extended'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+Processing variables... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:10:39
+
+  [1mInterpolation Summary:[0m
+    PSAL: [1;36m44[0m,[1;36m069[0m points -> missing
+    PSAL: [1;36m18[0m,[1;36m344[0m points -> interpolated_time
+    PSAL: [1;36m496[0m points -> interpolated_polynomial
+    PSAL_ANOMALY: [1;36m44[0m,[1;36m069[0m points -> missing
+    PSAL_ANOMALY: [1;36m18[0m,[1;36m344[0m points -> interpolated_time
+    PSAL_ANOMALY: [1;36m496[0m points -> interpolated_polynomial
+    TEMP: [1;36m52[0m,[1;36m234[0m points -> missing
+    TEMP: [1;36m18[0m,[1;36m238[0m points -> interpolated_time
+    TEMP: [1;36m508[0m points -> interpolated_polynomial
+    TEMP_ANOMALY: [1;36m52[0m,[1;36m234[0m points -> missing
+    TEMP_ANOMALY: [1;36m18[0m,[1;36m238[0m points -> interpolated_time
+    TEMP_ANOMALY: [1;36m508[0m points -> interpolated_polynomial
+    CNDC: [1;36m52[0m,[1;36m234[0m points -> missing
+    CNDC: [1;36m18[0m,[1;36m260[0m points -> interpolated_time
+    CNDC: [1;36m515[0m points -> interpolated_polynomial
+    SVEL: [1;36m52[0m,[1;36m234[0m points -> missing
+    SVEL: [1;36m18[0m,[1;36m262[0m points -> interpolated_time
+    SVEL: [1;36m499[0m points -> interpolated_polynomial
+    LAND_RELH: [1;36m53[0m,[1;36m680[0m points -> missing
+    LAND_RELH: [1;36m17[0m,[1;36m191[0m points -> interpolated_time
+    LAND_RELH: [1;36m1[0m,[1;36m183[0m points -> interpolated_polynomial
+    LAND_WSPD: [1;36m53[0m,[1;36m681[0m points -> missing
+    LAND_WSPD: [1;36m16[0m,[1;36m406[0m points -> interpolated_time
+    LAND_WSPD: [1;36m877[0m points -> interpolated_polynomial
+    LAND_WDIR: [1;36m53[0m,[1;36m792[0m points -> missing
+    LAND_WDIR: [1;36m16[0m,[1;36m274[0m points -> interpolated_time
+    LAND_WDIR: [1;36m896[0m points -> interpolated_polynomial
+    LAND_CAPH: [1;36m53[0m,[1;36m677[0m points -> missing
+    LAND_CAPH: [1;36m15[0m,[1;36m399[0m points -> interpolated_time
+    LAND_CAPH: [1;36m575[0m points -> interpolated_polynomial
+    LAND_AIRT: [1;36m53[0m,[1;36m678[0m points -> missing
+    LAND_AIRT: [1;36m16[0m,[1;36m994[0m points -> interpolated_time
+    LAND_AIRT: [1;36m578[0m points -> interpolated_polynomial
+STEP 5.8: GENERATING PER-MODEL VISUALIZATIONS
+Created model output directories in /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/xgboost/full_reconstruction_TEMP.png
+Saved full series reconstruction to /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models/xgboost/full_reconstruction_PSAL.png
+STEP 6: SAVING FINAL OUTPUTS AND FIGURES
+
+[1;34mSaving outputs[0m[1;34m...[0m
+  ✓ Data: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/data/[0m[95mOBSEA_multivariate_30min.csv[0m
+  ✓ Tables: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/[0m[95mtables[0m
+  Generating figures[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mgaps_heatmap.png[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mcorrelation_matrix.png[0m
+  Generating per-instrument time series[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctd.png[0m
+  [33mNo variables found for currents[0m
+  [33mNo variables found for waves[0m
+  [33mNo variables found for airmar[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctvg.png[0m
+  Generating time series with gap classification[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctd_gaps.png[0m
+  [33mNo variables found for currents[0m
+  [33mNo variables found for waves[0m
+  [33mNo variables found for airmar[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mtimeseries_ctvg_gaps.png[0m
+  Generating gap duration histogram[33m...[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mgap_duration_histogram.png[0m
+  ✓ Saved: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/figures/[0m[95mts_diagram.png[0m
+  ✓ Figures: [35m/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/[0m[95mfigures[0m
+  - Saved interpolation benchmark: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/tables/interpolation_comparison.csv
+  - Saved interpolation tracking metadata: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/tables/interpolation_tracking.csv
+  - Saved full interpolated dataset: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/data/OBSEA_multivariate_30min_interpolated.csv
+======================================================================
+PIPELINE COMPLETED SUCCESSFULLY
+  Final shape: (272631, 33)
+  Time range:  2009-05-29 18:30:00 to 2024-12-16 13:30:00
+  Results in: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup
+  Model outputs in: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/models
+======================================================================

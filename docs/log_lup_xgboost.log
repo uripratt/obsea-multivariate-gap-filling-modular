@@ -1,0 +1,196 @@
+nohup: ignoring input
+======================================================================
+OBSEA MULTIVARIATE DATA ANALYSIS PIPELINE (LUP VERSION)
+Execution started at: 2026-02-04 13:01:05
+Working Directory: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts
+Log file: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/pipeline_execution_20260204_130105.log
+======================================================================
+STEP 1: LOADING DATA
+Loading multiple observational sources (CTD, AWAC, Met)...
+[?25l[2K[32m⠋[0m Loading data...[2K[32m⠙[0m Loading ctd...[2K[32m⠹[0m Loading ctd...[2K[32m⠸[0m Loading ctd...[2K[32m⠴[0m Loading ctd...[2K  ✓ ctd: [1;36m239[0m,[1;36m341[0m records, [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠴[0m Loading ctd...[2K  ✓ currents: [1;36m52[0m,[1;36m041[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:30:00[0m to [1;36m2023[0m-[1;36m12[0m-[1;36m22[0m [1;92m03:30:00[0m
+[32m⠴[0m Loading ctd...[2K[32m⠦[0m Loading waves...[2K  ✓ waves: [1;36m23[0m,[1;36m821[0m records, [1;36m2018[0m-[1;36m04[0m-[1;36m05[0m [1;92m10:14:01[0m to [1;36m2024[0m-[1;36m10[0m-[1;36m08[0m [1;92m19:47:05[0m
+[32m⠦[0m Loading waves...[2K[32m⠧[0m Loading airmar...[2K  ✓ airmar: [1;36m110[0m,[1;36m517[0m records, [1;36m2011[0m-[1;36m10[0m-[1;36m06[0m [1;92m11:00:00[0m to [1;36m2024[0m-[1;36m08[0m-[1;36m29[0m [1;92m11:00:00[0m
+[32m⠧[0m Loading airmar...[2K[32m⠇[0m Loading ctvg...[2K[32m⠋[0m Loading ctvg...[2K  ✓ ctvg: [1;36m203[0m,[1;36m269[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:00:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠋[0m Loading ctvg...[2K  Loading ctvg...
+[?25hSTEP 2: APPLYING INSTRUMENTAL QC
+  - ctd       : 84,410 values flagged as suspect/fail
+  - currents  : 129 values flagged as suspect/fail
+  - waves     : 1,332 values flagged as suspect/fail
+  - airmar    : 17,191 values flagged as suspect/fail
+  - ctvg      : 59,719 values flagged as suspect/fail
+STEP 3: CREATING UNIFIED MULTIVARIATE DATASET
+
+[1;34mCreating unified dataset[0m[1;34m...[0m
+  Time range: [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+  ✓ ctd: [1;36m209[0m,[1;36m861[0m timestamps with data
+  ✓ currents: [1;36m52[0m,[1;36m041[0m timestamps with data
+  ✓ waves: [1;36m23[0m,[1;36m787[0m timestamps with data
+  ✓ airmar: [1;36m110[0m,[1;36m444[0m timestamps with data
+  ✓ ctvg: [1;36m203[0m,[1;36m125[0m timestamps with data
+
+[32mUnified dataset: [0m[1;32m244[0m[32m,[0m[1;32m524[0m[32m records, [0m[1;32m91[0m[32m variables[0m
+STEP 3.5: OCEANOGRAPHIC FEATURE EXTRACTION
+
+[1;36mAdding Phase [0m[1;36m3[0m[1;36m derived features[0m[1;36m...[0m
+  Computing σ_θ [1m([0mpotential density[1m)[0m[33m...[0m
+  Computing N² [1m([0mstratification[1m)[0m[33m...[0m
+  Computing wind U/V components[33m...[0m
+  Computing wind stress[33m...[0m
+  Computing wave energy flux[33m...[0m
+  Computing RMS currents[33m...[0m
+  Computing climatological anomalies[33m...[0m
+  [32m✓ Added [0m[1;32m9[0m[32m derived features: [0m[1;32m[[0m[32m'SIGMA0'[0m[32m, [0m[32m'N2'[0m[32m, [0m[32m'WIND_U'[0m[32m, [0m[32m'WIND_V'[0m[32m, [0m[32m'WIND_STRESS'[0m[32m, [0m[32m'WAVE_ENERGY'[0m[32m, [0m[32m'CUR_RMS'[0m[32m, [0m[32m'TEMP_ANOMALY'[0m[32m, [0m[32m'PSAL_ANOMALY'[0m[1;32m][0m
+STEP 4: STATISTICAL ANALYSIS AND CORRELATIONS
+  - Computed descriptive statistics for 33 variables
+  - Computed correlation matrix for primary predictors
+STEP 5: GAP ANALYSIS AND CLASSIFICATION
+  - Identified 201,887 gaps across all variables
+STEP 5.5: VARIABLE QUALITY FILTERING
+  Filtering to 11 high-quality variables (≤25% gaps)
+  ✓ Filtered: 100 → 29 columns
+  Variables retained: PSAL, PSAL_ANOMALY, TEMP, TEMP_ANOMALY, CNDC, SVEL, LAND_RELH, LAND_WSPD, LAND_WDIR, LAND_CAPH, LAND_AIRT
+  Working with 11 high-quality variables for interpolation
+STEP 5.6: SCIENTIFIC BENCHMARKING OF INTERPOLATION METHODS
+Testing: Linear, Time, Splines, Polynomial, VARMA, Bi-LSTM
+Benchmarking skipped (already completed in previous run).
+STEP 5.7: SELECTIVE INTERPOLATION (CONFIG-BASED)
+Applying optimized methods for production reconstruction
+
+  [1mInterpolation Configuration:[0m
+    micro: ✓ enabled [1m([0mmethod: time[1m)[0m
+    short: ✓ enabled [1m([0mmethod: varma[1m)[0m
+    medium: ✓ enabled [1m([0mmethod: xgboost[1m)[0m
+    long: ✓ enabled [1m([0mmethod: xgboost[1m)[0m
+    extended: ✗ disabled [1m([0mmethod: xgboost[1m)[0m
+    gigant: ✗ disabled [1m([0mmethod: xgboost[1m)[0m
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1161: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  return pd.date_range(start=start, end=end, freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/venv_obseactd/lib/python3.10/site-packages/torch/cuda/__init__.py:182: UserWarning: CUDA initialization: CUDA unknown error - this may be due to an incorrectly set up environment, e.g. changing env variable CUDA_VISIBLE_DEVICES after program start. Setting the available devices to be zero. (Triggered internally at /pytorch/c10/cuda/CUDAFunctions.cpp:119.)
+  return torch._C._cuda_getDeviceCount() > 0
+      VARMA Epoch [1/50] Loss: 1.229575
+      VARMA Epoch [10/50] Loss: 0.745943
+      VARMA Epoch [20/50] Loss: 0.722358
+      VARMA Epoch [30/50] Loss: 0.701139
+      VARMA Epoch [40/50] Loss: 0.679618
+      VARMA Epoch [50/50] Loss: 0.672033
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+Training Forward Model for PSAL...
+Training Backward Model for PSAL...
+Predicting Forward...
+Predicting Backward...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+Training Forward Model for PSAL...
+Training Backward Model for PSAL...
+Predicting Forward...
+Predicting Backward...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+      VARMA Epoch [1/50] Loss: 0.704365
+      VARMA Epoch [10/50] Loss: 0.626690
+      VARMA Epoch [20/50] Loss: 0.603062
+      VARMA Epoch [30/50] Loss: 0.590379
+      VARMA Epoch [40/50] Loss: 0.579060
+      VARMA Epoch [50/50] Loss: 0.571643
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+Training Forward Model for PSAL_ANOMALY...
+Training Backward Model for PSAL_ANOMALY...
+Predicting Forward...
+Predicting Backward...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+Training Forward Model for PSAL_ANOMALY...
+Training Backward Model for PSAL_ANOMALY...
+Predicting Forward...
+Predicting Backward...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+      VARMA Epoch [1/50] Loss: 1.268633
+      VARMA Epoch [10/50] Loss: 0.683494
+      VARMA Epoch [20/50] Loss: 0.667328
+      VARMA Epoch [30/50] Loss: 0.656918
+      VARMA Epoch [40/50] Loss: 0.640896
+      VARMA Epoch [50/50] Loss: 0.641199
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+Training Forward Model for TEMP...
+Training Backward Model for TEMP...
+Predicting Forward...
+Predicting Backward...
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+/home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/lup_data_obsea_analysis.py:1204: FutureWarning: 'T' is deprecated and will be removed in a future version, please use 'min' instead.
+  gap_timestamps = pd.date_range(gap['start'], gap['end'], freq=freq)
+    [33mGenerating multi-method comparison for TEMP[0m[33m...[0m
+      ✓ Added comparison column: TEMP_TIME
+      ✓ Added comparison column: TEMP_LINEAR
+      ✓ Added comparison column: TEMP_SPLINES
+      ✓ Added comparison column: TEMP_POLYNOMIAL
+      VARMA Epoch [1/50] Loss: 1.279381
+      VARMA Epoch [10/50] Loss: 0.754355
+      VARMA Epoch [20/50] Loss: 0.738084
+      VARMA Epoch [30/50] Loss: 0.731676
+      VARMA Epoch [40/50] Loss: 0.728945
+      VARMA Epoch [50/50] Loss: 0.721961
+      ✓ Added comparison column: TEMP_VARMA
+    [36m╔══ Multivariate Bi-LSTM [0m[1;36m([0m[36mImproved[0m[1;36m)[0m[36m for TEMP ══╗[0m
+    [2m│ Device: cpu[0m
+    [2m│ Mode: Train/Val/Test + Early Stopping + NaN Protection[0m
+    [2m│ Shuffle: DISABLED [0m[1;2m([0m[2mtemporal order preserved[0m[1;2m)[0m
+    [2m│ Auto-selecting predictors by correlation[0m[2;33m...[0m
+    Auto-selected predictors: ['TEMP', 'TEMP_TIME', 'TEMP_VARMA', 'TEMP_POLYNOMIAL', 'TEMP_SPLINES']
+    [2m│ Predictors [0m[1;2m([0m[1;2;36m5[0m[1;2m)[0m[2m: TEMP, TEMP_TIME, TEMP_VARMA[0m[2;33m...[0m
+    [2m│ Computing climatological anomaly for TEMP[0m[2;33m...[0m
+    [2m│ ✓ Anomaly computed[0m
+    [2m│ Complete records: [0m[1;2;36m202[0m[2m,[0m[1;2;36m245[0m[2m [0m[2;35m/[0m[2m [0m[1;2;36m272[0m[2m,[0m[1;2;36m631[0m
+    [36m│ Training Multivariate Bi-LSTM[0m[36m...[0m
+Initialized Multivariate LSTM Imputer
+  Target: TEMP
+  Predictors: ['TEMP', 'TEMP_TIME', 'TEMP_VARMA', 'TEMP_POLYNOMIAL', 'TEMP_SPLINES']
+  Split: Train=60%, Val=20%, Test=20%
+  Sequence length: 336 (temporal context)
+  Device: cpu
+Training Multivariate LSTM (Attention+Scheuler) on TEMP
+Temporal split:
+  Train: 163,578 samples (2009-05-29 18:30:00 to 2018-09-27 15:00:00)
+  Val:   54,526 samples (2018-09-27 15:30:00 to 2021-11-06 14:00:00)
+  Test:  54,527 samples (2021-11-06 14:30:00 to 2024-12-16 13:30:00)
+Starting training with Attention & Scheduler...
+  Epoch [1/100] Train Loss: 1.487112, Val Loss: 1.690762 
+  Epoch [5/100] Train Loss: 0.094029, Val Loss: 0.107773 
+  Epoch [10/100] Train Loss: 0.053701, Val Loss: 0.094878 
+  Epoch [15/100] Train Loss: 0.027342, Val Loss: 0.058245 
+  Epoch [20/100] Train Loss: 0.027993, Val Loss: 0.088902 
+  Epoch [25/100] Train Loss: 0.015920, Val Loss: 0.252211 
+  Epoch [30/100] Train Loss: 0.010909, Val Loss: 0.049785 
+  Epoch [35/100] Train Loss: 0.011303, Val Loss: 0.042160 
+  Epoch [40/100] Train Loss: 0.010455, Val Loss: 0.038423 
+  Epoch [45/100] Train Loss: 0.010869, Val Loss: 0.039400 
+  Epoch [50/100] Train Loss: 0.010092, Val Loss: 0.042344 
+  Epoch [55/100] Train Loss: 0.009561, Val Loss: 0.030925 
+  Epoch [60/100] Train Loss: 0.009130, Val Loss: 0.029681 

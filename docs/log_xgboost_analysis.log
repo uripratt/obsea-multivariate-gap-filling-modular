@@ -1,0 +1,74 @@
+nohup: ignoring input
+======================================================================
+OBSEA MULTIVARIATE DATA ANALYSIS PIPELINE (LUP VERSION)
+Execution started at: 2026-02-05 16:19:59
+Working Directory: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts
+Log file: /home/uripratt/Documents/PhD/OBSEA_data/CTD/scripts/output_lup/pipeline_execution_20260205_161959.log
+======================================================================
+STEP 1: LOADING DATA
+Loading multiple observational sources (CTD, AWAC, Met)...
+[?25l[2K[32m⠋[0m Loading data...[2K[32m⠙[0m Loading ctd...[2K[32m⠹[0m Loading ctd...[2K[32m⠸[0m Loading ctd...[2K[32m⠴[0m Loading ctd...[2K  ✓ ctd: [1;36m239[0m,[1;36m341[0m records, [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠴[0m Loading ctd...[2K  ✓ currents: [1;36m52[0m,[1;36m041[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:30:00[0m to [1;36m2023[0m-[1;36m12[0m-[1;36m22[0m [1;92m03:30:00[0m
+[32m⠴[0m Loading ctd...[2K[32m⠦[0m Loading waves...[2K  ✓ waves: [1;36m23[0m,[1;36m821[0m records, [1;36m2018[0m-[1;36m04[0m-[1;36m05[0m [1;92m10:14:01[0m to [1;36m2024[0m-[1;36m10[0m-[1;36m08[0m [1;92m19:47:05[0m
+[32m⠦[0m Loading waves...[2K[32m⠧[0m Loading airmar...[2K  ✓ airmar: [1;36m110[0m,[1;36m517[0m records, [1;36m2011[0m-[1;36m10[0m-[1;36m06[0m [1;92m11:00:00[0m to [1;36m2024[0m-[1;36m08[0m-[1;36m29[0m [1;92m11:00:00[0m
+[32m⠧[0m Loading airmar...[2K[32m⠇[0m Loading ctvg...[2K[32m⠋[0m Loading ctvg...[2K[32m⠙[0m Loading ctvg...[2K  ✓ ctvg: [1;36m203[0m,[1;36m269[0m records, [1;36m2010[0m-[1;36m04[0m-[1;36m08[0m [1;92m10:00:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+[32m⠙[0m Loading ctvg...[2K  Loading ctvg...
+[?25hSTEP 2: APPLYING INSTRUMENTAL QC
+  - ctd       : 84,410 values flagged as suspect/fail
+  - currents  : 129 values flagged as suspect/fail
+  - waves     : 1,332 values flagged as suspect/fail
+  - airmar    : 17,191 values flagged as suspect/fail
+  - ctvg      : 59,719 values flagged as suspect/fail
+STEP 3: CREATING UNIFIED MULTIVARIATE DATASET
+
+[1;34mCreating unified dataset[0m[1;34m...[0m
+  Time range: [1;36m2009[0m-[1;36m05[0m-[1;36m29[0m [1;92m18:30:00[0m to [1;36m2024[0m-[1;36m12[0m-[1;36m16[0m [1;92m13:30:00[0m
+  ✓ ctd: [1;36m209[0m,[1;36m861[0m timestamps with data
+  ✓ currents: [1;36m52[0m,[1;36m041[0m timestamps with data
+  ✓ waves: [1;36m23[0m,[1;36m787[0m timestamps with data
+  ✓ airmar: [1;36m110[0m,[1;36m444[0m timestamps with data
+  ✓ ctvg: [1;36m203[0m,[1;36m125[0m timestamps with data
+
+[32mUnified dataset: [0m[1;32m244[0m[32m,[0m[1;32m524[0m[32m records, [0m[1;32m91[0m[32m variables[0m
+STEP 3.5: OCEANOGRAPHIC FEATURE EXTRACTION
+
+[1;36mAdding Phase [0m[1;36m3[0m[1;36m derived features[0m[1;36m...[0m
+  Computing σ_θ [1m([0mpotential density[1m)[0m[33m...[0m
+  Computing N² [1m([0mstratification[1m)[0m[33m...[0m
+  Computing wind U/V components[33m...[0m
+  Computing wind stress[33m...[0m
+  Computing wave energy flux[33m...[0m
+  Computing RMS currents[33m...[0m
+  Computing climatological anomalies[33m...[0m
+  [32m✓ Added [0m[1;32m9[0m[32m derived features: [0m[1;32m[[0m[32m'SIGMA0'[0m[32m, [0m[32m'N2'[0m[32m, [0m[32m'WIND_U'[0m[32m, [0m[32m'WIND_V'[0m[32m, [0m[32m'WIND_STRESS'[0m[32m, [0m[32m'WAVE_ENERGY'[0m[32m, [0m[32m'CUR_RMS'[0m[32m, [0m[32m'TEMP_ANOMALY'[0m[32m, [0m[32m'PSAL_ANOMALY'[0m[1;32m][0m
+STEP 4: STATISTICAL ANALYSIS AND CORRELATIONS
+  - Computed descriptive statistics for 33 variables
+  - Computed correlation matrix for primary predictors
+STEP 5: GAP ANALYSIS AND CLASSIFICATION
+  - Identified 201,887 gaps across all variables
+STEP 5.5: VARIABLE QUALITY FILTERING
+  Filtering to 11 high-quality variables (≤25% gaps)
+  ✓ Filtered: 100 → 29 columns
+  Variables retained: PSAL, PSAL_ANOMALY, TEMP, TEMP_ANOMALY, CNDC, SVEL, LAND_RELH, LAND_WSPD, LAND_WDIR, LAND_CAPH, LAND_AIRT
+  Working with 11 high-quality variables for interpolation
+STEP 5.6: SCIENTIFIC BENCHMARKING OF INTERPOLATION METHODS
+Testing: Linear, Time, Splines, Polynomial, VARMA, Bi-LSTM
+Benchmarking skipped (already completed in previous run).
+STEP 5.7: SELECTIVE INTERPOLATION (CONFIG-BASED)
+Applying optimized methods for production reconstruction
+
+  [1mInterpolation Configuration:[0m
+    micro: ✓ enabled [1m([0mmethod: time[1m)[0m
+    short: ✓ enabled [1m([0mmethod: varma[1m)[0m
+    medium: ✓ enabled [1m([0mmethod: xgboost[1m)[0m
+    long: ✓ enabled [1m([0mmethod: xgboost[1m)[0m
+    extended: ✗ disabled [1m([0mmethod: xgboost[1m)[0m
+    gigant: ✗ disabled [1m([0mmethod: xgboost[1m)[0m
+    [2m⚠ Method [0m[2;32m'varma'[0m[2m for [0m[2;32m'short'[0m[2m is DISABLED. Falling back to [0m[2;32m'time'[0m[2m.[0m
+Training Forward Model for PSAL...
+Training Backward Model for PSAL...
+Predicting Forward...
+Predicting Backward...
+Training Forward Model for PSAL...
+terminate called after throwing an instance of 'thrust::THRUST_200700_500_600_700_800_900_1000_1200_NS::system::system_error'
+  what():  device free failed: cudaErrorLaunchFailure: unspecified launch failure

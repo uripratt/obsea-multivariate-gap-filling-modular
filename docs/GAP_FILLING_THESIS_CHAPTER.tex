@@ -1,0 +1,721 @@
+% =============================================================================
+% METHODOLOGY CHAPTER: OBSEA Multivariate Data Processing Pipeline
+% PhD Thesis - Coastal Ocean Monitoring and AI-Based Time Series Reconstruction
+% =============================================================================
+\documentclass[12pt,a4paper]{article}
+
+% --- Essential Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{longtable}
+
+% Hyperlink configuration
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    citecolor=blue!70!black,
+    urlcolor=blue!70!black
+}
+
+\onehalfspacing
+
+% Custom commands
+\newcommand{\degC}{$^\circ$C}
+\newcommand{\psu}{PSU}
+
+% Better figure positioning
+\renewcommand{\floatpagefraction}{0.8}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.1}
+
+\begin{document}
+
+% =============================================================================
+\section{Introduction and State of the Art}\label{sec:introduction_and_state_of_the_art}
+% =============================================================================
+
+\subsection{Introduction and General Description of the Topic}
+The monitoring of marine ecosystems, particularly at depth, presents a significant scientific and technological challenge due to limited in situ observations, complex ocean dynamics, and the non-linear interactions between physical, biogeochemical, and biological variables.
+
+In this context, the deployment of four instrumented landers in a Marine Protected Area on the Catalan coast provides a unique opportunity to study bentho-pelagic ecosystems at 300 m depth. The landers integrate sensors for temperature, salinity, pressure, chlorophyll, oxygen, hydrophones, and high-resolution cameras, producing heterogeneous and multimodal datasets over a four-month period.
+
+The main challenge is to transform these discrete, high-quality point measurements into a coherent and predictive understanding of ecosystem dynamics. This requires methodologies capable of:
+\begin{itemize}[noitemsep]
+    \item \textbf{Time-series completion:} developing physics-aware gap-filling techniques based on residual learning and climatological decomposition to reconstruct multimodal datasets without artificial temporal discontinuities.
+    \item \textbf{Integration:} correlating physical, chemical, and biological data.
+    \item \textbf{Spatial extrapolation:} extending point measurements to larger areas.
+    \item \textbf{Hybrid modelling:} combining numerical oceanographic models with machine learning.
+    \item \textbf{Predictive frameworks:} creating interactive tools such as digital twins for ecosystem forecasting.
+\end{itemize}
+
+The current stage of the PhD is focused on a deep investigation into which models and algorithms are most efficient for each task, forming a research phase that will guide subsequent implementation and integration.
+
+\subsection{Thematic Development and State of the Art}
+
+\subsubsection{Completion of Time Series (Gap-Filling)}
+Oceanographic time series commonly contain gaps caused by instrument failures, maintenance, or environmental noise. These gaps must be addressed to ensure continuity before multimodal analysis or prediction. Current approaches include:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Classical interpolation:} Linear \& PCHIP Interpolation, Akima.
+    \item \textbf{Statistical models:} ARIMA, VARMA (Vector Autoregressive Moving Average), Kalman Smoothers.
+    \item \textbf{Deep learning:}
+    \begin{itemize}
+        \item \textbf{Tree-Based and Probabilistic Ensembles:} 
+        \begin{itemize}
+            \item \textbf{MissForest:} A non-parametric iterative imputation method based on Random Forests, highly effective at capturing complex, multi-dimensional interactions without extensive hyperparameter tuning.
+            \item \textbf{XGBoost (Auto-Supervised Residual-Learning):} This study innovates by training bidirectional XGBoost trees not on the absolute variable, but on the residual difference between a linear baseline and the true signal. This anchors the model thermodynamically, allowing it to respond to sudden wind or current events without over-extrapolating.
+        \end{itemize}
+        \item \textbf{Recurrent Neural Networks (Sequential Memory):}
+        \begin{itemize}
+            \item \textbf{Bi-LSTM (Bidirectional Long Short-Term Memory):} An RNN that processes sequences in both forward and backward temporal directions simultaneously, excelling at capturing the thermal inertia and diffusive properties of the water column over long continuous gaps.
+            \item \textbf{BRITS (Bidirectional Recurrent Imputation for Time Series):} Explicitly models the missing data intervals via a time gap decay mechanism, forcing the network's hidden state to decay toward the empirical mean as the gap duration increases, making it highly suited for irregular oceanographic time series.
+        \end{itemize}
+        \item \textbf{Attention Models and Transformers (State-of-the-Art):} These models bypass step-by-step recurrence to weight the significance of all past and future points simultaneously, identifying hidden periodicities.
+        \begin{itemize}
+            \item \textbf{SAITS (Self-Attention Imputation for Time Series):} Adapts the Transformer architecture for missing value imputation via a diagonally-masked self-attention mechanism, determining which historical anomalies correlate most strongly with the current gap context.
+            \item \textbf{ImputeFormer:} A computationally optimized Transformer designed for infinitely long spatiotemporal series using Low-Rank attention, preventing the quadratic memory bottleneck typical of standard transformers when applied to high-frequency marine data.
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+These methods are evaluated based on reconstruction accuracy, temporal coherence, and uncertainty quantification. In the current research phase, a systematic comparison will be performed to determine the most efficient approach for multimodal oceanographic datasets.
+
+\subsubsection{Physical–Biological Correlation: Multimodal Deep Learning}
+Marine ecosystems integrate physical, bio-optical, acoustic, and visual information. Multimodal Deep Learning (MDL) provides the most advanced framework to combine these heterogeneous data sources and capture complex dependencies.
+
+Current strategies:
+\begin{itemize}[noitemsep]
+    \item Early fusion: concatenation of inputs (simple but limited in capturing complex interactions).
+    \item Late fusion: modality-specific encoders with late-stage integration (flexible, but fewer cross-modal interactions).
+    \item Cross-modal fusion: attention-based Transformers or Perceiver IO architectures.
+    \item Multimodal Graph Learning: each modality represented as nodes with spatio-temporal connections.
+\end{itemize}
+
+This PhD will investigate which multimodal architectures provide the best performance for correlating physical variables with biological indicators, including species presence, abundance, or biodiversity proxies.
+
+\subsubsection{Spatial Extrapolation from Discrete Observations}
+Extending information from the four landers to the entire Marine Protected Area is essential to understand ecosystem variability. Methods under investigation:
+\begin{itemize}[noitemsep]
+    \item Spatial Gaussian Processes (SGPs) for probabilistic interpolation.
+    \item Graph Neural Networks (GNNs) representing spatial and hydrodynamic connectivity.
+    \item Physics-Informed Neural Networks (PINNs) or Geophysical Informed Neural Networks (GINNs).
+    \item Neural Operators (FNO, DeepONet) for continuous field reconstruction.
+\end{itemize}
+The current research phase focuses on identifying which approaches provide the best trade-off between accuracy, computational efficiency, and generalization for sparse deep-sea data.
+
+\subsubsection{Hybrid Oceanographic Modelling}
+Numerical ocean models (e.g., NEMO, ROMS, XBeach) simulate physical processes at depth but contain uncertainties due to unresolved processes and model biases. Hybrid approaches combine these models with machine learning. Investigated strategies:
+\begin{itemize}[noitemsep]
+    \item Residual learning to correct model biases.
+    \item Neural parameterizations for turbulence or mixing.
+    \item ML-assisted data assimilation (e.g., Ensemble Kalman Filter + neural networks).
+    \item Integration of lander data for validation and improvement.
+\end{itemize}
+A detailed comparative study will determine which hybrid techniques are most effective for improving deep-water hydrodynamics and ecological predictions.
+
+\subsubsection{Predictive Capability and Digital Twin}
+A digital twin integrates data ingestion, predictive modelling, and interactive visualization, providing a tool for scenario exploration and ecosystem management. To bridge the gap between raw scientific data and visual analysis, our development incorporates a \textbf{high-performance 3D visualization framework}. Key components under research and development include:
+\begin{itemize}[noitemsep]
+    \item Temporal Transformers or recurrent models for short- and mid-term predictions.
+    \item Integration of multimodal, gap-filled, and spatially extrapolated data.
+    \item Interactive visualization engine rendering real-time hydrodynamics, physics-based ocean surface simulations (coupling numerical wave models like XBeach with rendering shaders), and dynamic underwater particle systems.
+    \item Propagation of uncertainties through immersive visual feedback to aid management decisions.
+\end{itemize}
+
+\subsubsection{Validation and Comparative Analysis with EMSO-ERIC}
+European observatories (EMSO-ERIC) provide extensive, long-term datasets from multiple oceanographic sites. These datasets allow validation of the algorithms developed with local lander data, testing scalability with larger volumes of heterogeneous data, and comparative assessment of modelling methods. This ensures that methodologies developed during the PhD are generalizable beyond the local study area.
+
+\subsection{General Objective and Sub-Objectives}
+
+\textbf{General Objective:}
+To develop an integrated methodological framework combining machine learning and hybrid oceanographic modelling to monitor, extrapolate, and predict physical and biological variables in a Marine Protected Area using in situ data.
+
+\textbf{Sub-Objectives:}
+\begin{enumerate}[noitemsep]
+    \item Develop robust, \textbf{physics-aware} methods for time-series gap-filling across multimodal datasets, utilizing residual learning and explicit missing-data formulations to isolate and predict underlying physical anomalies.
+    \item Build models for physical–biological correlation using Multimodal Deep Learning to understand time-lagged responses.
+    \item Implement spatial extrapolation frameworks to generalize point measurements into 4D continuous fields.
+    \item Integrate lander measurements into hybrid oceanographic models to correct sub-grid biases and improve deep-water dynamics validation.
+    \item Develop a predictive system and high-fidelity 3D digital twin for scenario simulation and ecosystem management viewing.
+\end{enumerate}
+
+\subsection{Knowledge Gaps and PhD Original Contributions}
+
+\subsubsection{Theme 1 — Completion and Reconstruction of Time Series}
+\textbf{Goal:} Reconstruct multimodal time series with gaps to ensure extreme temporal coherence, preventing artificial discontinuities and data leakage. \\
+\textbf{Knowledge Gap:} While state-of-the-art deep learning imputation models (e.g., SAITS, ImputeFormer) excel purely from a data-driven perspective, they are essentially "blind" to oceanographic thermodynamics. Recent literature highlights that purely data-driven models struggle with non-linear geophysical systems because they tend to overfit to trivial periodicities (e.g., seasonal cycles) and fail to respect foundational physical baselines during long observational gaps.\\
+\textbf{PhD Original Contribution:} This thesis contributes a novel, \textbf{physics-aware Residual Learning framework} for oceanographic gap-filling. Building upon concepts of physics-guided machine learning, this research rigorously decouples the climatological baseline (derived from standardized physical equations like TEOS-10) from the raw data. Advanced models (Bi-LSTM, XGBoost) are trained \textit{exclusively} on thermodynamic anomalies. The original contribution lies in formulating a methodology that guarantees physical baseline preservation during large gaps, prevents linear interpolation leakage, and shifts the computational effort toward reconstructing meso-scale oceanographic anomalies rather than simple diurnal curve-fitting.
+
+\subsubsection{Theme 2 — Physical–Biological Correlation Using Multimodal Deep Learning}
+\textbf{Goal:} Capture relationships between physical, bio-optical, acoustic, and visual data to understand ecosystem dynamics.\\
+\textbf{Knowledge Gap:} The integration of heterogeneous marine data usually relies on simplistic "early fusion" or "late fusion" techniques. As noted by recent reviews on Multimodal Deep Learning (MDL) in environmental sciences, these basic architectures fail to capture deep, time-lagged cross-modal dependencies—for instance, how a physical upwelling event today affects acoustic biomass metrics days later.\\
+\textbf{PhD Original Contribution:} The candidate will pioneer the application of \textbf{Cross-Modal Attention Architectures} specifically tailored for bentho-pelagic ecosystems at 300 m depth. Drawing inspiration from recent advancements in Transformer-based fusion, the thesis will develop latent bio-physical embeddings capable of mathematically encoding the time-lagged phenomenological responses between hydrodynamic forcing (CTD sensors) and ecological presence (hydrophones and cameras). This will provide a novel AI-driven proxy metric for deep-sea biodiversity that responds dynamically to physical oceanographic changes.
+
+\subsubsection{Theme 3 — Spatial Extrapolation from Discrete Observations}
+\textbf{Goal:} Generate continuous 4D (spatio-temporal) fields from highly sparse lander measurements.\\
+\textbf{Knowledge Gap:} Deep-sea continuous observatories are extremely sparse. Traditional spatial interpolators (e.g., Kriging) or standard Gaussian Processes fail because they rely on isotropic Euclidean distances, completely ignoring the complex bathymetry and varying boundary-layer hydrodynamics that dictate connectivity.\\
+\textbf{PhD Original Contribution:} To bridge this gap, this PhD will contribute to the nascent field of spatially-aware oceanographic AI by implementing \textbf{Hydrodynamically-Constrained Graph Neural Networks (GNNs)} or Physics-Informed Neural Networks (PINNs). The novelty lies in utilizing the Marine Protected Area's high-resolution bathymetric grid as the structural edge-weights of a GNN, or as the boundary conditions of a PINN. This forces the neural network to extrapolate data along physically viable pathways (e.g., along isobaths or prevailing current vectors) rather than across impermeable seabed topology, upgrading point-observations into hydrodynamically accurate spatial maps.
+
+\subsubsection{Theme 4 — Hybrid Oceanographic Models}
+\textbf{Goal:} Integrate \textit{in situ} lander measurements to enhance physical numerical model accuracy at depth.\\
+\textbf{Knowledge Gap:} High-resolution numerical models (e.g., NEMO, ROMS, XBeach) operating at 300 m depth suffer from significant uncertainties due to unresolved sub-grid processes like bottom boundary layer turbulence. Traditional data assimilation is computationally expensive and struggles to correct bottom-heavy biases efficiently. Recent paradigms propose replacing heuristic sub-grid equations with machine learning, yet "off-the-shelf" neural networks often violate conservation laws, leading to model blow-up.\\
+\textbf{PhD Original Contribution:} The thesis will introduce a hybrid prediction framework utilizing \textbf{Neural Parameterization} for deep-water boundary layers. By training continuous-time neural networks (such as Neural ODEs or Universal Differential Equations) on the high-fidelity \textit{in situ} data generated by the landers, the PhD candidate will substitute specific error-prone physical parameterizations within the numerical models. This will allow the numerical model to maintain overarching conservation laws while significantly improving its local hydrodynamic accuracy and computational efficiency through data-driven local bias correction.
+
+\subsubsection{Theme 5 — Predictive Capability and Digital Twin}
+\textbf{Goal:} Integrate AI predictions and numerical models into an immersive, interactive Digital Twin of the Ocean (DTO).\\
+\textbf{Knowledge Gap:} According to recent European frameworks on the Digital Twin of the Ocean, existing systems are predominantly flat, 2D web dashboards or delayed GIS platforms. They lack true, high-fidelity bidirectional coupling between real-time AI predictive algorithms, complex hydrodynamic models (waves, currents), and physics-based 3D visual rendering engines in the browser.\\
+\textbf{PhD Original Contribution:} The candidate will engineer a \textbf{High-Performance, Fully Immersive 3D Digital Twin environment}. The core scientific contribution is the architectural bridge between complex arrays (raw numerical wave models and AI forecasting outputs) and interactive visual analysis using Physics-Based Rendering (PBR) shaders and dynamic particle systems. Rather than merely visualizing static data, this tool will dynamically render spatio-temporal predictions, allowing stakeholders to actively simulate and visualize real-time ecosystem dynamics, propagating uncertainties visually to aid in Marine Protected Area management.
+
+\newpage
+% =============================================================================
+\section{Methodology: Multivariate Oceanographic Data Processing and AI-Based Gap Filling}
+\label{sec:methodology}
+% =============================================================================
+
+\subsection{Overview}
+
+This section presents a comprehensive methodology for the integration, quality control, and reconstruction of oceanographic time series data from the OBSEA underwater observatory (Vilanova i la Geltrú, NW Mediterranean Sea). The pipeline processes heterogeneous sensor data from 2009 to 2024, producing a gap-free, scientifically validated multivariate dataset at 30-minute temporal resolution.
+
+The methodology follows a sequential, modular architecture comprising seven distinct phases:
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Data Acquisition}: Loading raw observations from multiple instruments.
+    \item \textbf{Temporal Harmonization}: Resampling to a canonical 30-minute grid.
+    \item \textbf{Instrumental Quality Control}: QARTOD-compliant data validation.
+    \item \textbf{Physical Feature Engineering}: Derivation of oceanographic variables.
+    \item \textbf{Gap Analysis and Classification}: Identification and categorization of missing data.
+    \item \textbf{AI-Based Imputation}: Machine learning reconstruction of gaps.
+    \item \textbf{Validation and Export}: Quality assessment and dataset generation.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/pipeline_overview.png}
+    \caption{High-level architecture of the OBSEA data processing pipeline. The workflow proceeds from raw sensor acquisition (left) through quality control and physical feature extraction to AI-based gap filling, culminating in a Digital Twin visualization platform (right).}
+    \label{fig:pipeline_overview}
+\end{figure}
+
+\newpage
+% =============================================================================
+\subsection{Phase 1: Data Acquisition}
+\label{sec:data_acquisition}
+% =============================================================================
+
+The OBSEA observatory provides data from five primary instrument categories, each with distinct sampling characteristics and measurement domains (Table~\ref{tab:data_sources}).
+
+\begin{table}[H]
+\centering
+\caption{Summary of OBSEA data sources, instruments, and measured variables. The dataset spans 2009--2024.}
+\label{tab:data_sources}
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+\textbf{Instrument} & \textbf{Type} & \textbf{Primary Variables} \\ \midrule
+CTD SBE37 & Oceanographic & Temperature (TEMP), Salinity (PSAL), Conductivity (CNDC), Pressure (PRES) \\
+AWAC (Currents) & Hydrodynamic & Current speed (CSPD), Direction (CDIR), U/V components (UCUR, VCUR) \\
+AWAC (Waves) & Hydrodynamic & Significant wave height ($H_s$), Peak period ($T_p$), Mean direction \\
+Airmar & Meteorological & Wind speed (WSPD), Direction (WDIR), Air temperature (ATMP), Barometric pressure \\
+CTVG Vantage Pro2 & Meteorological & Land-based reference: wind, humidity, solar radiation \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =============================================================================
+\subsection{Phase 2: Temporal Harmonization}
+\label{sec:harmonization}
+% =============================================================================
+
+Raw observations are resampled to a canonical 30-minute grid. The approach is \textbf{physically coherent}, applying different aggregation methods based on variable type:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Scalar variables} (temperature, salinity): Arithmetic mean.
+    \item \textbf{Angular variables} (wind/wave direction): Circular mean (Equation~\ref{eq:circular_mean}).
+    \item \textbf{Wave periods}: Median (robust to outliers).
+\end{itemize}
+
+\begin{equation}
+    \bar{\theta} = \arctan2\left(\frac{1}{n}\sum_{i=1}^{n} \sin\theta_i,\, \frac{1}{n}\sum_{i=1}^{n} \cos\theta_i\right)
+    \label{eq:circular_mean}
+\end{equation}
+
+This decomposition into sine and cosine components correctly handles the 0°/360° angular discontinuity.
+
+% =============================================================================
+\subsection{Phase 3: Instrumental Quality Control (QARTOD)}
+\label{sec:quality_control}
+% =============================================================================
+
+Quality control follows the international QARTOD framework \cite{qartod_manual} through four sequential automated tests:
+
+\begin{enumerate}
+    \item \textbf{Range Check}: $x_{min} \leq x_i \leq x_{max}$ (e.g., $10\degC \leq T \leq 28\degC$)
+    
+    \item \textbf{Spike Detection}: A value is flagged if:
+    \begin{equation}
+        |x_i - \bar{x}_{window}| > \lambda \cdot \sigma_{window}, \quad \lambda = 3
+        \label{eq:spike}
+    \end{equation}
+    
+    \item \textbf{Gradient Check}: Rate of change must satisfy:
+    \begin{equation}
+        \left|\frac{x_i - x_{i-1}}{\Delta t}\right| \leq \left(\frac{dx}{dt}\right)_{max}
+    \end{equation}
+    
+    \item \textbf{Flatline Detection}: Consecutive identical values exceeding $n_{threshold} = 6$ (3 hours).
+\end{enumerate}
+
+% =============================================================================
+\subsection{Phase 4: Physical Feature Engineering}
+\label{sec:feature_engineering}
+% =============================================================================
+
+The pipeline derives physically meaningful variables using established oceanographic relationships \cite{teos10}:
+
+\begin{table}[H]
+\centering
+\caption{Derived physical variables and their scientific basis.}
+\label{tab:derived_vars}
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+\textbf{Variable} & \textbf{Description} & \textbf{Standard} \\ \midrule
+$\sigma_\theta$ & Potential density anomaly: $\rho(S_A, \Theta, 0) - 1000$ & TEOS-10 \\
+$N^2$ & Brunt-Väisälä frequency (stratification proxy) & — \\
+$\tau$ & Wind stress: $\rho_{air} \cdot C_d \cdot U_{10}^2$ & Bulk formula \\
+Wave Energy & Power flux: $\frac{\rho g^2 H_s^2 T_p}{64\pi}$ [kW/m] & Linear theory \\
+Anomaly & Deviation from climatological mean: $x' = x - \bar{x}(\text{doy}, \text{hour})$ & — \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Stationarity Analysis:} The Augmented Dickey-Fuller (ADF) test identifies non-stationary series ($p \geq 0.05$).
+
+\textbf{STL Decomposition:} Seasonal-Trend decomposition using LOESS \cite{cleveland1990stl} separates:
+\begin{equation}
+    Y_t = T_t + S_t + R_t
+\end{equation}
+where $T_t$ is the long-term trend (providing annual change rates), $S_t$ is the seasonal component, and $R_t$ is the residual.
+
+\newpage
+% =============================================================================
+\subsection{Phase 5: Gap Analysis and Classification}
+\label{sec:gap_analysis}
+% =============================================================================
+
+Missing data segments are systematically identified and categorized by temporal duration. This taxonomy (Table~\ref{tab:gap_taxonomy}) drives the \textbf{automatic selection of imputation methods}, ensuring that each gap is handled by the most appropriate algorithm.
+
+\begin{table}[H]
+\centering
+\caption{Gap classification taxonomy and method selection rationale.}
+\label{tab:gap_taxonomy}
+\begin{tabularx}{\textwidth}{@{}llXX@{}}
+\toprule
+\textbf{Category} & \textbf{Duration} & \textbf{Selected Method} & \textbf{Rationale} \\ \midrule
+Micro   & $< 1$ hour       & Linear interpolation  & Local continuity preserved; minimal physical change expected \\
+Short   & 1--6 hours       & VARMA                 & Cross-variable covariance captures oceanographic relationships \\
+Medium  & 6 hours--3 days  & Bi-LSTM               & Non-linear temporal dependencies; diurnal cycles captured \\
+Long    & 3--30 days       & XGBoost (bidirectional) & Recursive ensemble exploits both past and future context \\
+Extended & 30--60 days     & XGBoost + climatology / Numerical Models & Seasonal information required; integration of physical models (SWAN, XBeach) provides hydrodynamic boundaries \\
+Gigant  & $> 60$ days      & Numerical Models / Climatological fill   & Beyond ML predictability horizon; 3D hydrodynamic models (Delft3D, ROMS) initialized by large-scale reanalysis \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Method Selection Logic}
+
+The pipeline implements an automated decision tree for imputation method selection:
+
+\begin{algorithm}[H]
+\caption{Automatic Method Selection Based on Gap Duration}
+\begin{algorithmic}[1]
+\Require Gap duration $d$, configuration flags
+\If{$d < 1$ hour}
+    \State Apply \textbf{Linear Interpolation}
+\ElsIf{$d < 6$ hours \textbf{and} VARMA enabled}
+    \State Apply \textbf{VARMA} with correlated predictors
+\ElsIf{$d < 3$ days \textbf{and} Bi-LSTM enabled}
+    \State Apply \textbf{Bi-LSTM with Attention}
+\ElsIf{$d < 60$ days \textbf{and} XGBoost enabled}
+    \State Apply \textbf{XGBoost Bidirectional Recursive}
+\Else
+    \State Apply \textbf{Climatological Mean} fill and assess coupling with \textbf{Numerical Models (Delft3D, ROMS)}
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/gaps_heatmap.png}
+    \caption{Data availability heatmap across all variables and the 15-year observation period. Green indicates data presence; red indicates missing data. Vertical patterns reveal instrument failures affecting multiple variables simultaneously.}
+    \label{fig:gap_heatmap}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/gap_duration_histogram.png}
+    \caption{Distribution of gap durations. Left: Gaps under 24 hours (linear scale). Right: All gaps (log scale) with category boundaries marked.}
+    \label{fig:gap_histogram}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/timeseries_ctd_gaps.png}
+    \caption{CTD time series (Temperature, Salinity, Pressure) with classified gaps overlaid as colored bands. Green = micro, yellow = short, orange = medium, red = long, purple = extended.}
+    \label{fig:ctd_gaps}
+\end{figure}
+
+\newpage
+% =============================================================================
+\subsection{Phase 6: AI-Based Gap Filling Models}
+\label{sec:imputation}
+% =============================================================================
+
+Three machine learning approaches are implemented, each optimized for specific gap characteristics.
+
+% -----------------------------------------------------------------------------
+\subsubsection{Model 1: VARMA (Vector Autoregressive Moving Average)}
+
+For short gaps where linear cross-correlations dominate, VARMA exploits multivariate structure:
+
+\begin{equation}
+    \mathbf{y}_t = \sum_{i=1}^{p} \Phi_i \mathbf{y}_{t-i} + \sum_{j=1}^{q} \Theta_j \boldsymbol{\epsilon}_{t-j} + \boldsymbol{\epsilon}_t
+\end{equation}
+
+where $\mathbf{y}_t$ is the observation vector and $\Phi_i$, $\Theta_j$ are coefficient matrices. Model order $(p,q)$ is selected via information criteria (AIC/BIC).
+
+% -----------------------------------------------------------------------------
+\subsubsection{Model 2: Bidirectional LSTM with Attention}
+
+For medium and long gaps, a deep learning architecture \cite{hochreiter1997long, bahdanau2015neural} captures non-linear dependencies.
+
+\paragraph{Architecture.} The model consists of:
+\begin{itemize}[noitemsep]
+    \item Two stacked Bidirectional LSTM layers
+    \item Attention mechanism for temporal weighting
+    \item Fully connected output layer
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Bi-LSTM model hyperparameters and their values.}
+\label{tab:lstm_params}
+\begin{tabular}{@{}llp{7cm}@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} & \textbf{Description} \\ \midrule
+\texttt{hidden\_size} & 128 & Number of LSTM units per direction (256 total for bidirectional) \\
+\texttt{num\_layers} & 2 & Stacked LSTM layers for hierarchical feature extraction \\
+\texttt{dropout} & 0.2 & Regularization between layers to prevent overfitting \\
+\texttt{bidirectional} & True & Processes sequence forward and backward \\
+\texttt{sequence\_length} & 96 & Input window: 96 steps $\times$ 30 min = 48 hours \\
+\texttt{batch\_size} & 32 & Mini-batch size for stochastic gradient descent \\
+\texttt{epochs} & 100 & Maximum training iterations \\
+\texttt{learning\_rate} & 0.001 & Adam optimizer step size \\
+\texttt{early\_stopping\_patience} & 10 & Stop if validation loss doesn't improve for 10 epochs \\
+\texttt{train\_ratio} & 0.6 & 60\% of data for training \\
+\texttt{val\_ratio} & 0.2 & 20\% for validation, 20\% for testing \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Attention Mechanism.} The model learns to weight the importance of each time step:
+
+\begin{equation}
+    e_t = \mathbf{v}^T \tanh(\mathbf{W}[\mathbf{h}_t; \mathbf{s}] + \mathbf{b}), \quad
+    \alpha_t = \frac{\exp(e_t)}{\sum_{k=1}^{T} \exp(e_k)}
+\end{equation}
+
+where $\mathbf{h}_t$ are encoder hidden states and $\mathbf{s}$ is the decoder state. The context vector $\mathbf{c} = \sum_t \alpha_t \mathbf{h}_t$ focuses on relevant time steps.
+
+\paragraph{Residual Learning.} The model is trained to predict the \textit{anomaly} rather than the raw signal:
+
+\begin{equation}
+    \hat{x}' = f_{LSTM}(\mathbf{X}), \quad \hat{x} = \hat{x}' + \bar{x}_{climatology}
+\end{equation}
+
+This allows the network to focus on non-trivial variability.
+
+\paragraph{Blending Correction.} A linear bias ramp ensures smooth transitions at gap boundaries:
+
+\begin{equation}
+    \hat{x}_i^{corrected} = \hat{x}_i + \text{bias}_{start} \cdot \left(1 - \frac{i}{n}\right) + \text{bias}_{end} \cdot \frac{i}{n}
+\end{equation}
+
+where $\text{bias}_{start/end}$ are the prediction errors at the first and last known values.
+
+% -----------------------------------------------------------------------------
+\subsubsection{Model 3: XGBoost Bidirectional Recursive}
+
+For production-scale imputation, XGBoost provides efficient gradient boosting \cite{chen2016xgboost} with optimized recursive prediction. The adoption of an Auto-Supervised Residual approach forces the trees to learn purely physical noise over a steady baseline.
+
+\begin{table}[H]
+\centering
+\caption{XGBoost model hyperparameters and their values.}
+\label{tab:xgb_params}
+\begin{tabular}{@{}llp{7cm}@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} & \textbf{Description} \\ \midrule
+\texttt{n\_estimators} & 500 & Number of boosting rounds (trees) \\
+\texttt{max\_depth} & 7 & Maximum tree depth; controls model complexity \\
+\texttt{learning\_rate} & 0.05 & Shrinkage factor per iteration \\
+\texttt{subsample} & 0.8 & Row sampling ratio for each tree \\
+\texttt{colsample\_bytree} & 0.8 & Feature sampling ratio for each tree \\
+\texttt{min\_child\_weight} & 3 & Minimum sum of instance weight in a child \\
+\texttt{gamma} & 0.1 & Minimum loss reduction for split \\
+\texttt{reg\_alpha} & 0.1 & L1 regularization (Lasso) \\
+\texttt{reg\_lambda} & 1.0 & L2 regularization (Ridge) \\
+\texttt{device} & cuda & GPU acceleration (falls back to CPU) \\
+\texttt{tree\_method} & hist & Histogram-based algorithm (GPU-efficient) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Feature Engineering.} The model uses engineered temporal features:
+
+\begin{table}[H]
+\centering
+\caption{Temporal features used by XGBoost.}
+\label{tab:xgb_features}
+\begin{tabular}{@{}lp{9cm}@{}}
+\toprule
+\textbf{Feature Type} & \textbf{Values} \\ \midrule
+Lag features & 2, 4, 12, 24, 48, 168 steps (1h to 1 week) \\
+Rolling windows & 12, 48, 168 steps with mean and std \\
+Cyclical features & $\sin/\cos$ encoding of hour, day-of-week, day-of-year \\
+Time features & Hour, day, month, year, is\_weekend \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Recursive Prediction Algorithm.}
+
+\begin{algorithm}[H]
+\caption{XGBoost Recursive Gap Filling (Optimized $O(n)$)}
+\begin{algorithmic}[1]
+\Require Trained model $M$, time series with gap, feature matrix $\mathbf{F}$
+\State Pre-compute static features (cyclical, exogenous) once
+\State Identify gap positions $\{i_1, i_2, \ldots, i_n\}$
+\For{each position $i_k$ in gap}
+    \State Extract feature row $\mathbf{x}_{i_k}$ from $\mathbf{F}$
+    \State Predict: $\hat{y}_{i_k} = M(\mathbf{x}_{i_k})$
+    \State Update dynamic features (lags, rolling stats) with $\hat{y}_{i_k}$
+\EndFor
+\State \Return Filled time series
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Bidirectional Fusion.} Two models are trained—forward and backward. Final predictions are averaged:
+
+\begin{equation}
+    \hat{x}_i = \frac{\hat{x}_i^{forward} + \hat{x}_i^{backward}}{2}
+\end{equation}
+
+This cancels directional bias and improves accuracy in gap centers.
+
+\newpage
+\subsubsection{Imputation Examples by Gap Category}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/example_gap_micro.png}
+    \caption{\textbf{Micro gap ($<$ 1 hour):} Linear interpolation. The short duration allows simple connection of endpoints without introducing artifacts.}
+    \label{fig:gap_micro}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/example_gap_short.png}
+    \caption{\textbf{Short gap (1--6 hours):} VARMA imputation. Cross-correlation with related variables (e.g., air temperature) improves reconstruction.}
+    \label{fig:gap_short}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/example_gap_medium.png}
+    \caption{\textbf{Medium gap (6 hours--3 days):} Bi-LSTM with attention. The model captures diurnal variability and non-linear dynamics.}
+    \label{fig:gap_medium}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/example_gap_long_errors_drifted.png}
+    \caption{\textbf{Long gap (3--30 days):} Interpolation comparison. The forward-backward ensemble provides robust predictions even for extended missing periods. The bottom panel displays the residual errors of the models against the true hidden signal.}
+    \label{fig:gap_long}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/extended_bilstm.png}
+    \caption{\textbf{Extended gap (30--60 days):} Bi-LSTM reconstruction example showing the model's capacity to maintain physical variability over multi-week outages.}
+    \label{fig:gap_extended}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/gap_gigant_xgboost.png}
+    \caption{\textbf{Gigant gap ($>$ 60 days):} XGBoost prediction relying heavily on the climatological baseline, demonstrating the predictability horizon where physical models must be integrated.}
+    \label{fig:gap_gigant}
+\end{figure}
+
+\newpage
+% =============================================================================
+\subsection{Phase 7: Validation and Benchmarking}
+\label{sec:validation}
+% =============================================================================
+
+Model performance is assessed through \textbf{block-masking cross-validation}:
+
+\begin{enumerate}[noitemsep]
+    \item Artificial gaps are created by masking known values.
+    \item Each imputation method fills the masked segment.
+    \item Predictions are compared against ground truth.
+\end{enumerate}
+
+\subsubsection{Evaluation Metrics}
+
+\begin{align}
+    \text{RMSE} &= \sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2} \label{eq:rmse} \\[0.5em]
+    \text{MAE} &= \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y}_i| \label{eq:mae} \\[0.5em]
+    R^2 &= 1 - \frac{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2} \label{eq:r2}
+\end{align}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/benchmark.png}
+    \caption{Benchmark results: RMSE and Precision comparisons across imputation methods and gap categories for Temperature reconstruction. XGBoost and Bi-LSTM consistently outperform traditional methods across all non-trivial gap scales.}
+    \label{fig:benchmark}
+\end{figure}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Comparison with Numerical Oceanographic Models}
+
+For Extended and Gigant gaps (months to seasons), purely data-driven machine learning models reach their predictability horizon, reverting towards climatological baselines. To maintain accurate, high-frequency physical variability during these prolonged outages, the MTSI framework will systematically compare ML extrapolations against deterministic numerical models:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Wave Dynamics (SWAN \& XBeach):} High-resolution spectral wave models (SWAN) and coastal hydro-morphodynamic models (XBeach) will be driven by regional atmospheric forcing (e.g., ECMWF ERA5 wind fields) and Copernicus Marine Service (CMEMS) lateral boundaries to reconstruct wave parameters ($H_s$, $T_p$, Dir) and extreme coastal setup during lander outages.
+    \item \textbf{3D Hydrodynamics (Delft3D \& ROMS):} To reconstruct the full water-column stratification (Temperature, Salinity) and current velocities (U, V) during multi-month gaps, nested hydrodynamic models like Delft3D or the Regional Ocean Modeling System (ROMS) will be employed. These models, nested within coarser regional solutions (e.g., IBI-MFC), provide physically consistent 4D fields that will be statistically downscaled to the OBSEA local point.
+\end{itemize}
+
+This comparison aims to establish the precise temporal threshold where computational fluid dynamics (CFD) models provide lower RMSE and higher physical fidelity than Deep Learning sequence models, facilitating a truly hybrid data-assimilation approach.
+
+% =============================================================================
+\subsection{Phase 8: Output Generation and Visualization}
+\label{sec:output}
+% =============================================================================
+
+The final outputs include:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Reconstructed dataset}: \texttt{OBSEA\_multivariate\_30min\_interpolated.csv}
+    \item \textbf{Imputation tracking}: Metadata indicating which method filled each gap
+    \item \textbf{Statistical summaries}: Descriptive statistics and correlation matrices
+    \item \textbf{Visualizations}: Time series plots, T-S diagrams, gap heatmaps
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{figures/correlation_matrix.png}
+        \caption{Variable correlation matrix.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{figures/ts_diagram.png}
+        \caption{T-S diagram with $\sigma_\theta$ isopycnals.}
+    \end{subfigure}
+    \caption{Diagnostic visualizations: (a) Pearson correlation between oceanographic and meteorological variables reveals physical relationships exploited by multivariate models. (b) Temperature-Salinity diagram characterizes water mass properties.}
+    \label{fig:diagnostics}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/comparison_full_timeseries.png}
+    \caption{Full 15-year time series comparison: Original observations (blue) versus AI-reconstructed continuous dataset (orange). Gaps are seamlessly filled while preserving physical variability patterns.}
+    \label{fig:full_comparison}
+\end{figure}
+
+% =============================================================================
+\subsection{Computational Environment}
+\label{sec:environment}
+% =============================================================================
+
+\begin{table}[H]
+\centering
+\caption{Software environment and hardware specifications.}
+\label{tab:environment}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Component} & \textbf{Specification} \\ \midrule
+Python version & 3.10 \\
+Deep learning & PyTorch 2.1 with CUDA 12.1 \\
+Gradient boosting & XGBoost 2.0 (GPU-enabled) \\
+Oceanography & GSW library (TEOS-10) \\
+Statistics & statsmodels, scipy \\
+GPU & NVIDIA GeForce RTX 4060 Ti (8 GB) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+GPU acceleration reduces LSTM training time from days to hours and enables efficient XGBoost recursive prediction.
+
+% =============================================================================
+\subsection{Summary}
+\label{sec:summary}
+% =============================================================================
+
+This methodology transforms heterogeneous, gap-riddled sensor data into a high-fidelity, continuous multivariate dataset suitable for climate analysis. The combination of rigorous quality control (QARTOD), physics-based feature engineering (TEOS-10), and state-of-the-art machine learning (Bi-LSTM, XGBoost) ensures both scientific validity and practical utility.
+
+The resulting dataset spans 15 years at 30-minute resolution, providing an unprecedented resource for studying coastal ocean dynamics in the NW Mediterranean Sea.
+
+% =============================================================================
+\begin{thebibliography}{10}
+% =============================================================================
+
+\bibitem{teos10}
+IOC, SCOR and IAPSO (2010).
+\textit{The International Thermodynamic Equation of Seawater -- 2010 (TEOS-10)}. UNESCO.
+
+\bibitem{qartod_manual}
+U.S. IOOS (2020).
+\textit{Manual for Real-Time Quality Control of In-Situ Temperature and Salinity Data (QARTOD)}.
+
+\bibitem{chen2016xgboost}
+Chen, T., \& Guestrin, C. (2016).
+XGBoost: A Scalable Tree Boosting System. \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 785-794.
+
+\bibitem{hochreiter1997long}
+Hochreiter, S., \& Schmidhuber, J. (1997).
+Long Short-Term Memory. \textit{Neural Computation}, 9(8), 1735-1780.
+
+\bibitem{bahdanau2015neural}
+Bahdanau, D., Cho, K., \& Bengio, Y. (2015).
+Neural Machine Translation by Jointly Learning to Align and Translate. \textit{ICLR}.
+
+\bibitem{emery2001data}
+Emery, W. J., \& Thomson, R. E. (2001).
+\textit{Data analysis methods in physical oceanography}. Elsevier.
+
+\bibitem{moeeni2017comparison}
+Moeeni, H., Bonakdari, H., \& Fatemi, S. E. (2017).
+Comparison of modern techniques in estimating missing data in long-term datasets. \textit{Environmental Science and Pollution Research}, 24(17), 15159-15174.
+
+\bibitem{cleveland1990stl}
+Cleveland, R. B., Cleveland, W. S., McRae, J. E., \& Terpenning, I. (1990).
+STL: A seasonal-trend decomposition procedure based on loess. \textit{Journal of Official Statistics}, 6(1), 3-73.
+
+\end{thebibliography}
+
+\end{document}
