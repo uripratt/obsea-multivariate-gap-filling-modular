@@ -34,12 +34,13 @@ class BRITSImputer(STLResidualMixin):
 
         # Dynamically adjust n_steps based on max_gap_size
         if self.max_gap_size is not None:
-            if self.max_gap_size <= 12: # Micro/Short gaps
-                self.n_steps = max(self.n_steps, 48) # Ensure at least 48
-            elif self.max_gap_size <= 144: # Medium
-                self.n_steps = 256
-            else: # Long/Gigant gaps
-                self.n_steps = 512 # Up to 512 max on A40
+            if self.max_gap_size <= 12: # Micro gaps
+                self.n_steps = max(self.n_steps, 24)
+            elif self.max_gap_size <= 64: # Short/Medium gaps
+                self.n_steps = max(self.n_steps, self.max_gap_size * 2)
+            else: # Long gaps
+                self.n_steps = 128 # Cap at 128 to match monolithic success
+            
             logger.info(f"  [BRITS] Adjusted n_steps to {self.n_steps} based on max_gap_size={self.max_gap_size}")
 
         self.model = BRITS(

@@ -218,8 +218,14 @@ def run_pipeline(mode="production", limit_days=None, start_date=None, end_date=N
         
         # 2. QC & Preprocessing
         # Sanitize: la API STA puede devolver None en lugar de NaN para valores faltantes
+        # Remove any duplicate columns that might have appeared during fusion
+        df_raw = df_raw.loc[:, ~df_raw.columns.duplicated()].copy()
+        
         for col in df_raw.columns:
-            df_raw[col] = pd.to_numeric(df_raw[col], errors='coerce')
+            try:
+                df_raw[col] = pd.to_numeric(df_raw[col], errors='coerce')
+            except Exception as e:
+                logger.warning(f"Could not convert {col} to numeric: {e}")
         
         logger.info("Applying QARTOD Quality Control...")
         df_qc = apply_instrumental_qc(df_raw)

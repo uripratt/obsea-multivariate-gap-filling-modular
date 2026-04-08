@@ -71,7 +71,7 @@ FALLBACK_INTERPOLATION = 'time'
 
 # Deep Learning / ML Configuration (Optimized for NVIDIA A40 46GB)
 HARDWARE_CONFIG = {
-    'dl_rnn_batch_size': 512,      # Subido de 32 para A40
+    'dl_rnn_batch_size': 64,       # Reduced from 512 for better RNN convergence
     'dl_transformer_batch_size': 256, # Subido de 16 para A40
     'dl_epochs': 150,              # Más margen para convergencia
     'dl_patience': 25,             # Más paciencia para Early Stopping
@@ -155,9 +155,9 @@ CONFIG = {
 }
 
 CONFIG['data_paths'] = {
-    'CTD': 'exported_data/RAW/OBSEA_CTD_30min_nc_RAW.csv',
-    'BUOY_METEO': 'exported_data/RAW/OBSEA_Airmar_30min_nc_RAW.csv',
-    'CTVG_METEO': 'exported_data/RAW/OBSEA_CTVG_Vantage_Pro2_30min_nc_RAW.csv',
+    'CTD': 'data/exported_data/RAW/OBSEA_CTD_30min_nc_RAW.csv',
+    'BUOY_METEO': 'data/exported_data/RAW/OBSEA_Airmar_30min_nc_RAW.csv',
+    'CTVG_METEO': 'data/exported_data/RAW/OBSEA_CTVG_Vantage_Pro2_30min_nc_RAW.csv',
 }
 
 CONFIG['variables'] = {
